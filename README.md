@@ -1,4 +1,3 @@
-# Malleable rust loader
 
 ![Malleable rust loader](banner.png?raw=true "Malleable rust loader")
 
@@ -8,6 +7,8 @@ malléable : adjectif
     Qui a la propriété de s'aplatir et de s'étendre en lames, en feuilles.
     L'or est le plus malléable des métaux.
 ```
+# Malleable rust loader
+
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -46,7 +47,7 @@ malléable : adjectif
 
 ## Introduction
 
-The objectiv of the Malleable rust loader is to load various payload (DLL from memory, Exe, etc...) in a way to evade static analysis. It can fetch data from various methods and perform multiple data operation to deobfuscate or decrypt payloads and new configuration.
+The objectiv of the Malleable rust loader is to load various payload (DLL from memory, Exe, etc...) in a way to evade static analysis of Antivirus. It can fetch data from various methods and perform multiple data operation to deobfuscate or decrypt payloads and new configuration.
 
 Loader behavior is define by a config file and is higly customisable. At first the loader include initial config file and just before doing anything, there is mecanisms to update the config by a new one.
 
