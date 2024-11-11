@@ -78,7 +78,7 @@ def main():
 
     else:
         log.info("[+] OLLVM Compilation")
-        os.system('cp ~/.malleable/config/initial.json.aead* ~/.malleable/config/mem* ~/malleable-rust-loader/config/')
+        os.system('cp ~/.malleable/config/initial.json.aead* ~/.malleable/config/mem* config/')
         comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
         log.info(comm)
         compil_result=os.system(comm)
@@ -86,7 +86,7 @@ def main():
     # compil_result=0 if compilation is OK
     if not compil_result:
         log.info('[+] compilation succeed')
-        os.system('rm -f ~/malleable-rust-loader/config/*')
+        os.system('rm -f config/*')
         log.info(os.popen(f'ls -lah {file}').read().replace('\n',''))
         log.info(os.popen(f'file {file}').read().replace('\n',''))
         log.info(os.popen(f'sha256sum {file}').read().replace('\n',''))
@@ -112,7 +112,7 @@ EOF
         os.system(exec_comm)
     else:
         log.info('[+] compilation failed')
-        os.system('rm ~/malleable-rust-loader/config/*')
+        os.system('rm -f config/*')
 
 if __name__ == '__main__':
     main()
