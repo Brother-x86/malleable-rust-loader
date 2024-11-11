@@ -1,3 +1,4 @@
+# Malleable rust loader
 
 ![Malleable rust loader](banner.png?raw=true "Malleable rust loader")
 
@@ -7,8 +8,6 @@ malléable : adjectif
     Qui a la propriété de s'aplatir et de s'étendre en lames, en feuilles.
     L'or est le plus malléable des métaux.
 ```
-# Malleable rust loader
-
 ## Table of Contents
 
 - [Introduction](#introduction)
