@@ -9,7 +9,7 @@ fn main() {
     env_logger::init();
 
     let mut keypair  = concat!(env!("HOME"), "/.malleable/ed25519.u8").to_string();
-    let mut config_file_to_sign  = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
+    let mut config_file_to_sign: String  = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
 
 
     {
