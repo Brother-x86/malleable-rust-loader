@@ -1,4 +1,5 @@
 use crate::dataoperation::DataOperation;
+use crate::dataoperation::Stegano;
 use crate::loaderconf::LoaderConf;
 
 use std::fs;
@@ -53,4 +54,17 @@ pub fn initialize_loader(loaderconf: LoaderConf, json_file: String) {
     let json_file_webp: String = format!("{json_file}.webp");
     info!("[+] Obfuscated WEBPAGE+BASE64 config: {}", json_file_webp);
     fs::write(&json_file_webp, &data).expect("Unable to write file");
+
+    // create one config STEGANO
+    let mut data = loaderconf.concat_loader_jsondata().into_bytes();
+    data = apply_all_dataoperations(
+        &mut vec![DataOperation::STEGANO(Stegano{ input_image: String::from("/home/user/stegoru/rust.png") })],
+        data,
+    )
+    .unwrap();
+    let json_file_steg: String = format!("{json_file}.steg");
+    info!("[+] Obfuscated STEGANO config: {}", json_file_steg);
+    fs::write(&json_file_steg, &data).expect("Unable to write file");
+
+
 }
