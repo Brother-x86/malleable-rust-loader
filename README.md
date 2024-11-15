@@ -126,8 +126,8 @@ TODO: IMAGE
 
 ## Config example
 
-Here, this is the first line of the config file the first update link is stored in a HTML page : **gobelin.html** and the second one in **troll.html**.
-Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, the DLL is encrypted+sign with dataoperation:AEAD.
+Here, this is the first lines of the config file. The first update configuration link is stored in a HTML page : **gobelin.html** and the second one in **troll.html**.
+Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, the DLL is downloaded with HTTPS and then decrypted+verified with dataoperation:AEAD.
 
 ```
 {
@@ -176,9 +176,9 @@ Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, th
 ```
 
 This is the last part of the config,
-Here, before reloading any configuration, the loader try to fetch Internet (microsoft.com or microsoftonline.com). After that, he verify both hostname or domain join name before running any payload.
+Here, before reloading any configuration, the loader try to fetch Internet (microsoft.com or microsoftonline.com). After that, he verify both hostname or domain join name before running any payload (OR operator)
 
-At the end, you can see the elliptic-curv Ed25519 material. The config is signed with a private key present in the compil host.
+At the end, you can see the elliptic-curv Ed25519 material. This config and every update config should be signed with a private key.
 
 ```
   "defuse_update": [
@@ -369,6 +369,13 @@ winrust loader --ollvm
 ### 4.5 windows compilation with payload in memory
 
 This part show you how to include memory into the loader at compile time.
+You can add max to 4 memory at compile time in the loader memory (you you want more, you should edit link.rs). The memory should be stored in file in this directory: 
+```
+~/.malleable/config/mem1
+~/.malleable/config/mem2 
+etc...
+```
+
 You can create a demo config with :
 
 ```
@@ -404,10 +411,10 @@ winrust loader --debug --mem1
 ## 5. Deploy config and payload
 
 This part is up to you.
-you should deploy config file and payload manually.
+you should deploy config file and payload manually in the infrastructure (web serveur/c2, etC...)
 It's not part of the project today. Wait next release 2.0 for this.
 
-For example, with the previous config you should put a first reload config here :
+For example, in the previous config sample shown in this doc, you should put a first reload config here :
 https://kaboum.xyz/artdonjon/gobelin.html and an encrypted DLL here : https://kaboum.xyz/artdonjon/donjon_dll.jpg
 
 
@@ -418,7 +425,7 @@ This part define side script and commands to help you
 
 ##  Winrust
 
-`winrust.py`, is a script to that could help you to easily:
+`winrust.py`, is a script that could help you to easily:
 - cross-compile from linux to Windows
 - deploy exe with SMB into a Windows host
 - and run it with psexec.py (or other impacket lateral movement script)
@@ -457,7 +464,7 @@ by Brother
 ```
 
 -> be carefull, **psexec.py** is catch by Antivirus Defender but have the advantage of sending live output during execution wish is very important to debug.
-if you want to test against an Defender, you can switch to **atexex.py**, you will have output but at the end of the execution.
+if you want to test against this antivirus, you can switch to **atexex.py**, you will have output but at the end of the execution. However, you also could run it manually via RDP.
 
 
 example of winrust usage (you should add the --debug option to have output for debugging) :
