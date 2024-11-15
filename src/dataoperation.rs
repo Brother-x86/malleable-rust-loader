@@ -27,6 +27,9 @@ use log::debug;
 
 struct CounterNonceSequence(u32);
 
+//extern crate lsb_text_png_steganography_mod;
+//use lsb_text_png_steganography_mod::{ hide, reveal_mod };
+
 impl NonceSequence for CounterNonceSequence {
     // called once for each seal operation
     fn advance(&mut self) -> Result<Nonce, Unspecified> {
