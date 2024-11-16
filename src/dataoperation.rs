@@ -24,8 +24,12 @@ use ring::rand::SystemRandom;
 
 use cryptify::encrypt_string;
 use log::debug;
+use log::info;
 
 struct CounterNonceSequence(u32);
+
+use crate::lsb_text_png_steganography_mod::{ hide_mod, reveal_mod };
+use std::env;
 
 impl NonceSequence for CounterNonceSequence {
     // called once for each seal operation
@@ -47,6 +51,7 @@ pub enum DataOperation {
     WEBPAGE,
     ROT13, //only after base64 because input is String
     REVERSE,
+    STEGANO,
 }
 
 pub trait UnApplyDataOperation {
@@ -75,6 +80,12 @@ pub trait UnApplyDataOperation {
         };
         Ok(caps["loader"].as_bytes().to_vec())
     }
+
+    fn stegano_decode_lsb(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("{}", encrypt_string!("dataoperation: STEGANO decode"));
+        Ok(reveal_mod(data)?)
+    }
+
 }
 impl UnApplyDataOperation for DataOperation {
     fn un_apply_one_operation(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -83,6 +94,7 @@ impl UnApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_decode(data),
             DataOperation::WEBPAGE => self.webpage_harvesting(data),
             DataOperation::AEAD(aead_material) => aead_material.decrypt_mat(data),
+            DataOperation::STEGANO => self.stegano_decode_lsb(data),
             _ => todo!(),
         }
     }
@@ -103,6 +115,25 @@ pub trait ApplyDataOperation {
         debug!("{}", encrypt_string!("dataoperation: WEBPAGE create"));
         Ok(format!("!!!{}!!!", std::str::from_utf8(&data)?).into_bytes())
     }
+
+    fn stegano_encode_lsb(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
+
+        let input_image: String=env::var("STEGANO_INPUT_IMAGE").unwrap();
+        info!("STEGANO_INPUT_IMAGE: {}",input_image);
+        let img = hide_mod(data, &input_image);
+        //img.save('output_carrier_path').unwrap();
+        // TODO il faut pas laisser ça !!!
+        let output_image= format!{"{}.steg.png",input_image};
+        info!("IMAGE SAVE to {}",&output_image);
+        img.save(output_image).unwrap();
+
+        //this part is useless as vec is not the good way to save IMAGE
+        // TODO: try to img.export to vec, and then save it later.
+        Ok(img.to_vec())
+    }
+
+
 }
 impl ApplyDataOperation for DataOperation {
     fn apply_one_operation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -111,6 +142,7 @@ impl ApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_encode(data),
             DataOperation::WEBPAGE => self.webpage_create(data),
             DataOperation::AEAD(aead_material) => aead_material.encrypt_mat(data),
+            DataOperation::STEGANO => self.stegano_encode_lsb(data),
             _ => todo!(),
         }
     }

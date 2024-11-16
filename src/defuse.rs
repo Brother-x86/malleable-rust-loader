@@ -170,7 +170,7 @@ pub struct DomainJoin {
 #[cfg(target_os = "linux")]
 impl DefuseCheck for DomainJoin {
     fn stop_exec(&self) -> bool {
-        false
+        true
     }
     fn get_operator(&self) -> Operator {
         self.operator

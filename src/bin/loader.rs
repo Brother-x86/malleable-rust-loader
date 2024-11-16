@@ -76,12 +76,13 @@ fn main() {
         if loaderconf.stop_defuse(&loaderconf.defuse_update) {
             error!("{}", lc!("[!] DEFUSE STOP reload config"));
         } else {
-            let mut nb_config = 1;
+            let mut nb_config = 0;
             let mut change_loader = false;
             let mut replacement_loaderconf: LoaderConf = LoaderConf::new_empty();
             info!("{}", lc!("[+] RELOAD config"));
 
             for conflink in &loaderconf.loaderconf_update_links {
+                nb_config = nb_config + 1;
                 info!(
                     "{}/{}{}{:?}",
                     nb_config,
@@ -143,7 +144,6 @@ fn main() {
                     "{}",
                     lc!("[+] DECISION: try to fetch an other loader with next link")
                 );
-                nb_config = nb_config + 1;
             }
 
             if change_loader {

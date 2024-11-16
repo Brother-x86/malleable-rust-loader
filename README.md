@@ -105,6 +105,7 @@ The way to modify fetch data from link
 - [x] REVERSE
 - [x] WEBPAGE -> allow to put the data somewhere into HTML
 - [x] AEAD
+- [x] STEGANO -> hide data in png (jpg seems not to work)
 
 # Design
 
@@ -294,18 +295,43 @@ cargo run --bin encrypt_payload ~/.malleable/payload/sliver.dll
 
 Here you will generate a config file, sign it and prepare the file to become the initial config loader.
 
-conf.rs is designed to create Working json config file and sign it automatically.
+conf.rs is designed to create Working json config file and sign it automatically. it help to show you various configurations options, its very helpfull to start.
+
+If you modify a json config by hand after generating with conf.rs, **you should sign it againg** with the `sign` command:
+
+```
+cargo run --bin sign /home/user/.malleable/config/initial.json
+```
+
+There is multiple configuration example in conf.rs, just check the help with:
+```
+cargo run --bin conf - --help
+```
+
+### 3.1 Banner config
+
+the simpliest payload one, only print the awesome project banner in a fashion way. Nice for testing and switching from harmfull conf into weaponized one.
+
+```
+cargo run --bin conf banner
+```
+
+### 3.2 Encrypted dll configuration
+
 By default, the conf.rs script try to fetch key to decrypt dll here: `.malleable/payload/sliver.dll.dataop` , modifying it for simplicity: 
 
 ```
 cargo run --bin conf dll
 ```
 
-If you modify a json config by hand, you should sign it againg.
+### 3.3 Stegano
+
+if you want to use stegano to hide conf, you should precise an input image with this environnment variable:
 
 ```
-cargo run --bin sign /home/user/.malleable/config/initial.json
+export STEGANO_INPUT_IMAGE=/path/to/your/image
 ```
+
 
 ## 4. Compile loader
 
@@ -556,7 +582,8 @@ sudo upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
 - collect data and send to C2 with a special payload : TODO
 - find a way to sends logs into a C2, could be nice for error
 - persistence payloads
-- stegano for DataOperation, hide config and payload into nice harmless pictures
+- [X] stegano for DataOperation, hide config and payload into nice harmless pictures -> Done 16/11/2024
+
 
 # Credits and Thanks
 
