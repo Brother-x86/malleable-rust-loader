@@ -165,25 +165,6 @@ impl LinkFetch for HTTPLink {
         Ok(body)
     }
 
-    /* 
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
-        //TODO: en fonction du type de Link, on va appeller une fonction differente HTTP ou DNS ou ...
-        debug!(
-            "{}{}",
-            encrypt_string!("HTTP download: "),
-            &self.get_target()
-        );
-        let mut res = reqwest::blocking::get(&self.get_target())?;
-        let mut body: Vec<u8> = Vec::new();
-        res.read_to_end(&mut body)?;
-
-        debug!("{}{}", encrypt_string!("Download status: "), res.status());
-        //debug!("   -Headers: {:#?}", res.headers());
-        debug!("{}{}", encrypt_string!("Download len: "), &body.len());
-        debug!("{}{:?}", encrypt_string!("Download bytes: "), &body[1..15]);
-        Ok(body)
-    }
-*/
     fn get_target(&self) -> String {
         format!("{}", self.url)
     }
