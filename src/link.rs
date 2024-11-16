@@ -134,7 +134,7 @@ impl LinkFetch for Link {
 }
 
 
-
+//TODO remove this from const, and find a way to define it globally with config for every Link.
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0";
 const TIMEOUT: u64 = 10;
 
