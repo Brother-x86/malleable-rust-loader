@@ -120,7 +120,7 @@ pub trait ApplyDataOperation {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
 
         let input_image: String=env::var("STEGANO_INPUT_IMAGE").unwrap();
-        info!("STEGANO_INPUT_IMAGE:{}",input_image);
+        info!("STEGANO_INPUT_IMAGE: {}",input_image);
         let img = hide_mod(data, &input_image);
         //img.save('output_carrier_path').unwrap();
         // TODO il faut pas laisser ça !!!

@@ -57,12 +57,17 @@ pub fn initialize_loader(loaderconf: LoaderConf, json_file: String) {
     fs::write(&json_file_webp, &data).expect("Unable to write file");
 
     // create one config STEGANO
-    let mut data = loaderconf.concat_loader_jsondata().into_bytes();
-    // TODO set env variable to 
-    // export STEGANO_INPUT_IMAGE=/home/user/.malleable/config/troll2.jpg
-    unsafe {
-        env::set_var("STEGANO_INPUT_IMAGE", "/home/user/.malleable/config/troll2.jpg");
+    let mut data: Vec<u8> = loaderconf.concat_loader_jsondata().into_bytes();
+    // set env variable to: export STEGANO_INPUT_IMAGE=/home/user/.malleable/config/troll2.jpg
+
+    match env::var("STEGANO_INPUT_IMAGE") {
+        Ok(_) => (),
+        Err(_) =>  unsafe {
+            env::set_var("STEGANO_INPUT_IMAGE",  concat!(env!("HOME"),"/.malleable/config/troll2.jpg"));
+        },
     }
+
+   
     data = apply_all_dataoperations(
         &mut vec![DataOperation::STEGANO],
         data,
