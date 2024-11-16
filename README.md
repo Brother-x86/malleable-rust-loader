@@ -331,9 +331,10 @@ cargo run --bin conf dll
 if you want to use stegano to hide conf, you should precise an input image with this environnment variable:
 
 ```
-export STEGANO_INPUT_IMAGE=/path/to/your/image
+export STEGANO_INPUT_IMAGE=/path/to/your/image.png
 ```
 
+!WARNING! jpg should be supported too but, but during my last tests it wasnt working, so prefer to export the image into a png format instead of jpg.
 
 ## 4. Compile loader
 
