@@ -33,9 +33,6 @@ const INITIAL_LOADER : &[u8] = include_bytes!("/projects/config/initial.json.aea
 const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!("/projects/config/initial.json.aead.dataop.rot13b64");
 
 
-
-
-
 fn main() {
     #[cfg(feature="logdebug")]
     env_logger::init();

@@ -120,16 +120,16 @@ pub trait ApplyDataOperation {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
 
         let input_image: String=env::var("STEGANO_INPUT_IMAGE").unwrap();
-        info!("STEGANO_INPUT_IMAGE: {}",input_image);
-        let img = hide_mod(data, &input_image);
-        //img.save('output_carrier_path').unwrap();
-        // TODO il faut pas laisser ça !!!
+        info!("{}{}",encrypt_string!("STEGANO_INPUT_IMAGE: "),input_image);
+        let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
+
+        //TODO, try to remove this part
         let output_image= format!{"{}.steg.png",input_image};
-        info!("IMAGE SAVE to {}",&output_image);
+        info!("{}{}",encrypt_string!("IMAGE SAVE to "),&output_image);
         img.save(output_image).unwrap();
 
         //this part is useless as vec is not the good way to save IMAGE
-        // TODO: try to img.export to vec, and then save it later.
+        // TODO: try to img.export to vec, and then save it later differently
         Ok(img.to_vec())
     }
 

@@ -9,6 +9,9 @@ use cryptify::encrypt_string;
 use log::debug;
 use log::info;
 
+use std::time::Duration;
+
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
     HTTP(HTTPLink),
@@ -130,7 +133,39 @@ impl LinkFetch for Link {
     }
 }
 
+
+
+const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0";
+const TIMEOUT: u64 = 10;
+
+
 impl LinkFetch for HTTPLink {
+
+    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+        //TODO: en fonction du type de Link, on va appeller une fonction differente HTTP ou DNS ou ...
+        debug!(
+            "{}{}",
+            encrypt_string!("HTTP download: "),
+            &self.get_target()
+        );
+
+        let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(TIMEOUT))
+        .user_agent(USER_AGENT)
+        .build()?;
+
+        let mut res = client.get(&self.get_target()).send()?;
+        let mut body: Vec<u8> = Vec::new();
+        res.read_to_end(&mut body)?;
+
+        debug!("{}{}", encrypt_string!("Download status: "), res.status());
+        //debug!("   -Headers: {:#?}", res.headers());
+        debug!("{}{}", encrypt_string!("Download len: "), &body.len());
+        debug!("{}{:?}", encrypt_string!("Download bytes: "), &body[1..15]);
+        Ok(body)
+    }
+
+    /* 
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
         //TODO: en fonction du type de Link, on va appeller une fonction differente HTTP ou DNS ou ...
         debug!(
@@ -148,7 +183,7 @@ impl LinkFetch for HTTPLink {
         debug!("{}{:?}", encrypt_string!("Download bytes: "), &body[1..15]);
         Ok(body)
     }
-
+*/
     fn get_target(&self) -> String {
         format!("{}", self.url)
     }
