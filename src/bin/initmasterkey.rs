@@ -16,12 +16,11 @@ fn initialize_master_keypair(path_file: &str) {
 }
 
 fn main() {
-
     let malleable_working_dir: &str = concat!(env!("HOME"), "/.malleable");
     let keypair_path: &str = concat!(env!("HOME"), "/.malleable/ed25519.u8");
     let payload_dir: &str = concat!(env!("HOME"), "/.malleable/payload");
     let config_dir: &str = concat!(env!("HOME"), "/.malleable/config");
-     
+
     env_logger::init();
     // TODO create the directory
     fs::create_dir_all(malleable_working_dir).unwrap();

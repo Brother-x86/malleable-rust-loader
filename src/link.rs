@@ -11,7 +11,6 @@ use log::info;
 
 use std::time::Duration;
 
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
     HTTP(HTTPLink),
@@ -55,7 +54,6 @@ pub struct MemoryLink {
     pub sleep: u64,
     pub jitt: u64,
 }
-
 
 pub trait LinkFetch {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error>;
@@ -133,14 +131,12 @@ impl LinkFetch for Link {
     }
 }
 
-
 //TODO remove this from const, and find a way to define it globally with config for every Link.
-const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0";
+const USER_AGENT: &str =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0";
 const TIMEOUT: u64 = 10;
 
-
 impl LinkFetch for HTTPLink {
-
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
         //TODO: en fonction du type de Link, on va appeller une fonction differente HTTP ou DNS ou ...
         debug!(
@@ -150,9 +146,9 @@ impl LinkFetch for HTTPLink {
         );
 
         let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(TIMEOUT))
-        .user_agent(USER_AGENT)
-        .build()?;
+            .timeout(Duration::from_secs(TIMEOUT))
+            .user_agent(USER_AGENT)
+            .build()?;
 
         let mut res = client.get(&self.get_target()).send()?;
         let mut body: Vec<u8> = Vec::new();
@@ -222,7 +218,6 @@ impl LinkFetch for FileLink {
     }
 }
 
-
 // ----------- COMPILE TIME mEMORy
 // MEMORY_1
 #[rustfmt::skip]
@@ -286,12 +281,12 @@ impl LinkFetch for MemoryLink {
             3 => Ok(MEMORY_3.to_vec()),
             4 => Ok(MEMORY_4.to_vec()),
             //TODO raise Error here
-            _ => Ok(vec![])
+            _ => Ok(vec![]),
         }
     }
 
     fn get_target(&self) -> String {
-        format!("{}{}",encrypt_string!("MEMORY_"),self.memory_nb)
+        format!("{}{}", encrypt_string!("MEMORY_"), self.memory_nb)
     }
     fn get_dataoperation(&self) -> Vec<DataOperation> {
         self.dataoperation.to_vec()
@@ -303,4 +298,3 @@ impl LinkFetch for MemoryLink {
         self.jitt
     }
 }
-
