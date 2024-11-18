@@ -72,12 +72,11 @@ impl PoolLinks {
             );
             return Ok(newconf);
         }
-        bail!("{}", encrypt_string!("NOconfigfound"))
+        bail!("{}", encrypt_string!("No config found"))
     }
 
     // doc: https://nickymeuleman.netlify.app/blog/multithreading-rust
     pub fn update_links_together(&self, config: &Config) -> Result<Config, anyhow::Error> {
-        
         let mut handle_list: Vec<thread::JoinHandle<Config>> = vec![];
         let pool_link= &self.pool_links;
         let pool_link_len= pool_link.len();
@@ -114,6 +113,9 @@ impl PoolLinks {
             config_list.push(newconfig);
         }
 
+        // TODO choice de la conf la plus recente PARMIS les NOUVELLES conf. si la conf du loader est plus recente. elle compte pas. (mais très probablement va se faire ecraser au prochain RELOAD) -> quuuoique.
+        // ok la conf la plus récente bas les couilles.
+        // si que des confs identique, on les renvoit., si la conf du loader est plus recente que les autres configs, on 
         for conf in config_list{
             info!("VICTORY! {:?}",conf);
         }

