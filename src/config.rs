@@ -263,8 +263,8 @@ impl Config {
                 encrypt_string!(" PoolLinks: "),
                 &pool_name
             );
-            match pool_links.update_pool(&self)  {
-                Ok(newconf) => {return newconf},
+            match pool_links.update_pool(&self) {
+                Ok(newconf) => return newconf,
                 _ => break,
             };
         }
