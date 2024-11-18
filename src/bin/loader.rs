@@ -73,7 +73,10 @@ fn main() {
         if config.stop_defuse(&config.defuse_update) {
             error!("{}", lc!("[!] DEFUSE STOP reload config"));
         } else {
-            let mut nb_config = 0;
+            info!("{}", lc!("[+] UPDATE config"));
+
+            /* 
+            let mut nb_config: i32 = 0;
             let mut change_loader = false;
             let mut replacement_loaderconf: Config = Config::new_empty();
             info!("{}", lc!("[+] RELOAD config"));
@@ -147,7 +150,7 @@ fn main() {
                 info!("{}", lc!("[+] LOADER replaced"));
                 config = replacement_loaderconf;
             }
-
+            */
             info!("{}", lc!("[+] DEFUSE payload exec"));
             if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));

@@ -16,6 +16,13 @@ use log::info;
 use cryptify::encrypt_string;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SignMaterial {
+    pub peer_public_key_bytes: Vec<u8>,
+    pub sign_bytes: Vec<u8>,
+}
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
     pub update_links: Vec<Link>,
     pub payloads: Vec<Payload>,
@@ -242,10 +249,11 @@ impl Config {
         let sleep_time: time::Duration = time::Duration::from_millis((total_sleep * 1000.0) as u64);
         thread::sleep(sleep_time);
     }
+
+    pub fn update_config(&self) -> Config {
+        
+        todo!()
+    }
+
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SignMaterial {
-    pub peer_public_key_bytes: Vec<u8>,
-    pub sign_bytes: Vec<u8>,
-}
