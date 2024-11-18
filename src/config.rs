@@ -251,6 +251,7 @@ impl Config {
         thread::sleep(sleep_time);
     }
 
+    // try to fetch a new config, if no config are found return self.
     pub fn update_config(&self) -> Config {
         let mut pool_nb: i32 = 0;
         for (pool_name, pool_links) in &self.update_links {
@@ -262,9 +263,11 @@ impl Config {
                 encrypt_string!(" PoolLinks: "),
                 &pool_name
             );
-            let (replace_config, newconf) = pool_links.update_pool(&self);
-            //TODO, if replace config, dans ce cas, vérifier si conf différente de self, et remplacer la config
+            match pool_links.update_pool(&self)  {
+                Ok(newconf) => {return newconf},
+                _ => break,
+            };
         }
-        todo!()
+        self.to_owned()
     }
 }

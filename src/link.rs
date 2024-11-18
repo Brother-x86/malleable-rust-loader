@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::io::Read;
 use std::{thread, time};
 // use anyhow::{Context, Result};
-use anyhow::Result;
 use anyhow::bail;
+use anyhow::Result;
 use cryptify::encrypt_string;
 use log::debug;
 //use log::warn;
@@ -27,20 +27,23 @@ impl Link {
         info!("{:?}", self);
     }
 
-    pub fn fetch_config(&self,config: &Config)-> Result<Config, anyhow::Error> {
+    pub fn fetch_config(&self, config: &Config) -> Result<Config, anyhow::Error> {
         let result = self.fetch_data();
         let data = match result {
             Ok(data) => data,
-            Err(error) => bail!("{}{}",encrypt_string!("fetch_data fail: "),error),          
+            Err(error) => bail!("{}{}", encrypt_string!("fetch_data fail: "), error),
         };
         debug!("{}", encrypt_string!("deserialized data"));
         let newconfig: Config = match serde_json::from_slice(&data) {
             Ok(newconfig) => newconfig,
-            Err(error) => bail!("{}{}",encrypt_string!("deserialized data fail: "),error), 
+            Err(error) => bail!("{}{}", encrypt_string!("deserialized data fail: "), error),
         };
         match config.verify_newloader_sign(&newconfig) {
-            Ok(()) => { info!("{}",encrypt_string!("verify signature: OK")); Ok(newconfig)},
-            _unspecified => bail!("{}",encrypt_string!("verify signature: FAIL")),
+            Ok(()) => {
+                info!("{}", encrypt_string!("config signature: VERIFIED"));
+                Ok(newconfig)
+            }
+            _unspecified => bail!("{}", encrypt_string!("config signature: verify FAIL")),
         }
     }
 }
