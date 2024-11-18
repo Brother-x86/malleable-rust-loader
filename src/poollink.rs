@@ -109,6 +109,7 @@ impl PoolLinks {
 
         let mut config_list: Vec<Config> = vec![];
         for handle in handle_list {
+            //TODO ptet ici pas de unwrap oupsi.
             let newconfig= handle.join().unwrap();
             config_list.push(newconfig);
         }
