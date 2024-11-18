@@ -1,5 +1,5 @@
 use crate::defuse::{Defuse, Operator};
-use crate::link::Link;
+use crate::poollink::PoolLinks;
 use crate::payload::Payload;
 use chksum_sha2_512 as sha2_512;
 use rand::Rng;
@@ -15,6 +15,9 @@ use log::info;
 
 use cryptify::encrypt_string;
 
+use std::collections::BTreeMap;
+
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
     pub peer_public_key_bytes: Vec<u8>,
@@ -24,7 +27,7 @@ pub struct SignMaterial {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-    pub update_links: Vec<Link>,
+    pub update_links: BTreeMap<String, PoolLinks>,
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
@@ -35,7 +38,7 @@ pub struct Config {
 #[allow(dead_code)]
 impl Config {
     pub fn new_unsigned(
-        update_links: Vec<Link>,
+        update_links: BTreeMap<String, PoolLinks>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
@@ -62,7 +65,7 @@ impl Config {
             sign_bytes: vec![],
         };
         Config {
-            update_links: vec![],
+            update_links: BTreeMap::new(),
             sign_material: sign_material,
             payloads: vec![],
             defuse_update: vec![],
@@ -74,7 +77,7 @@ impl Config {
 
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
-        loader_update_links: Vec<Link>,
+        update_links: BTreeMap<String, PoolLinks>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
@@ -82,7 +85,7 @@ impl Config {
         jitt: u64,
     ) -> Config {
         let mut new_loader = Config::new_unsigned(
-            loader_update_links,
+            update_links,
             payloads,
             defuse_update,
             defuse_payload,

