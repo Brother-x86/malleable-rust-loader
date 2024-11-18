@@ -1,5 +1,5 @@
-use crate::dataoperation::DataOperation;
 use crate::config::Config;
+use crate::dataoperation::DataOperation;
 
 use std::fs;
 
@@ -8,7 +8,6 @@ use crate::dataoperation::AeadMaterial;
 
 use log::info;
 use std::env;
-
 
 pub fn initialize_loader(loaderconf: Config, json_file: String) {
     info!("[+] AEAD Encrypt initial loader config");
@@ -62,25 +61,17 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
 
     match env::var("STEGANO_INPUT_IMAGE") {
         Ok(_) => (),
-        Err(_) =>  unsafe {
-            env::set_var("STEGANO_INPUT_IMAGE",  concat!(env!("HOME"),"/.malleable/config/troll2.jpg"));
+        Err(_) => unsafe {
+            env::set_var(
+                "STEGANO_INPUT_IMAGE",
+                concat!(env!("HOME"), "/.malleable/config/troll2.jpg"),
+            );
         },
     }
 
-   
-    data = apply_all_dataoperations(
-        &mut vec![DataOperation::STEGANO],
-        data,
-    )
-    .unwrap();
+    data = apply_all_dataoperations(&mut vec![DataOperation::STEGANO], data).unwrap();
     // TODO, this is useless at this time because output data Vec<u8> are not ok to become an image
     let json_file_steg: String = format!("{json_file}.steg");
     info!("[+] Obfuscated STEGANO config: {}", json_file_steg);
     fs::write(&json_file_steg, &data).expect("Unable to write file");
-
-
-
-    
-
-
 }

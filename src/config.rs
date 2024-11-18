@@ -1,6 +1,6 @@
 use crate::defuse::{Defuse, Operator};
-use crate::poollink::PoolLinks;
 use crate::payload::Payload;
+use crate::poollink::PoolLinks;
 use chksum_sha2_512 as sha2_512;
 use rand::Rng;
 use ring::signature::Ed25519KeyPair;
@@ -17,13 +17,11 @@ use cryptify::encrypt_string;
 
 use std::collections::BTreeMap;
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
     pub peer_public_key_bytes: Vec<u8>,
     pub sign_bytes: Vec<u8>,
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -228,8 +226,8 @@ impl Config {
                     }
                 } else {
                     match defuse.get_operator() {
-                        Operator::AND => {},
-                        Operator::OR => check_this_defuse = false
+                        Operator::AND => {}
+                        Operator::OR => check_this_defuse = false,
                     }
                 }
             } else {
@@ -254,9 +252,19 @@ impl Config {
     }
 
     pub fn update_config(&self) -> Config {
-        
+        let mut pool_nb: i32 = 0;
+        for (pool_name, pool_links) in &self.update_links {
+            pool_nb = pool_nb + 1;
+            info!(
+                "{}/{}{}{}",
+                pool_nb,
+                &self.update_links.len(),
+                encrypt_string!(" PoolLinks: "),
+                &pool_name
+            );
+            let (replace_config, newconf) = pool_links.update_pool(&self);
+            //TODO, if replace config, dans ce cas, vérifier si conf différente de self, et remplacer la config
+        }
         todo!()
     }
-
 }
-

