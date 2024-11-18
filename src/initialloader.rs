@@ -1,5 +1,5 @@
 use crate::dataoperation::DataOperation;
-use crate::loaderconf::LoaderConf;
+use crate::config::Config;
 
 use std::fs;
 
@@ -10,7 +10,7 @@ use log::info;
 use std::env;
 
 
-pub fn initialize_loader(loaderconf: LoaderConf, json_file: String) {
+pub fn initialize_loader(loaderconf: Config, json_file: String) {
     info!("[+] AEAD Encrypt initial loader config");
     let mut dataoperations: Vec<DataOperation> = vec![];
     //TODO multiple time, je comprends pas pk ca fail

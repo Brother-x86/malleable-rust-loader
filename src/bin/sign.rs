@@ -1,5 +1,5 @@
 use log::info;
-use malleable_rust_loader::loaderconf::LoaderConf;
+use malleable_rust_loader::config::Config;
 use malleable_rust_loader::initialloader::initialize_loader;
 use std::env;
 extern crate env_logger;
@@ -25,8 +25,8 @@ fn main() {
     }
     
     info!("[+] Signing Loader from file: {config_file_to_sign} ");
-    let mut loader = LoaderConf::new_fromfile(&config_file_to_sign);
-    let key_pair = LoaderConf::fromfile_master_keypair(keypair.as_str());
+    let mut loader = Config::new_fromfile(&config_file_to_sign);
+    let key_pair = Config::fromfile_master_keypair(keypair.as_str());
     loader.sign_loader(&key_pair);
     info!("[+] Write sign_bytes to: {config_file_to_sign}");
     loader.serialize_to_file_pretty(&config_file_to_sign);

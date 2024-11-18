@@ -16,8 +16,8 @@ use log::info;
 use cryptify::encrypt_string;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LoaderConf {
-    pub loaderconf_update_links: Vec<Link>,
+pub struct Config {
+    pub update_links: Vec<Link>,
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
@@ -26,21 +26,21 @@ pub struct LoaderConf {
     pub jitt: u64,
 }
 #[allow(dead_code)]
-impl LoaderConf {
+impl Config {
     pub fn new_unsigned(
-        loader_update_links: Vec<Link>,
+        update_links: Vec<Link>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
         sleep: u64,
         jitt: u64,
-    ) -> LoaderConf {
+    ) -> Config {
         let sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
-        LoaderConf {
-            loaderconf_update_links: loader_update_links,
+        Config {
+            update_links: update_links,
             sign_material: sign_material,
             payloads: payloads,
             defuse_update: defuse_update,
@@ -49,13 +49,13 @@ impl LoaderConf {
             jitt: jitt,
         }
     }
-    pub fn new_empty() -> LoaderConf {
+    pub fn new_empty() -> Config {
         let sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
-        LoaderConf {
-            loaderconf_update_links: vec![],
+        Config {
+            update_links: vec![],
             sign_material: sign_material,
             payloads: vec![],
             defuse_update: vec![],
@@ -73,8 +73,8 @@ impl LoaderConf {
         defuse_payload: Vec<Defuse>,
         sleep: u64,
         jitt: u64,
-    ) -> LoaderConf {
-        let mut new_loader = LoaderConf::new_unsigned(
+    ) -> Config {
+        let mut new_loader = Config::new_unsigned(
             loader_update_links,
             payloads,
             defuse_update,
@@ -108,7 +108,7 @@ impl LoaderConf {
 
     pub fn verify_newloader_sign(
         &self,
-        otherloader: &LoaderConf,
+        otherloader: &Config,
     ) -> Result<(), ring::error::Unspecified> {
         let sign_data = otherloader.return_sign_data();
         let peer_public_key = signature::UnparsedPublicKey::new(
@@ -118,10 +118,10 @@ impl LoaderConf {
         peer_public_key.verify(sign_data.as_bytes(), &otherloader.sign_material.sign_bytes)
     }
 
-    pub fn new_fromfile(path_file: &str) -> LoaderConf {
+    pub fn new_fromfile(path_file: &str) -> Config {
         let loader_bytes: Vec<u8> = fs::read(path_file).unwrap();
         let l = std::str::from_utf8(&loader_bytes).unwrap();
-        let loader: LoaderConf = serde_json::from_str(l).unwrap();
+        let loader: Config = serde_json::from_str(l).unwrap();
         loader
     }
 
@@ -133,7 +133,7 @@ impl LoaderConf {
         debug!("{:?}", self);
     }
     pub fn get_loader_without_sign_material(&self) -> String {
-        let mut print_loader: LoaderConf = self.clone();
+        let mut print_loader: Config = self.clone();
         let clean_sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
@@ -168,12 +168,12 @@ impl LoaderConf {
         let digest = sha2_512::chksum(data).unwrap();
         digest.to_hex_lowercase()
     }
-    pub fn is_same_loader_hash(&self, otherloader: &LoaderConf) -> bool {
+    pub fn is_same_loader_hash(&self, otherloader: &Config) -> bool {
         let loader_hash = self.calculate_loader_hash();
         let otherloader_hash = otherloader.calculate_loader_hash();
         loader_hash == otherloader_hash
     }
-    pub fn is_same_loader(&self, otherloader: &LoaderConf) -> bool {
+    pub fn is_same_loader(&self, otherloader: &Config) -> bool {
         let loader_serialized = self.concat_loader_jsondata();
         let otherloader_serialized = otherloader.concat_loader_jsondata();
         loader_serialized == otherloader_serialized
