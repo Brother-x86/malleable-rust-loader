@@ -1,21 +1,19 @@
-//use indexmap::IndexMap;
 use crate::link::Link;
 use crate::link::LinkFetch;
-//use log::debug;
 use log::info;
 use log::warn;
 use serde::{Deserialize, Serialize};
-//use std::collections::BTreeMap;
 
 use crate::config::Config;
 use cryptify::encrypt_string;
 
 use anyhow::bail;
+use std::thread;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum PoolMode {
     ONEBYONE,
-    PARALLEL,
+    TOGETHER,
 }
 //TODO il faut ajouter aussi des modes de choix, pourcentage de liens valides etc...
 //TODO,il faudra rajouter la date de création dans la config pour comparer si plusieurs conf différentes trouvées dans un pool
@@ -30,7 +28,7 @@ impl PoolLinks {
     pub fn update_pool(&self, config: &Config) -> Result<Config, anyhow::Error> {
         match &self.pool_mode {
             PoolMode::ONEBYONE => self.update_links_onebyone(config),
-            PoolMode::PARALLEL => todo!(),
+            PoolMode::TOGETHER => self.update_links_together(config),
         }
     }
 
@@ -46,7 +44,7 @@ impl PoolLinks {
                 &link.get_target()
             );
 
-            let newconf = match link.fetch_config(&config) {
+            let newconf: Config = match link.fetch_config(&config) {
                 Ok(newconf) => newconf,
                 Err(error) => {
                     warn!("{}{}", encrypt_string!("error: "), error);
@@ -76,4 +74,10 @@ impl PoolLinks {
         }
         bail!("{}", encrypt_string!("NOconfigfound"))
     }
+
+    pub fn update_links_together(&self, config: &Config) -> Result<Config, anyhow::Error> {
+        todo!()
+    }
+
+
 }
