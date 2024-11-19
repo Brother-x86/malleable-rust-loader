@@ -272,9 +272,27 @@ impl Config {
                 &pool_name
             );
             match pool_links.update_pool(&self) {
-                Ok(newconf) => return newconf,
+                Ok(newconf) => { 
+                    
+                    if self.is_same_loader(&newconf){
+                        info!(
+                            "{}",
+                            encrypt_string!(
+                                "[+] DECISION: keep the same active CONFIG, and run the payloads"
+                            )
+                        );        
+                    }else{
+                        info!(
+                            "{}",
+                            encrypt_string!(
+                                "[+] DECISION: replace the active CONFIG, and run the payloads"
+                            )
+                        );
+                    }
+                    
+                    return newconf},
                 Err(error) => {
-                    warn!("{}{}", encrypt_string!("error: "), error);
+                    warn!("{}{}", encrypt_string!("[+] Switch to next Pool, reason: "), error);
                     ()
                 },
             };

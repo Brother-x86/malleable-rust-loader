@@ -209,7 +209,7 @@ exec(decoded_script)
                     }),
                 ],
                 pool_mode: PoolMode::ADVANCED(Advanced{
-                    random:0,               // fetch only x random link from pool and ignore the other, (0 not set)
+                    random:3,               // fetch only x random link from pool and ignore the other, (0 not set)
                     max_link_broken:0,      // how many accepted link broken before switch to next pool if no conf found, (0 not set)
                     parallel:true,          // try to fetch every link in the same time, if not its one by one
                     linear:true,            // fetch link in the order or randomized

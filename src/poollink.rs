@@ -2,6 +2,7 @@ use crate::link::Link;
 use crate::link::LinkFetch;
 use log::info;
 use log::warn;
+use log::debug;
 use serde::{Deserialize, Serialize};
 
 use crate::config::Config;
@@ -10,6 +11,7 @@ use cryptify::encrypt_string;
 use anyhow::bail;
 use std::thread;
 
+use rand::seq::SliceRandom;
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -46,6 +48,7 @@ impl PoolLinks {
         }
     }
 
+    //TODO update with date check and remove DECISION message, only print the config number if needed.
     pub fn update_links_simple(&self, config: &Config) -> Result<Config, anyhow::Error> {
         let mut link_nb: i32 = 0;
         for link in &self.pool_links {
@@ -69,6 +72,7 @@ impl PoolLinks {
 
             if config.is_same_loader(&newconf) {
                 info!("{}", encrypt_string!("same config: Yes"));
+                //remove
                 info!(
                     "{}",
                     encrypt_string!(
@@ -103,22 +107,39 @@ impl PoolLinks {
  */
 
     pub fn update_links_advanced(&self, config: &Config, advanced: &Advanced) -> Result<Config, anyhow::Error> {
-        let mut fetch_configs: Vec<Config> = vec![];
-        let pool_link;
+        let mut fetch_configs: Vec<(Config,i32)> = vec![];
+        //let pool_link: Vec<&Link>;
+        let pool_link: Vec<Link>;
+
 
         if advanced.random != 0 {
-            pool_link= todo!(); // TODO random
+            // TODO add advanced.random and remove 3 and test if advance.random < size -> not tested
+            //let sample: Vec<_> = self.pool_links
+            let sample: Vec<Link> = self.pool_links
+            .choose_multiple(&mut rand::thread_rng(), 3)
+            .collect();
+            println!("{:?}",sample);
+            pool_link=sample;
+            //pool_link  // TODO random
         }else if advanced.linear {
-            pool_link= &self.pool_links;
+            pool_link= self.pool_links;
         }else{
-            pool_link=todo!() // TODO not linear -> randomized order, on devrait ptet renommer comme ça.
+            todo!() 
+            //pool_link=todo!() // TODO not linear -> randomized order, on devrait ptet renommer comme ça.
         }
 
         let pool_link_len= pool_link.len();
 
         //TODO: only if parallel...
-        let mut handle_list: Vec<thread::JoinHandle<Config>> = vec![];
+        let mut handle_list: Vec<thread::JoinHandle<(Config,i32)>> = vec![];
         let mut link_nb: i32 = 0;
+
+        if advanced.parallel {
+            info!("[+] fetch all link in parallel")
+        }else{
+            info!("[+] fetch all link one by one")
+        }
+
         for link in pool_link {
             link_nb = link_nb + 1;
             info!(
@@ -130,14 +151,15 @@ impl PoolLinks {
             );
 
             if advanced.parallel{
+                
                 let thread_link=link.clone();
                 let thread_config=config.clone();
-                let handle: thread::JoinHandle<Config> = thread::spawn(move || {
-                    info!("thread begin {}",link_nb);
+                let handle: thread::JoinHandle<(Config,i32)> = thread::spawn(move || {
+                    debug!("thread begin, link: {}",link_nb);
                     //TODO pas de unwrap ici, faire un jolie message de crash
                     let newconfig= thread_link.fetch_config(&thread_config).unwrap();
-                    info!("thread end {}",link_nb);
-                    newconfig
+                    debug!("thread end, link: {}",link_nb);
+                    (newconfig,link_nb)
                 });
                 handle_list.push(handle);
     
@@ -149,56 +171,58 @@ impl PoolLinks {
 
 
         if advanced.parallel {
-            info!("all thread run, wait to join");
-            //let mut handle_nb: i32 = 0;
-    
+            info!("[+] all thread run, wait  join");
+
             for handle in handle_list {
                 //TODO ptet ici pas de unwrap oupsi.
-                let newconfig= handle.join().unwrap();
-                fetch_configs.push(newconfig);
+                match handle.join() {
+                    Ok(conf_int) => fetch_configs.push(conf_int),
+                    Err(error) => warn!("{}{:?}", encrypt_string!("Thread link fail to fetch: "), error)
+                    } ;
+                
             }
     
-        }else {
-            // TODO , think if something to do for not paralle
         }
 
         // ici: config_list est OK
-
-
-
+        
+        //TODO max_link_broken -> en fonction de la taille de config_list, ca donne combien de lien broken ?
+        // pour ca il faudrait checker pool_link_len 
 
         self.choose_config_from_config_list(config,advanced,fetch_configs)
     }
 
-    /*
+    pub fn choose_config_from_config_list(&self, config: &Config, _advanced: &Advanced, config_list:Vec<(Config,i32)> ) -> Result<Config, anyhow::Error> {
 
-    use std::{collections::HashSet, hash::Hash};
-
-fn my_eq<T>(a: &[T], b: &[T]) -> bool
-where
-    T: Eq + Hash,
-{
-    let a: HashSet<_> = a.iter().collect();
-    let b: HashSet<_> = b.iter().collect();
-
-    a == b
-
-     */
-
-    // 3 choice of return:
-    // return a new config
-    // return the already used config (in config)
-    // return error : to indicate to check the next pool
-    pub fn choose_config_from_config_list(&self, config: &Config, advanced: &Advanced, config_list:Vec<Config> ) -> Result<Config, anyhow::Error> {
-        /*
-        let empty :  Vec<Config>=vec![];
-        
-        if config_list == empty {
-
+        if config_list.len() == 0 {
+            bail!("{}", encrypt_string!("No VALID config found in Pool: empty list"))
         }
- */
-        bail!("{}", encrypt_string!("No VALID config found in Pool"))
+        let mut config_choosen : Config= config_list[0].0.clone();
+        let mut nb_choosen : i32 = config_list[0].1.clone();
+            
+        for (conf,i) in config_list{
+            if config_choosen.date <= conf.date {
+                if conf.is_same_loader(&config_choosen){
+                    debug!("Config nb {} is equal to {}",nb_choosen,i)
+                }else{
+                config_choosen = conf;
+                nb_choosen=i;
+                }
+            }
+        };
 
+        if config.date <= config_choosen.date {
+            info!(
+                "{}{}",
+                encrypt_string!(
+                    "[+] choose CONFIG fetch from link: "
+                ),
+                nb_choosen
+            );        
+Ok(config_choosen)
+        } else {
+            bail!("{}", encrypt_string!("No VALID config found in Pool: running config.date is superior to all config"))
+        }
     }
 
 
