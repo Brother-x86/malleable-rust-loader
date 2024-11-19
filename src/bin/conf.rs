@@ -178,6 +178,14 @@ exec(decoded_script)
             (
                 "kaboum.xyz first links".to_string(),
                 PoolLinks {
+                    pool_mode: PoolMode::ADVANCED(Advanced {
+                        random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
+                        max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+                        parallel: true, // try to fetch every link in the same time, if not its one by one
+                        linear: true,   // fetch link in the order or randomized
+                        stop_same: false, // stop if found the same conf -> not for parallel
+                        stop_new: false, // stop if found a new conf -> not for parallel
+                    }),
                     pool_links: vec![
                         Link::HTTP(HTTPLink {
                             url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
@@ -210,14 +218,6 @@ exec(decoded_script)
                             sleep: 0,
                         }),
                     ],
-                    pool_mode: PoolMode::ADVANCED(Advanced {
-                        random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
-                        max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
-                        parallel: true, // try to fetch every link in the same time, if not its one by one
-                        linear: true,   // fetch link in the order or randomized
-                        stop_same: false, // stop if found the same conf -> not for parallel
-                        stop_new: false, // stop if found a new conf -> not for parallel
-                    }),
                 },
             ),
         ),
@@ -226,13 +226,13 @@ exec(decoded_script)
             (
                 "backup 1".to_string(),
                 PoolLinks {
+                    pool_mode: PoolMode::SIMPLE,
                     pool_links: vec![Link::HTTP(HTTPLink {
                         url: String::from("https://kaboum.xyz/artdonjon/backup1.html"),
                         dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
                         jitt: 0,
                         sleep: 0,
                     })],
-                    pool_mode: PoolMode::SIMPLE,
                 },
             ),
         ),
@@ -241,13 +241,13 @@ exec(decoded_script)
             (
                 "backup 2".to_string(),
                 PoolLinks {
+                    pool_mode: PoolMode::SIMPLE,
                     pool_links: vec![Link::HTTP(HTTPLink {
                         url: String::from("https://kaboum.xyz/artdonjon/backup2.html"),
                         dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
                         jitt: 0,
                         sleep: 0,
                     })],
-                    pool_mode: PoolMode::SIMPLE,
                 },
             ),
         ),

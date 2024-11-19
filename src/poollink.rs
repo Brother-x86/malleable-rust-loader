@@ -31,8 +31,8 @@ pub enum PoolMode {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PoolLinks {
-    pub pool_links: Vec<Link>,
     pub pool_mode: PoolMode,
+    pub pool_links: Vec<Link>,
 }
 
 impl PoolLinks {
@@ -210,7 +210,7 @@ impl PoolLinks {
         // place the first config as choosen config
         let mut config_choosen: Config = config_list[0].0.clone();
         let mut nb_choosen: i32 = config_list[0].1.clone();
-        info!("First choosen config set to {}", nb_choosen);
+        info!("First choosen config set to link: {}", nb_choosen);
 
         // if more config, compare date to choosen one
         if config_list.len() >= 2 {
