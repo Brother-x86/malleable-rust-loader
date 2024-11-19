@@ -89,7 +89,33 @@ impl PoolLinks {
         bail!("{}", encrypt_string!("No config found"))
     }
 
+    /*
+    pub struct Advanced {
+    pub random:u64,             // fetch only x random link from pool and ignore the other, (0 not set)
+    pub max_link_broken:u64,    // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+    pub parallel:bool,          // try to fetch every link in the same time, if not its one by one
+    pub linear:bool,            // fetch link in the order or randomized
+    pub stop_same:bool,         // stop if found the same conf -> not for parallel_fetch
+    pub stop_new:bool,          // stop if found a new conf -> not for parallel_fetch
+}
+ */
+
+    pub fn update_links_advanced(&self, config: &Config, advanced:Advanced) -> Result<Config, anyhow::Error> {
+        let mut fetch_configs: Vec<Config> = vec![];
+        let pool_link;
+
+        if advanced.random != 0 {
+            pool_link= todo!(); // TODO random
+        }else if advanced.linear {
+            pool_link= &self.pool_links;
+        }else{
+            pool_link=todo!() // TODO not linear -> randomized order, on devrait ptet renommer comme ça.
+        }
+
+        todo!()
+    }
     // doc: https://nickymeuleman.netlify.app/blog/multithreading-rust
+    /* 
     pub fn update_links_advanced(&self, config: &Config) -> Result<Config, anyhow::Error> {
         let mut handle_list: Vec<thread::JoinHandle<Config>> = vec![];
         let pool_link= &self.pool_links;
@@ -136,6 +162,7 @@ impl PoolLinks {
         info!("CRASH now");
         todo!()
     }
+    */
 }
 
 //use std::time::Duration;
