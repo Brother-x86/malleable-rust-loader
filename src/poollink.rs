@@ -10,10 +10,24 @@ use cryptify::encrypt_string;
 use anyhow::bail;
 use std::thread;
 
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Advanced {
+    pub random:u64,             // fetch only x random link from pool and ignore the other, (0 not set)
+    pub max_link_broken:u64,    // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+    pub parallel:bool,          // try to fetch every link in the same time, if not its one by one
+    pub linear:bool,            // fetch link in the order or randomized
+    pub stop_same:bool,         // stop if found the same conf -> not for parallel_fetch
+    pub stop_new:bool,          // stop if found a new conf -> not for parallel_fetch
+}
+
+
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum PoolMode {
-    ONEBYONE,
-    TOGETHER,
+    SIMPLE,
+    ADVANCED(Advanced),
 }
 //TODO il faut ajouter aussi des modes de choix, pourcentage de liens valides etc...
 //TODO,il faudra rajouter la date de création dans la config pour comparer si plusieurs conf différentes trouvées dans un pool
@@ -27,12 +41,12 @@ pub struct PoolLinks {
 impl PoolLinks {
     pub fn update_pool(&self, config: &Config) -> Result<Config, anyhow::Error> {
         match &self.pool_mode {
-            PoolMode::ONEBYONE => self.update_links_onebyone(config),
-            PoolMode::TOGETHER => self.update_links_together(config),
+            PoolMode::SIMPLE => self.update_links_simple(config),
+            PoolMode::ADVANCED(_) => self.update_links_advanced(config),
         }
     }
 
-    pub fn update_links_onebyone(&self, config: &Config) -> Result<Config, anyhow::Error> {
+    pub fn update_links_simple(&self, config: &Config) -> Result<Config, anyhow::Error> {
         let mut link_nb: i32 = 0;
         for link in &self.pool_links {
             link_nb = link_nb + 1;
@@ -76,7 +90,7 @@ impl PoolLinks {
     }
 
     // doc: https://nickymeuleman.netlify.app/blog/multithreading-rust
-    pub fn update_links_together(&self, config: &Config) -> Result<Config, anyhow::Error> {
+    pub fn update_links_advanced(&self, config: &Config) -> Result<Config, anyhow::Error> {
         let mut handle_list: Vec<thread::JoinHandle<Config>> = vec![];
         let pool_link= &self.pool_links;
         let pool_link_len= pool_link.len();
