@@ -174,73 +174,82 @@ exec(decoded_script)
 
     let solar_distance = BTreeMap::from([
         (
-            "1 first".to_string(),
-            PoolLinks {
-                pool_links: vec![
-                    Link::HTTP(HTTPLink {
-                        url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
+            1,
+            (
+                "kaboum.xyz first links".to_string(),
+                PoolLinks {
+                    pool_links: vec![
+                        Link::HTTP(HTTPLink {
+                            url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
+                            dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                            jitt: 0,
+                            sleep: 0,
+                        }),
+                        Link::HTTP(HTTPLink {
+                            url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
+                            dataoperation: vec![DataOperation::STEGANO],
+                            jitt: 0,
+                            sleep: 0,
+                        }),
+                        Link::HTTP(HTTPLink {
+                            url: String::from("https://kaboum.xyz/artdonjon/troll4.png"),
+                            dataoperation: vec![DataOperation::STEGANO],
+                            jitt: 0,
+                            sleep: 0,
+                        }),
+                        Link::HTTP(HTTPLink {
+                            url: String::from("https://kaboum.xyz/artdonjon/troll1.png"),
+                            dataoperation: vec![DataOperation::STEGANO],
+                            jitt: 0,
+                            sleep: 0,
+                        }),
+                        Link::HTTP(HTTPLink {
+                            url: String::from("https://kaboum.xyz/artdonjon/troll2.png"),
+                            dataoperation: vec![DataOperation::STEGANO],
+                            jitt: 0,
+                            sleep: 0,
+                        }),
+                    ],
+                    pool_mode: PoolMode::ADVANCED(Advanced {
+                        random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
+                        max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+                        parallel: true, // try to fetch every link in the same time, if not its one by one
+                        linear: true,   // fetch link in the order or randomized
+                        stop_same: false, // stop if found the same conf -> not for parallel
+                        stop_new: false, // stop if found a new conf -> not for parallel
+                    }),
+                },
+            ),
+        ),
+        (
+            2,
+            (
+                "backup 1".to_string(),
+                PoolLinks {
+                    pool_links: vec![Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/backup1.html"),
                         dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
                         jitt: 0,
                         sleep: 0,
-                    }),
-                    Link::HTTP(HTTPLink {
-                        url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
-                        dataoperation: vec![DataOperation::STEGANO],
-                        jitt: 0,
-                        sleep: 0,
-                    }),
-                    Link::HTTP(HTTPLink {
-                        url: String::from("https://kaboum.xyz/artdonjon/troll4.png"),
-                        dataoperation: vec![DataOperation::STEGANO],
-                        jitt: 0,
-                        sleep: 0,
-                    }),
-                    Link::HTTP(HTTPLink {
-                        url: String::from("https://kaboum.xyz/artdonjon/troll1.png"),
-                        dataoperation: vec![DataOperation::STEGANO],
-                        jitt: 0,
-                        sleep: 0,
-                    }),
-                    Link::HTTP(HTTPLink {
-                        url: String::from("https://kaboum.xyz/artdonjon/troll2.png"),
-                        dataoperation: vec![DataOperation::STEGANO],
-                        jitt: 0,
-                        sleep: 0,
-                    }),
-                ],
-                pool_mode: PoolMode::ADVANCED(Advanced {
-                    random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
-                    max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
-                    parallel: true, // try to fetch every link in the same time, if not its one by one
-                    linear: true,   // fetch link in the order or randomized
-                    stop_same: false, // stop if found the same conf -> not for parallel
-                    stop_new: false, // stop if found a new conf -> not for parallel
-                }),
-            },
+                    })],
+                    pool_mode: PoolMode::SIMPLE,
+                },
+            ),
         ),
         (
-            "2 backup".to_string(),
-            PoolLinks {
-                pool_links: vec![Link::HTTP(HTTPLink {
-                    url: String::from("https://kaboum.xyz/artdonjon/backup1.html"),
-                    dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
-                    jitt: 0,
-                    sleep: 0,
-                })],
-                pool_mode: PoolMode::SIMPLE,
-            },
-        ),
-        (
-            "3 backup".to_string(),
-            PoolLinks {
-                pool_links: vec![Link::HTTP(HTTPLink {
-                    url: String::from("https://kaboum.xyz/artdonjon/backup2.html"),
-                    dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
-                    jitt: 0,
-                    sleep: 0,
-                })],
-                pool_mode: PoolMode::SIMPLE,
-            },
+            3,
+            (
+                "backup 2".to_string(),
+                PoolLinks {
+                    pool_links: vec![Link::HTTP(HTTPLink {
+                        url: String::from("https://kaboum.xyz/artdonjon/backup2.html"),
+                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                        jitt: 0,
+                        sleep: 0,
+                    })],
+                    pool_mode: PoolMode::SIMPLE,
+                },
+            ),
         ),
     ]);
 

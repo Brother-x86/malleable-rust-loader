@@ -29,7 +29,7 @@ pub struct SignMaterial {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-    pub update_links: BTreeMap<String, PoolLinks>,
+    pub update_links: BTreeMap<u64, (String, PoolLinks)>,
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
@@ -41,7 +41,7 @@ pub struct Config {
 #[allow(dead_code)]
 impl Config {
     pub fn new_unsigned(
-        update_links: BTreeMap<String, PoolLinks>,
+        update_links: BTreeMap<u64, (String, PoolLinks)>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
@@ -82,7 +82,7 @@ impl Config {
 
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
-        update_links: BTreeMap<String, PoolLinks>,
+        update_links: BTreeMap<u64, (String, PoolLinks)>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
@@ -261,7 +261,7 @@ impl Config {
     // try to fetch a new config, if no config are found return self. if no config is return from pool, need to try the next pool
     pub fn update_config(&self) -> Config {
         let mut pool_nb: i32 = 0;
-        for (pool_name, pool_links) in &self.update_links {
+        for (_pool_nb, (pool_name, pool_links)) in &self.update_links {
             pool_nb = pool_nb + 1;
             info!(
                 "{}/{}{}{}",

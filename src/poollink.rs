@@ -71,7 +71,10 @@ impl PoolLinks {
                 info! {"{}",encrypt_string!("config date : TOO OLD")};
             }
         }
-        bail!("{}", encrypt_string!("No VALID fresh new config found in Pool"))
+        bail!(
+            "{}",
+            encrypt_string!("No VALID fresh new config found in Pool")
+        )
     }
 
     /*
@@ -247,5 +250,3 @@ impl PoolLinks {
         }
     }
 }
-
-//use std::time::Duration;
