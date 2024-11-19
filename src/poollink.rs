@@ -42,7 +42,7 @@ impl PoolLinks {
     pub fn update_pool(&self, config: &Config) -> Result<Config, anyhow::Error> {
         match &self.pool_mode {
             PoolMode::SIMPLE => self.update_links_simple(config),
-            PoolMode::ADVANCED(_) => self.update_links_advanced(config),
+            PoolMode::ADVANCED(advanced) => self.update_links_advanced(config,advanced),
         }
     }
 
@@ -75,7 +75,9 @@ impl PoolLinks {
                         "[+] DECISION: keep the same active LOADER, and run the payloads"
                     )
                 );
-                bail!("{}", encrypt_string!("Found same loader"))
+                //TODO verif cette ligne était fausse je pense:
+                //bail!("{}", encrypt_string!("Found same loader"))
+                return Ok(newconf);
             }
             warn!("{}", encrypt_string!("same config: No"));
             info!(
@@ -86,7 +88,7 @@ impl PoolLinks {
             );
             return Ok(newconf);
         }
-        bail!("{}", encrypt_string!("No config found"))
+        bail!("{}", encrypt_string!("No VALID config found in Pool"))
     }
 
     /*
@@ -100,7 +102,7 @@ impl PoolLinks {
 }
  */
 
-    pub fn update_links_advanced(&self, config: &Config, advanced:Advanced) -> Result<Config, anyhow::Error> {
+    pub fn update_links_advanced(&self, config: &Config, advanced: &Advanced) -> Result<Config, anyhow::Error> {
         let mut fetch_configs: Vec<Config> = vec![];
         let pool_link;
 
@@ -112,8 +114,94 @@ impl PoolLinks {
             pool_link=todo!() // TODO not linear -> randomized order, on devrait ptet renommer comme ça.
         }
 
-        todo!()
+        let pool_link_len= pool_link.len();
+
+        //TODO: only if parallel...
+        let mut handle_list: Vec<thread::JoinHandle<Config>> = vec![];
+        let mut link_nb: i32 = 0;
+        for link in pool_link {
+            link_nb = link_nb + 1;
+            info!(
+                "{}/{}{}{:?}",
+                link_nb,
+                &pool_link_len,
+                encrypt_string!(" Link: "),
+                &link.get_target()
+            );
+
+            if advanced.parallel{
+                let thread_link=link.clone();
+                let thread_config=config.clone();
+                let handle: thread::JoinHandle<Config> = thread::spawn(move || {
+                    info!("thread begin {}",link_nb);
+                    //TODO pas de unwrap ici, faire un jolie message de crash
+                    let newconfig= thread_link.fetch_config(&thread_config).unwrap();
+                    info!("thread end {}",link_nb);
+                    newconfig
+                });
+                handle_list.push(handle);
+    
+            }else{
+                // TODO deal with stop_same and stop_new (avec des return)
+                todo!()
+            }
+        }
+
+
+        if advanced.parallel {
+            info!("all thread run, wait to join");
+            //let mut handle_nb: i32 = 0;
+    
+            for handle in handle_list {
+                //TODO ptet ici pas de unwrap oupsi.
+                let newconfig= handle.join().unwrap();
+                fetch_configs.push(newconfig);
+            }
+    
+        }else {
+            // TODO , think if something to do for not paralle
+        }
+
+        // ici: config_list est OK
+
+
+
+
+        self.choose_config_from_config_list(config,advanced,fetch_configs)
     }
+
+    /*
+
+    use std::{collections::HashSet, hash::Hash};
+
+fn my_eq<T>(a: &[T], b: &[T]) -> bool
+where
+    T: Eq + Hash,
+{
+    let a: HashSet<_> = a.iter().collect();
+    let b: HashSet<_> = b.iter().collect();
+
+    a == b
+
+     */
+
+    // 3 choice of return:
+    // return a new config
+    // return the already used config (in config)
+    // return error : to indicate to check the next pool
+    pub fn choose_config_from_config_list(&self, config: &Config, advanced: &Advanced, config_list:Vec<Config> ) -> Result<Config, anyhow::Error> {
+        /*
+        let empty :  Vec<Config>=vec![];
+        
+        if config_list == empty {
+
+        }
+ */
+        bail!("{}", encrypt_string!("No VALID config found in Pool"))
+
+    }
+
+
     // doc: https://nickymeuleman.netlify.app/blog/multithreading-rust
     /* 
     pub fn update_links_advanced(&self, config: &Config) -> Result<Config, anyhow::Error> {

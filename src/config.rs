@@ -12,6 +12,7 @@ use std::{thread, time};
 
 use log::debug;
 use log::info;
+use log::warn;
 
 use cryptify::encrypt_string;
 
@@ -272,9 +273,13 @@ impl Config {
             );
             match pool_links.update_pool(&self) {
                 Ok(newconf) => return newconf,
-                _ => break,
+                Err(error) => {
+                    warn!("{}{}", encrypt_string!("error: "), error);
+                    ()
+                },
             };
         }
+
         self.to_owned()
     }
 }
