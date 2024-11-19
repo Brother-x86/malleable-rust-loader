@@ -209,19 +209,18 @@ impl PoolLinks {
         // place the first config as choosen config
         let mut config_choosen: Config = config_list[0].0.clone();
         let mut nb_choosen: i32 = config_list[0].1.clone();
-        debug!("set choosen config to {}", nb_choosen);
+        info!("First choosen config set to {}", nb_choosen);
 
         // if more config, compare date to choosen one
         if config_list.len() >= 2 {
             for (newconf, i) in config_list[1..].to_vec() {
                 if config_choosen.date <= newconf.date {
-                    info! {"{}{}",encrypt_string!("config date : OK, link: "),i};
                     if newconf.is_same_loader(&config_choosen) {
-                        debug!("Config nb {} is equal to {}", nb_choosen, i)
+                        info! {"{}{}",encrypt_string!("config date : OK, same config of the choosen, link: "),i};
                     } else {
                         config_choosen = newconf;
                         nb_choosen = i;
-                        debug!("NEW choosen config! {}", nb_choosen)
+                        info! {"{}{}",encrypt_string!("config date : OK, NEW choosen config, link: "),nb_choosen};
                     }
                 } else {
                     info! {"{}{}",encrypt_string!("config date : TOO OLD, link: "),i};
@@ -239,7 +238,7 @@ impl PoolLinks {
             bail!(
                 "{}",
                 encrypt_string!(
-                    "No VALID config found in Pool: running config.date is superior to all config"
+                    "No VALID config found in Pool: actual running config.date is superior to all config"
                 )
             )
         }

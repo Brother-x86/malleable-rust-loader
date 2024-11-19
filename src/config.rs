@@ -273,7 +273,7 @@ impl Config {
             match pool_links.update_pool(&self) {
                 Ok(newconf) => {
                     if self.is_same_loader(&newconf) {
-                        info!("{}", encrypt_string!("same config: yes"));
+                        info!("{}", encrypt_string!("same active config: yes"));
                         info!(
                             "{}",
                             encrypt_string!(
