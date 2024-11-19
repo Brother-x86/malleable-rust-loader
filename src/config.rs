@@ -294,16 +294,16 @@ impl Config {
                 Err(error) => {
                     warn!(
                         "{}{}",
-                        encrypt_string!("[+] Switch to next Pool, reason: "),
+                        encrypt_string!("[+] Switch to next PoolLinks, reason: "),
                         error
                     );
                     ()
                 }
             };
         }
-        info!(
+        warn!(
             "{}",
-            encrypt_string!("[+] All pool fetch without finding a new one")
+            encrypt_string!("[+] All PoolLinks fetch without finding a new fresh VALID config")
         );
         info!(
             "{}",

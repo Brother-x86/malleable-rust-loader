@@ -28,8 +28,6 @@ pub enum PoolMode {
     SIMPLE,
     ADVANCED(Advanced),
 }
-//TODO il faut ajouter aussi des modes de choix, pourcentage de liens valides etc...
-//TODO,il faudra rajouter la date de création dans la config pour comparer si plusieurs conf différentes trouvées dans un pool
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PoolLinks {
@@ -73,7 +71,7 @@ impl PoolLinks {
                 info! {"{}",encrypt_string!("config date : TOO OLD")};
             }
         }
-        bail!("{}", encrypt_string!("No VALID new config found in Pool"))
+        bail!("{}", encrypt_string!("No VALID fresh new config found in Pool"))
     }
 
     /*
@@ -235,6 +233,11 @@ impl PoolLinks {
             );
             Ok(config_choosen)
         } else {
+            info!(
+                "{}{}",
+                encrypt_string!("[+] all conf are older than actual config: "),
+                config.date
+            );
             bail!(
                 "{}",
                 encrypt_string!(
