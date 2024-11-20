@@ -185,6 +185,7 @@ exec(decoded_script)
                         linear: true,   // fetch link in the order or randomized
                         stop_same: false, // stop if found the same conf -> not for parallel
                         stop_new: false, // stop if found a new conf -> not for parallel
+                        accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
                     }),
                     pool_links: vec![
                         Link::HTTP(HTTPLink {

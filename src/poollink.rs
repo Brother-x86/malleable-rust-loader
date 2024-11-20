@@ -21,6 +21,7 @@ pub struct Advanced {
     pub linear: bool,         // fetch link in the order or randomized
     pub stop_same: bool,      // stop if found the same conf -> not for parallel_fetch
     pub stop_new: bool,       // stop if found a new conf -> not for parallel_fetch
+    pub accept_old: bool, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -45,6 +46,20 @@ impl PoolLinks {
 
     //TODO update with date check and remove DECISION message, only print the config number if needed.
     pub fn update_links_simple(&self, config: &Config) -> Result<Config, anyhow::Error> {
+        let advanced = Advanced {
+            random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
+            max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+            parallel: false,    // try to fetch every link in the same time, if not its one by one
+            linear: true,       // fetch link in the order or randomized
+            stop_same: true,    // stop if found the same conf -> not for parallel
+            stop_new: true,     // stop if found a new conf -> not for parallel
+            accept_old: false,  // stop if found a new conf -> not for parallel
+        };
+
+        self.update_links_advanced(config, &advanced)
+        // NOW call the
+
+        /*
         let mut link_nb: i32 = 0;
         for link in &self.pool_links {
             link_nb = link_nb + 1;
@@ -63,7 +78,7 @@ impl PoolLinks {
                     continue;
                 }
             };
-            //nex time its here
+            //nex time its here //PLus besoin ///FIX
             if config.date <= newconf.date {
                 info! {"{}",encrypt_string!("config date : OK")};
                 return Ok(newconf);
@@ -75,18 +90,8 @@ impl PoolLinks {
             "{}",
             encrypt_string!("No VALID fresh new config found in Pool")
         )
+        */
     }
-
-    /*
-        pub struct Advanced {
-        pub random:u64,             // fetch only x random link from pool and ignore the other, (0 not set)
-        pub max_link_broken:u64,    // how many accepted link broken before switch to next pool if no conf found, (0 not set)
-        pub parallel:bool,          // try to fetch every link in the same time, if not its one by one
-        pub linear:bool,            // fetch link in the order or randomized
-        pub stop_same:bool,         // stop if found the same conf -> not for parallel_fetch
-        pub stop_new:bool,          // stop if found a new conf -> not for parallel_fetch
-    }
-     */
 
     pub fn update_links_advanced(
         &self,
@@ -151,11 +156,13 @@ impl PoolLinks {
             if advanced.parallel {
                 let thread_link = link.clone();
                 let thread_config = config.clone();
+                let thread_advanced = advanced.clone();
                 let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
                     thread::spawn(move || {
                         debug!("thread begin, link: {}", link_nb);
                         //TODO pas de unwrap ici, faire un jolie message de crash
-                        let newconfig: Config = thread_link.fetch_config(&thread_config)?;
+                        let newconfig: Config =
+                            thread_link.fetch_config(&thread_config, thread_advanced, link_nb)?;
                         debug!("thread end, link: {}", link_nb);
                         Ok((newconfig, link_nb))
                     });
@@ -172,16 +179,8 @@ impl PoolLinks {
             for handle in handle_list {
                 match handle.join() {
                     Ok(Ok(conf_i)) => fetch_configs.push(conf_i),
-                    Ok(Err(error)) => warn!(
-                        "{}{:?}",
-                        encrypt_string!("Thread link fail to fetch: "),
-                        error
-                    ),
-                    Err(error) => warn!(
-                        "{}{:?}",
-                        encrypt_string!("Thread link fail to fetch: "),
-                        error
-                    ),
+                    Ok(Err(error)) => warn!("{}{:?}", encrypt_string!("Thread failed: "), error),
+                    Err(error) => warn!("{}{:?}", encrypt_string!("Thread failed: "), error),
                 };
             }
             info!(
@@ -208,44 +207,49 @@ impl PoolLinks {
             )
         }
         // place the first config as choosen config
+        info!(
+            "{}",
+            encrypt_string!("[+] Begin to choose the config to return from pool")
+        );
+
         let mut config_choosen: Config = config_list[0].0.clone();
         let mut nb_choosen: i32 = config_list[0].1.clone();
-        info!("First choosen config set to link: {}", nb_choosen);
+        debug!("initial choosen config, link: {}", nb_choosen);
 
         // if more config, compare date to choosen one
         if config_list.len() >= 2 {
             for (newconf, i) in config_list[1..].to_vec() {
                 if config_choosen.date <= newconf.date {
                     if newconf.is_same_loader(&config_choosen) {
-                        info! {"{}{}",encrypt_string!("config date : OK, same config of the choosen, link: "),i};
+                        debug! {"{}{}",encrypt_string!("config date : OK, same config as choosen, link "),i};
                     } else {
                         config_choosen = newconf;
                         nb_choosen = i;
-                        info! {"{}{}",encrypt_string!("config date : OK, NEW choosen config, link: "),nb_choosen};
+                        debug! {"{}{}",encrypt_string!("config date : OK, NEW choosen config, link "),nb_choosen};
                     }
                 } else {
-                    info! {"{}{}",encrypt_string!("config date : TOO OLD, link: "),i};
+                    debug! {"{}{}",encrypt_string!("config date : TOO OLD, link "),i};
                 }
             }
         }
         if config.date <= config_choosen.date {
             info!(
                 "{}{}",
-                encrypt_string!("[+] choose CONFIG fetch from link: "),
+                encrypt_string!("[+] choose config of link "),
                 nb_choosen
             );
             Ok(config_choosen)
         } else {
             info!(
                 "{}{}",
-                encrypt_string!("[+] all conf are older than actual config: "),
+                encrypt_string!("[+] all conf are older than actual config date: "),
                 config.date
             );
             bail!(
-                "{}",
+                "{}{}",
                 encrypt_string!(
-                    "No VALID config found in Pool: actual running config.date is superior to all config"
-                )
+                    "No VALID config found in Pool: actual running config.date is superior to all config: "
+                ), config.date
             )
         }
     }
