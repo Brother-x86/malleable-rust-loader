@@ -27,41 +27,15 @@ impl Link {
     pub fn print_link_compact(&self) {
         info!("{:?}", self);
     }
-    /*
-    pub fn fetch_config(&self, config: &Config, advanced:Advanced,link_nb:i32) -> Result<Config, anyhow::Error> {
-        let result = self.fetch_data();
-        let data = match result {
-            Ok(data) => data,
-            Err(error) => bail!("{}{}{}{}", encrypt_string!("link "),link_nb,encrypt_string!(" fetch_data() error: "), error),
-        };
-        debug!("{}", encrypt_string!("deserialized data"));
-        let newconfig: Config = match serde_json::from_slice(&data) {
-            Ok(newconfig) => newconfig,
-            //Err(error) => bail!("{}{}", encrypt_string!("deserialized data fail: "), error),
-            Err(error) => bail!("{}{}{}{}", encrypt_string!("link "),link_nb,encrypt_string!(" deserialized data error: "), error),
-
-        };
-        match config.verify_newloader_sign(&newconfig) {
-            Ok(()) => {
-                info!("{}", encrypt_string!("config signature: VERIFIED"));
-                Ok(newconfig)
-            }
-            _unspecified => bail!("{}", encrypt_string!("config signature: verify FAIL")),
-            //            Err(error) => bail!("{}{}{}{}", encrypt_string!("link "),link_nb,encrypt_string!(" deserialized data error: "), error),
-
-        }
-        todo!();
-
-     */
 
     pub fn fetch_config(
         &self,
         config: &Config,
-        advanced: Advanced,
+        advanced: &Advanced,
         link_nb: i32,
     ) -> Result<Config, anyhow::Error> {
         let result = self.fetch_data();
-        let data = match result {
+        let data: Vec<u8> = match result {
             Ok(data) => data,
             Err(error) => bail!(
                 "{}{}{}{}",
@@ -83,29 +57,8 @@ impl Link {
                 error
             ),
         };
-        /*
         match config.verify_newloader_sign(&newconfig) {
-            Ok(()) => {
-                info!(
-                    "{}{}{}",
-                    encrypt_string!("link "),
-                    link_nb,
-                    encrypt_string!(" config signature: VERIFIED")
-                );
-                Ok(newconfig)
-            }
-            _unspecified => //bail!("{}", encrypt_string!("config signature: verify FAIL")),
-            bail!(
-                "{}{}{}",
-                encrypt_string!("link "),
-                link_nb,
-                encrypt_string!(" config signature: verify FAIL")
-            )
-        } */
-        match config.verify_newloader_sign(&newconfig) {
-            Ok(()) => {
-                ()
-            }
+            Ok(()) => (),
             _unspecified =>
             //bail!("{}", encrypt_string!("config signature: verify FAIL")),
             {
@@ -117,7 +70,6 @@ impl Link {
                 )
             }
         }
-
         if advanced.accept_old == false {
             if config.date > newconfig.date {
                 bail!(

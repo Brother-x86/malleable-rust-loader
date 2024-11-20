@@ -53,7 +53,7 @@ impl PoolLinks {
             linear: true,       // fetch link in the order or randomized
             stop_same: true,    // stop if found the same conf -> not for parallel
             stop_new: true,     // stop if found a new conf -> not for parallel
-            accept_old: false,  // stop if found a new conf -> not for parallel
+            accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
         };
 
         self.update_links_advanced(config, &advanced)
@@ -98,13 +98,10 @@ impl PoolLinks {
         config: &Config,
         advanced: &Advanced,
     ) -> Result<Config, anyhow::Error> {
-        let mut fetch_configs: Vec<(Config, i32)> = vec![];
-        //let pool_link: Vec<&Link>;
         let pool_link: Vec<Link>;
 
+        // create pool_links
         if advanced.random != 0 {
-            // TODO add advanced.random and remove 3 and test if advance.random < size -> not tested
-            //let sample: Vec<_> = self.pool_links
             info!(
                 "{}{}/{}",
                 encrypt_string!("[+] randomly choose only "),
@@ -123,7 +120,6 @@ impl PoolLinks {
                 .cloned()
                 .collect();
             pool_link = sample;
-            //pool_link  // TODO random
         } else if advanced.linear {
             pool_link = self.pool_links.clone();
         } else {
@@ -132,28 +128,24 @@ impl PoolLinks {
         }
 
         let pool_link_len: usize = pool_link.len();
-
-        //TODO: only needed if parallel.
-        let mut handle_list: Vec<thread::JoinHandle<Result<(Config, i32), anyhow::Error>>> = vec![];
         let mut link_nb: i32 = 0;
 
+        // fetch pool_links and choose a VALID config
         if advanced.parallel {
-            info!("[+] fetch all link in parallel")
-        } else {
-            info!("[+] fetch all link one by one")
-        }
-
-        for link in pool_link {
-            link_nb = link_nb + 1;
-            info!(
-                "{}/{}{}{:?}",
-                link_nb,
-                &pool_link_len,
-                encrypt_string!(" Link: "),
-                &link.get_target()
-            );
-
-            if advanced.parallel {
+            info!("[+] fetch all link in parallel");
+            let mut handle_list: Vec<thread::JoinHandle<Result<(Config, i32), anyhow::Error>>> =
+                vec![];
+            let mut fetch_configs: Vec<(Config, i32)> = vec![];
+            for link in pool_link {
+                link_nb = link_nb + 1;
+                info!(
+                    "{}/{}{}{:?}",
+                    link_nb,
+                    &pool_link_len,
+                    encrypt_string!(" Link: "),
+                    &link.get_target()
+                );
+                //parallel
                 let thread_link = link.clone();
                 let thread_config = config.clone();
                 let thread_advanced = advanced.clone();
@@ -162,18 +154,15 @@ impl PoolLinks {
                         debug!("thread begin, link: {}", link_nb);
                         //TODO pas de unwrap ici, faire un jolie message de crash
                         let newconfig: Config =
-                            thread_link.fetch_config(&thread_config, thread_advanced, link_nb)?;
+                            thread_link.fetch_config(&thread_config, &thread_advanced, link_nb)?;
                         debug!("thread end, link: {}", link_nb);
                         Ok((newconfig, link_nb))
                     });
                 handle_list.push(handle);
-            } else {
-                // TODO deal with stop_same and stop_new (avec des return)
-                todo!()
+                //not parallel
             }
-        }
 
-        if advanced.parallel {
+            //only for parallel
             info!("[+] all thread run to fetch a config, wait them finish to join");
 
             for handle in handle_list {
@@ -188,10 +177,52 @@ impl PoolLinks {
                 fetch_configs.len(),
                 pool_link_len
             );
-        }
+            //TODO max_link_broken -> en fonction de la taille de config_list, ca donne combien de lien broken ?  , pour ca il faudrait checker pool_link_len
 
-        //TODO max_link_broken -> en fonction de la taille de config_list, ca donne combien de lien broken ?  , pour ca il faudrait checker pool_link_len
-        self.choose_config_from_config_list(config, advanced, fetch_configs)
+            self.choose_config_from_config_list(config, advanced, fetch_configs)
+        } else {
+            info!("[+] fetch all link one by one");
+            //TODO max_link_broken
+            //TODO stop_same + stop_new -> avec une fetch_configs
+            //let mut fetch_configs: Vec<(Config, i32)> = vec![];
+            for link in pool_link {
+                link_nb = link_nb + 1;
+                info!(
+                    "{}/{}{}{:?}",
+                    link_nb,
+                    &pool_link_len,
+                    encrypt_string!(" Link: "),
+                    &link.get_target()
+                );
+                let newconfig: Config = match link.fetch_config(config, advanced, link_nb) {
+                    Ok(newconfig) => {
+                        info!(
+                            "{}{}",
+                            encrypt_string!("[+] choose config of link "),
+                            link_nb
+                        );
+                        newconfig
+                    }
+                    Err(error) => {
+                        warn!("{}{:?}", encrypt_string!("Check failed: "), error);
+                        continue;
+                    }
+                };
+    
+                return Ok(newconfig);
+            }
+
+            // TODO same if other reason.
+            info!(
+                "[+] check finish, 0/{} succeed",
+                pool_link_len
+            );
+
+            bail!(
+                "{}",
+                encrypt_string!("No VALID config found in Pool: all link check")
+            )
+        }
     }
 
     pub fn choose_config_from_config_list(
