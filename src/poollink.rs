@@ -152,7 +152,6 @@ impl PoolLinks {
                 let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
                     thread::spawn(move || {
                         debug!("thread begin, link: {}", link_nb);
-                        //TODO pas de unwrap ici, faire un jolie message de crash
                         let newconfig: Config =
                             thread_link.fetch_config(&thread_config, &thread_advanced, link_nb)?;
                         debug!("thread end, link: {}", link_nb);
@@ -212,7 +211,7 @@ impl PoolLinks {
                 return Ok(newconfig);
             }
 
-            // TODO same if other reason.
+            // TODO 3/5 info message same if some succeed.
             info!(
                 "[+] check finish, 0/{} succeed",
                 pool_link_len

