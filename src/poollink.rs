@@ -15,13 +15,13 @@ use rand::seq::SliceRandom;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Advanced {
-    pub random: u64, // fetch only x random link from pool and ignore the other, (0 not set)
+    pub random: u64,          // fetch only x random link from pool and ignore the other, (0 not set)
     pub max_link_broken: u64, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
     pub parallel: bool,       // try to fetch every link in the same time, if not its one by one
     pub linear: bool,         // fetch link in the order or randomized
     pub stop_same: bool,      // stop if found the same conf -> not for parallel_fetch
     pub stop_new: bool,       // stop if found a new conf -> not for parallel_fetch
-    pub accept_old: bool, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
+    pub accept_old: bool,     // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -51,46 +51,11 @@ impl PoolLinks {
             max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
             parallel: false,    // try to fetch every link in the same time, if not its one by one
             linear: true,       // fetch link in the order or randomized
-            stop_same: true,    // stop if found the same conf -> not for parallel
-            stop_new: true,     // stop if found a new conf -> not for parallel
+            stop_same: false,   // stop if found the same conf -> not for parallel
+            stop_new: false,    // stop if found a new conf -> not for parallel
             accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
         };
-
         self.update_links_advanced(config, &advanced)
-        // NOW call the
-
-        /*
-        let mut link_nb: i32 = 0;
-        for link in &self.pool_links {
-            link_nb = link_nb + 1;
-            info!(
-                "{}/{}{}{:?}",
-                link_nb,
-                &self.pool_links.len(),
-                encrypt_string!(" Link: "),
-                &link.get_target()
-            );
-
-            let newconf: Config = match link.fetch_config(&config) {
-                Ok(newconf) => newconf,
-                Err(error) => {
-                    warn!("{}{}", encrypt_string!("error: "), error);
-                    continue;
-                }
-            };
-            //nex time its here //PLus besoin ///FIX
-            if config.date <= newconf.date {
-                info! {"{}",encrypt_string!("config date : OK")};
-                return Ok(newconf);
-            } else {
-                info! {"{}",encrypt_string!("config date : TOO OLD")};
-            }
-        }
-        bail!(
-            "{}",
-            encrypt_string!("No VALID fresh new config found in Pool")
-        )
-        */
     }
 
     pub fn update_links_advanced(
@@ -129,13 +94,13 @@ impl PoolLinks {
 
         let pool_link_len: usize = pool_link.len();
         let mut link_nb: i32 = 0;
+        let mut fetch_configs: Vec<(Config, i32)> = vec![];
 
         // fetch pool_links and choose a VALID config
         if advanced.parallel {
-            info!("[+] fetch all link in parallel");
+            info!("{}", encrypt_string!("[+] fetch all link in parallel"));
             let mut handle_list: Vec<thread::JoinHandle<Result<(Config, i32), anyhow::Error>>> =
                 vec![];
-            let mut fetch_configs: Vec<(Config, i32)> = vec![];
             for link in pool_link {
                 link_nb = link_nb + 1;
                 info!(
@@ -151,18 +116,20 @@ impl PoolLinks {
                 let thread_advanced = advanced.clone();
                 let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
                     thread::spawn(move || {
-                        debug!("thread begin, link: {}", link_nb);
+                        debug!("{}{}", encrypt_string!("thread begin, link: "), link_nb);
                         let newconfig: Config =
                             thread_link.fetch_config(&thread_config, &thread_advanced, link_nb)?;
-                        debug!("thread end, link: {}", link_nb);
+                        debug!("{}{}", encrypt_string!("thread end, link: {}"), link_nb);
                         Ok((newconfig, link_nb))
                     });
                 handle_list.push(handle);
                 //not parallel
             }
 
-            //only for parallel
-            info!("[+] all thread run to fetch a config, wait them finish to join");
+            info!(
+                "{}",
+                encrypt_string!("[+] all thread run to fetch a config, wait them finish to join")
+            );
 
             for handle in handle_list {
                 match handle.join() {
@@ -172,18 +139,14 @@ impl PoolLinks {
                 };
             }
             info!(
-                "[+] all thread finish, {}/{} succeed",
+                "{}{}/{}{}",
+                encrypt_string!("[+] all thread finish, "),
                 fetch_configs.len(),
-                pool_link_len
+                pool_link_len,
+                encrypt_string!(" succeed")
             );
-            //TODO max_link_broken -> en fonction de la taille de config_list, ca donne combien de lien broken ?  , pour ca il faudrait checker pool_link_len
-
-            self.choose_config_from_config_list(config, advanced, fetch_configs)
         } else {
-            info!("[+] fetch all link one by one");
-            //TODO max_link_broken
-            //TODO stop_same + stop_new -> avec une fetch_configs
-            //let mut fetch_configs: Vec<(Config, i32)> = vec![];
+            info!("{}",encrypt_string!("[+] fetch all link one by one"));
             for link in pool_link {
                 link_nb = link_nb + 1;
                 info!(
@@ -207,21 +170,23 @@ impl PoolLinks {
                         continue;
                     }
                 };
-    
-                return Ok(newconfig);
+                if advanced.stop_same && config.is_same_loader(&newconfig) {
+                    return Ok(newconfig);
+                } else if advanced.stop_new && config.date < newconfig.date {
+                    return Ok(newconfig);
+                } else {
+                    fetch_configs.push((newconfig, link_nb));
+                }
             }
 
-            // TODO 3/5 info message same if some succeed.
             info!(
-                "[+] check finish, 0/{} succeed",
+                "[+] all fetch finish, {}/{} succeed",
+                fetch_configs.len(),
                 pool_link_len
             );
-
-            bail!(
-                "{}",
-                encrypt_string!("No VALID config found in Pool: all link check")
-            )
         }
+
+        self.choose_config_from_config_list(config, advanced, fetch_configs)
     }
 
     pub fn choose_config_from_config_list(
@@ -233,9 +198,12 @@ impl PoolLinks {
         if config_list.len() == 0 {
             bail!(
                 "{}",
-                encrypt_string!("No VALID config found in Pool: empty list")
+                encrypt_string!("No VALID config found in Pool: all link checked")
             )
         }
+
+        //TODO max_link_broken -> en fonction de la taille de config_list, ca donne combien de lien broken ?  , pour ca il faudrait checker pool_link_len
+
         // place the first config as choosen config
         info!(
             "{}",
@@ -244,7 +212,11 @@ impl PoolLinks {
 
         let mut config_choosen: Config = config_list[0].0.clone();
         let mut nb_choosen: i32 = config_list[0].1.clone();
-        debug!("initial choosen config, link: {}", nb_choosen);
+        debug!(
+            "{}{}",
+            encrypt_string!("initial choosen config, link: "),
+            nb_choosen
+        );
 
         // if more config, compare date to choosen one
         if config_list.len() >= 2 {

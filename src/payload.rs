@@ -94,7 +94,7 @@ impl DllFromMemory {
         );
         let dll_entry_point =
             unsafe { mem::transmute::<_, DllEntryPoint>(mm.get_function(&self.dll_entrypoint)) };
-            info!("{}", encrypt_string!("dll_entry_point()"));
+        info!("{}", encrypt_string!("dll_entry_point()"));
 
         let result = dll_entry_point();
         debug!("{}{}", encrypt_string!("DLL result = "), result);

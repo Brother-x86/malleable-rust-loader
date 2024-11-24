@@ -144,7 +144,7 @@ impl Config {
         debug!("{:#?}", self);
     }
     pub fn print_loader_compact(&self) {
-        debug!("print_loader_compact");
+        debug!("{}",encrypt_string!("print_loader_compact"));
         debug!("{:?}", self);
     }
     pub fn get_loader_without_sign_material(&self) -> String {
@@ -273,7 +273,12 @@ impl Config {
             match pool_links.update_pool(&self) {
                 Ok(newconf) => {
                     if self.is_same_loader(&newconf) {
-                        info!("{}", encrypt_string!("[+] the new config is identical to the current config"));
+                        info!(
+                            "{}",
+                            encrypt_string!(
+                                "[+] the new config is identical to the current config"
+                            )
+                        );
                         info!(
                             "{}",
                             encrypt_string!(
@@ -281,7 +286,10 @@ impl Config {
                             )
                         );
                     } else {
-                        info!("{}", encrypt_string!("the new config is different from the current config"));
+                        info!(
+                            "{}",
+                            encrypt_string!("the new config is different from the current config")
+                        );
                         info!(
                             "{}",
                             encrypt_string!(
