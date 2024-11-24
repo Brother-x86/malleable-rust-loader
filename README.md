@@ -373,10 +373,10 @@ Basically, if you choose the SIMPLE one, it's like if you have define an Adavanc
         };
 ```
 Here, all config link of the pool will be fetch one by one in the same order and only the newest one will be choose to replace the actual config.
-If not VALID config are found and at least one config identical to the actual config are found, the actual config is conserved and the payload are rune.
-if NO valid config are found in a Pool, the loader go to check the next Pool and so on.
 
-All output example are not in this format, 
+- If not VALID config are found and at least one config identical to the actual config are found, the actual config is conserved and the payload are run.
+- if NO valid config are found in a Pool, the loader go to check the next Pool and so on.
+
 
 
 ## 4. Compile loader
