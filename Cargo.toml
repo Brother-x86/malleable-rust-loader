@@ -28,6 +28,8 @@ argparse = "0.2.2"
 pin-project-lite = "=0.2.14"
 #image = "0.20"
 image = "0.21"
+chrono = { version = "0.4.38", features = ["serde"]}
+
 
 [target.'cfg(windows)'.dependencies]
 memorymodule-rs = "0.0.3"

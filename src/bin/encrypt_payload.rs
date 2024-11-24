@@ -1,11 +1,10 @@
+use log::info;
 use malleable_rust_loader::dataoperation::apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::AeadMaterial;
 use malleable_rust_loader::dataoperation::DataOperation;
 use std::fs;
-use log::info;
 extern crate env_logger;
 use argparse::{ArgumentParser, Store};
-
 
 fn main() {
     env_logger::init();
@@ -23,17 +22,10 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let aead_mat: AeadMaterial = AeadMaterial::init_aead_key_material();  
+    let aead_mat: AeadMaterial = AeadMaterial::init_aead_key_material();
 
-    let output_dataop: String = format!("{}{}",
-        payload,
-        ".dataop"
-    ).to_string();
-    let output_payload: String = format!("{}{}",
-        payload,
-        ".aead"
-    ).to_string();
-
+    let output_dataop: String = format!("{}{}", payload, ".dataop").to_string();
+    let output_payload: String = format!("{}{}", payload, ".aead").to_string();
 
     let mut dataoperations: Vec<DataOperation> = vec![DataOperation::AEAD(aead_mat)];
     info!("[+] Payload open {}", payload.as_str());

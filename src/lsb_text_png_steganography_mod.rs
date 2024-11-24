@@ -12,7 +12,10 @@ use bit_helpers::{change_last_bit, get_bit_at, transform_u32_to_array_of_u8};
 extern crate anyhow;
 use anyhow::Result;
 
-pub fn hide_mod<'a>(payload: Vec<u8>, carrier_path: &'a str) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+pub fn hide_mod<'a>(
+    payload: Vec<u8>,
+    carrier_path: &'a str,
+) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     //let payload = file_helpers::get_file_string(payload_path);
     let payload_bytes = &payload;
     let carrier = image::open(carrier_path).unwrap();
@@ -72,7 +75,6 @@ pub fn hide_mod<'a>(payload: Vec<u8>, carrier_path: &'a str) -> ImageBuffer<imag
 
     img
 }
-
 
 pub fn hide<'a>(payload_path: &str, carrier_path: &'a str) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let payload = file_helpers::get_file_string(payload_path);
@@ -134,9 +136,6 @@ pub fn hide<'a>(payload_path: &str, carrier_path: &'a str) -> ImageBuffer<image:
 
     img
 }
-
-
-
 
 pub fn reveal_mod(image_data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
     // Just wrote but this needs a refactor!
