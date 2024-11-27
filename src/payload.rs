@@ -365,6 +365,7 @@ impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<(), anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
+        info!("Exec {:?} {}",&path,&self.cmdline);
         let mut comm = Command::new(&path);
 
         for i in self.cmdline.trim().split_whitespace() {
@@ -374,7 +375,7 @@ impl Exec {
         let output = comm
             .output()
             .expect(&encrypt_string!("failed to execute process"));
-        let _hello = output.stdout;
+        let _hello: Vec<u8> = output.stdout;
         Ok(())
     }
 }

