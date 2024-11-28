@@ -74,6 +74,22 @@ impl Payload {
     pub fn print_payload_compact(&self) {
         debug!("+{:?}", self);
     }
+    pub fn is_same_payload(&self, other_payload: &Payload) -> bool {
+        let self_serialized = serde_json::to_string(self).unwrap();
+        let other_serialized = serde_json::to_string(other_payload).unwrap();
+        self_serialized == other_serialized
+    }
+    pub fn is_already_running (&self, running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) -> bool{
+        for running_payload in &mut *running_thread  {
+            if self.is_same_payload(&running_payload.1){
+                info!("Payload is already running");
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -399,3 +415,5 @@ impl Exec {
         Ok(PayloadExec::NoThread())
     }
 }
+
+
