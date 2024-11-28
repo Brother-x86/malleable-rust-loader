@@ -1,5 +1,6 @@
 use crate::defuse::{Defuse, Operator};
 use crate::payload::Payload;
+use crate::payload::PayloadExec;
 use crate::poollink::PoolLinks;
 use chksum_sha2_512 as sha2_512;
 use rand::Rng;
@@ -198,7 +199,7 @@ impl Config {
         signature::Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref()).unwrap()
     }
 
-    pub fn exec_payloads(&self) {
+    pub fn exec_payloads(&self, running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
         let mut nb_payload = 1;
         for payload in &self.payloads {
             info!(
@@ -209,7 +210,14 @@ impl Config {
                 &payload
             );
             payload.print_payload_compact();
-            payload.exec_payload();
+            //TODO
+            match payload.exec_payload() {
+                PayloadExec::NoThread() => (),
+                PayloadExec::Thread(join_handle, payload) => {
+                    running_thread.push((join_handle, payload));
+                    ()
+                }
+            }
             nb_payload = nb_payload + 1;
         }
     }
