@@ -80,6 +80,8 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 - [x] **DownloadAndExec** : allow you to exec something else from disk, could be used to replace the Loader by a new version
 - [x] **DllFromMemory** : The Star feature, allow you to run a DLL from Memory with module memorymodule-rs wish is apure rust adaptation of fancycode/MemoryModule (https://github.com/fancycode/MemoryModule)
 - [x] **ExecPython** : Allow to exec python code, in conjonction with the Pyramid project of Naksyn, this allow to run exe from memory with a commandline.
+- [x] **WriteFile** : Create a file from a link (download, from memory, etc...).
+- [x] **Exec** : Allow to exec a file in the filesystem with a specific commandline.
 
 
 ### Compilation

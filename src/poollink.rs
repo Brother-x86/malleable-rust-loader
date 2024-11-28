@@ -15,13 +15,13 @@ use rand::seq::SliceRandom;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Advanced {
-    pub random: u64,          // fetch only x random link from pool and ignore the other, (0 not set)
+    pub random: u64, // fetch only x random link from pool and ignore the other, (0 not set)
     pub max_link_broken: u64, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
     pub parallel: bool,       // try to fetch every link in the same time, if not its one by one
     pub linear: bool,         // fetch link in the order or randomized
     pub stop_same: bool,      // stop if found the same conf -> not for parallel_fetch
     pub stop_new: bool,       // stop if found a new conf -> not for parallel_fetch
-    pub accept_old: bool,     // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
+    pub accept_old: bool, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -146,7 +146,7 @@ impl PoolLinks {
                 encrypt_string!(" succeed")
             );
         } else {
-            info!("{}",encrypt_string!("[+] fetch all link one by one"));
+            info!("{}", encrypt_string!("[+] fetch all link one by one"));
             for link in pool_link {
                 link_nb = link_nb + 1;
                 info!(

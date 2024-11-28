@@ -144,7 +144,7 @@ impl Config {
         debug!("{:#?}", self);
     }
     pub fn print_loader_compact(&self) {
-        debug!("{}",encrypt_string!("print_loader_compact"));
+        debug!("{}", encrypt_string!("print_loader_compact"));
         debug!("{:?}", self);
     }
     pub fn get_loader_without_sign_material(&self) -> String {

@@ -29,6 +29,7 @@ pin-project-lite = "=0.2.14"
 #image = "0.20"
 image = "0.21"
 chrono = { version = "0.4.38", features = ["serde"]}
+shellexpand = "3.1.0"
 
 
 [target.'cfg(windows)'.dependencies]
