@@ -95,6 +95,8 @@ fn main() {
             info!("[+] no RUNNING thread");
         };
 
+        //TODO: param to wait for all running thread
+
         info!(
             "{}{}{}{}",
             lc!("[+] END LOOP "),
@@ -106,5 +108,6 @@ fn main() {
         let sleep_time = time::Duration::from_millis(1000);
         thread::sleep(sleep_time);
         loop_nb = loop_nb + 1;
+
     }
 }
