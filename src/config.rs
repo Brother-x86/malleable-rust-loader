@@ -199,7 +199,6 @@ impl Config {
         signature::Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref()).unwrap()
     }
 
-
     pub fn exec_payloads(&self, running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
         let mut nb_payload = 1;
         for payload in &self.payloads {
@@ -210,34 +209,24 @@ impl Config {
                 encrypt_string!(" payload: "),
                 &payload
             );
-            payload.print_payload_compact();
-            //TODO refacto ça
-            //clean de ce qui est running.
 
-            /* 
-            let mut payload_is_already_running=false;
-            for running_payload in &mut *running_thread  {
-                if payload.is_same_payload(&running_payload.1){
-                    info!("Payload is already running");
-                    payload_is_already_running=true;
-                    break
-                }
-            }
-            if payload_is_already_running {
-                break
-            }
-            */
+            //clean the running_thread
+            running_thread.retain(|x| x.0.is_finished() == false);
+
             if payload.is_already_running(running_thread) == false {
-            match payload.exec_payload() {
-                PayloadExec::NoThread() => (),
-                PayloadExec::Thread(join_handle, payload) => {
-                    running_thread.push((join_handle, payload));
-                    ()
+                match payload.exec_payload() {
+                    PayloadExec::NoThread() => (),
+                    PayloadExec::Thread(join_handle, payload) => {
+                        running_thread.push((join_handle, payload));
+                        ()
+                    }
                 }
             }
-        }
             nb_payload = nb_payload + 1;
         }
+
+        //clean the running_thread
+        running_thread.retain(|x| x.0.is_finished() == false);
     }
 
     pub fn stop_defuse(&self, defuse_list: &Vec<Defuse>) -> bool {
