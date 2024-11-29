@@ -89,7 +89,7 @@ fn main() {
         if running_thread.len() != 0 {
             info!("[+] RUNNING thread:");
             for i in &running_thread {
-                info!("thread: {:?}", i);
+                info!("thread: {:?}", i.1);
             }
         } else {
             info!("[+] no RUNNING thread");
@@ -105,7 +105,8 @@ fn main() {
             "\n"
         );
 
-        let sleep_time = time::Duration::from_millis(1000);
+        //TODO, add this sleep+jitt time into a config parameter
+        let sleep_time = time::Duration::from_millis(3000);
         thread::sleep(sleep_time);
         loop_nb = loop_nb + 1;
 

