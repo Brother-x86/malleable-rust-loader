@@ -13,6 +13,8 @@ use log::info;
 use crate::config::Config;
 
 use std::time::Duration;
+use std::fs;
+
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
@@ -256,8 +258,6 @@ impl LinkFetch for DNSLink {
         self.jitt
     }
 }
-
-use std::fs;
 
 impl LinkFetch for FileLink {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
