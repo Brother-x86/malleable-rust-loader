@@ -1,6 +1,6 @@
 use malleable_rust_loader::config::Config;
 //use malleable_rust_loader::link::LinkFetch;
-use std::{thread, time};
+use std::thread;
 
 #[macro_use]
 extern crate litcrypt;
@@ -68,7 +68,6 @@ fn main() {
         );
         info!("{}{:?}", lc!("[+] Active LOADER: "), config);
         config.print_loader_without_sign_material();
-        config.sleep_and_jitt();
 
         info!("{}", lc!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {
@@ -96,7 +95,7 @@ fn main() {
         };
 
         //TODO: param to wait for all running thread
-
+        config.sleep_and_jitt();
         info!(
             "{}{}{}{}",
             lc!("[+] END LOOP "),
@@ -106,8 +105,6 @@ fn main() {
         );
 
         //TODO, add this sleep+jitt time into a config parameter
-        let sleep_time = time::Duration::from_millis(3000);
-        thread::sleep(sleep_time);
         loop_nb = loop_nb + 1;
     }
 }

