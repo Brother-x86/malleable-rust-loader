@@ -55,12 +55,12 @@ pub enum Payload {
 impl Payload {
     pub fn exec_payload(&self) -> PayloadExec {
         let exec_result = match &self {
-            Payload::DllFromMemory(payload) => payload.dll_from_memory(),
-            Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
             Payload::Banner() => banner(),
-            Payload::WriteZip(payload) => payload.write_zip(),
             Payload::WriteFile(payload) => payload.write_file(),
+            Payload::WriteZip(payload) => payload.write_zip(),
             Payload::Exec(payload) => payload.exec_file(),
+            Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
+            Payload::DllFromMemory(payload) => payload.dll_from_memory(),
         };
         match exec_result {
             Ok(a) => a,

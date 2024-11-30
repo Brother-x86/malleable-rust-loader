@@ -61,7 +61,9 @@ Various way to retreive data for exec payload and reload configs are regrouped i
 
 In addition, there is mechanism to modify to collected data retreive from a Link, its come from a list of define DataOperation to retreive the original data. (encrypted DLL, BASE64+ROT13 config file)
 
-Moreover, some defuse action could be define before reloading config or executing payload (internet connectivity, specific domain join, or expected hostname)
+Moreover, some defuse action could be define before reloading config or executing payload (internet connectivity, specific domain join, or expected hostname).
+
+Some payload could run in a thread, this let the loader executing stuff and possibly reload the configuration during execution.
 
 LLVM Obfuscator (OLLVM) compilation options + string encryption are also include to avoid static analysis.
 
@@ -77,13 +79,12 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 ### Payloads
 
 - [x] **Banner** : Display the awesome project banner 
-- [x] **DownloadAndExec** : allow you to exec something else from disk, could be used to replace the Loader by a new version
-- [x] **DllFromMemory** : The Star feature, allow you to run a DLL from Memory with module memorymodule-rs wish is apure rust adaptation of fancycode/MemoryModule (https://github.com/fancycode/MemoryModule)
-- [x] **ExecPython** : Allow to exec python code, in conjonction with the Pyramid project of Naksyn, this allow to run exe from memory with a commandline.
-- [x] **WriteFile** : Create a file from a link (download, from memory, etc...).
+- [x] **WriteFile** : Write a file to the disk, the file could be fetch from a link (download http, memory, etc..)
+- [x] **WriteZip** : Unzip a .zip file into the disk
 - [x] **Exec** : Allow to exec a file in the filesystem with a specific commandline.
-
-
+- [x] **ExecPython** : Allow to exec python code, in conjonction with the Pyramid project of Naksyn, this allow to run exe from memory with a commandline.
+- [x] **DllFromMemory** : The Star feature, allow you to run a DLL from Memory with module memorymodule-rs wish is apure rust adaptation of fancycode/MemoryModule (https://github.com/fancycode/MemoryModule)
+ 
 ### Compilation
 
 - [X] cross compilation from linux
@@ -96,11 +97,11 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 
 Fetch data with various methods, du to loader config structure, its easy to add a new Link type.
 
-- [x] HTTP
-- [x] FILE
+- [x] HTTP : classic http download of data
+- [x] FILE : retreive data from a file present in the filesystem (an encrypted dll for example)
+- [x] MEMORY -> this permit to create a packer, or to drop specific file 
 - [ ] Websocket (todo, ez)
 - [ ] DNS (todo, hard), the plan is to use the DNSCAT protocol
-- [x] MEMORY -> this permit to create a packer
 
 ### DataOperation
 
@@ -108,10 +109,10 @@ The way to modify fetch data from link
 
 - [x] BASE64
 - [x] ROT13
-- [x] REVERSE
-- [x] WEBPAGE -> allow to put the data somewhere into HTML
-- [x] AEAD
+- [x] WEBPAGE -> surrounded data with delimiters, hide data into an HTML response. (steam profile, fake website, forum or whatever)
+- [x] AEAD -> encrypt and verify data.
 - [x] STEGANO -> hide data in png (jpg seems not to work)
+- [x] REVERSE -> todo!()
 
 # Design
 
@@ -126,6 +127,8 @@ The loader when running:
 6. Eventually replace the Loader configuration if it found a new valid one, or try to fetch an other valid config Link
 7. Verify if exec defuse conditions are met before next steps
 8. Run the defined payloads !
+
+If payload run in Thread, go to an other loop.
 
 ## Execution workflow
 
@@ -143,15 +146,7 @@ Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, th
       "kaboum.xyz first links",
       {
         "pool_mode": {
-          "ADVANCED": {
-            "random": 0,
-            "max_link_broken": 0,
-            "parallel": true,
-            "linear": true,
-            "stop_same": false,
-            "stop_new": false,
-            "accept_old": false
-          }
+          "SIMPLE"
         },
         "pool_links": [
           {
@@ -622,15 +617,14 @@ sudo upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
 
 
 - infra as code to deploy or redeploy config and payload stage -> v2.0
-- more payload
-- more Link to fetch data : DNS + WebSocket
-- More way to defeat static analysis -> tricks are welcome!
-- The --bin check just to verify configuration file before sign
-- Network redirector to modify the traffic behavior of an implant (listen 127.0.0.1 -> redirect to C2)
+- more payload, persistence payloads, reconnaissance payloads
 - collect data and send to C2 with a special payload : TODO
 - find a way to sends logs into a C2, could be nice for error
-- persistence payloads
+- more Link to fetch data : DNS + WebSocket
+- new check.rs binary to verify configuration file before or after signing 
+- Network redirector to modify the traffic behavior of an implant (listen 127.0.0.1 -> redirect to C2) -> could be done with wstunnel
 - [X] stegano for DataOperation, hide config and payload into nice harmless pictures -> Done 16/11/2024
+- More way to defeat static analysis -> tricks are welcome!
 
 
 # Credits and Thanks
