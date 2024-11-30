@@ -86,7 +86,7 @@ fn main() {
 
         //print running_thread
         if running_thread.len() != 0 {
-            info!("[+] RUNNING thread {}",running_thread.len());
+            info!("[+] RUNNING thread {}", running_thread.len());
             for i in &running_thread {
                 info!("-thread: {:?}", i.1);
             }
