@@ -4,12 +4,10 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 use std::{thread, time};
-// use anyhow::{Context, Result};
 use anyhow::bail;
 use anyhow::Result;
 use cryptify::encrypt_string;
 use log::debug;
-//use log::warn;
 use log::info;
 
 use crate::config::Config;
@@ -48,7 +46,6 @@ impl Link {
         debug!("{}", encrypt_string!("deserialized data"));
         let newconfig: Config = match serde_json::from_slice(&data) {
             Ok(newconfig) => newconfig,
-            //Err(error) => bail!("{}{}", encrypt_string!("deserialized data fail: "), error),
             Err(error) => bail!(
                 "{}{}{}{}",
                 encrypt_string!("link "),
@@ -60,7 +57,6 @@ impl Link {
         match config.verify_newloader_sign(&newconfig) {
             Ok(()) => (),
             _unspecified =>
-            //bail!("{}", encrypt_string!("config signature: verify FAIL")),
             {
                 bail!(
                     "{}{}{}",
@@ -206,7 +202,6 @@ const TIMEOUT: u64 = 10;
 
 impl LinkFetch for HTTPLink {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
-        //TODO: en fonction du type de Link, on va appeller une fonction differente HTTP ou DNS ou ...
         debug!(
             "{}{}",
             encrypt_string!("HTTP download: "),

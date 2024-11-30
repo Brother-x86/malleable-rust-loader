@@ -1,13 +1,6 @@
-//extern crate libloading;
-//extern crate winapi;
-//extern crate zip_extract;
-
 #[cfg(target_os = "windows")]
 use std::ffi::CString;
 
-//use std::io::Cursor;
-//use std::path::PathBuf;
-//use std::io::Read;
 #[cfg(target_os = "windows")]
 use cryptify::encrypt_string;
 #[cfg(target_os = "windows")]

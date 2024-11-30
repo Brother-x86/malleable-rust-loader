@@ -19,8 +19,6 @@ use cryptify::encrypt_string;
 
 use chrono::prelude::*;
 use std::collections::BTreeMap;
-//#use chrono::serde::ts_seconds_option;
-//    #[serde(with = "ts_seconds_option")]
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
