@@ -6,4 +6,5 @@ pub mod initialloader;
 pub mod link;
 pub mod lsb_text_png_steganography_mod;
 pub mod payload;
+pub mod payload_util;
 pub mod poollink;

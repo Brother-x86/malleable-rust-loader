@@ -205,7 +205,7 @@ impl PoolLinks {
         //TODO max_link_broken -> en fonction de la taille de config_list, ca donne combien de lien broken ?  , pour ca il faudrait checker pool_link_len
 
         // place the first config as choosen config
-        info!(
+        debug!(
             "{}",
             encrypt_string!("[+] Begin to choose the config to return from pool")
         );

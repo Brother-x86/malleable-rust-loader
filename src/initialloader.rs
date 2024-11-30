@@ -12,8 +12,6 @@ use std::env;
 pub fn initialize_loader(loaderconf: Config, json_file: String) {
     info!("[+] AEAD Encrypt initial loader config");
     let mut dataoperations: Vec<DataOperation> = vec![];
-    //TODO multiple time, je comprends pas pk ca fail
-    //for n in 1..2 {
     let aead_mat: AeadMaterial = AeadMaterial::init_aead_key_material();
     dataoperations.push(DataOperation::AEAD(aead_mat));
 
@@ -32,7 +30,7 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
     )
     .expect("Unable to write file");
 
-    //ROT13 dataoperation of the initial paylaod
+    // ROT13 dataoperation of the initial paylaod
     info!("[+] Ofuscate AEAD material with ROT13+BASE64");
     let mut dataoperations: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
     let mut data: Vec<u8> = fs::read(format!("{json_file}.aead.dataop")).unwrap();
@@ -57,8 +55,7 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
 
     // create one config STEGANO
     let mut data: Vec<u8> = loaderconf.concat_loader_jsondata().into_bytes();
-    // set env variable to: export STEGANO_INPUT_IMAGE=/home/user/.malleable/config/troll2.jpg
-
+    // set env variable if not set to: export STEGANO_INPUT_IMAGE=/home/user/.malleable/config/troll2.jpg
     match env::var("STEGANO_INPUT_IMAGE") {
         Ok(_) => (),
         Err(_) => unsafe {

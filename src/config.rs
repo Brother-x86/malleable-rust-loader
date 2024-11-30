@@ -1,5 +1,6 @@
 use crate::defuse::{Defuse, Operator};
 use crate::payload::Payload;
+use crate::payload::PayloadExec;
 use crate::poollink::PoolLinks;
 use chksum_sha2_512 as sha2_512;
 use rand::Rng;
@@ -18,8 +19,6 @@ use cryptify::encrypt_string;
 
 use chrono::prelude::*;
 use std::collections::BTreeMap;
-//#use chrono::serde::ts_seconds_option;
-//    #[serde(with = "ts_seconds_option")]
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
@@ -198,7 +197,7 @@ impl Config {
         signature::Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref()).unwrap()
     }
 
-    pub fn exec_payloads(&self) {
+    pub fn exec_payloads(&self, running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
         let mut nb_payload = 1;
         for payload in &self.payloads {
             info!(
@@ -208,10 +207,24 @@ impl Config {
                 encrypt_string!(" payload: "),
                 &payload
             );
-            payload.print_payload_compact();
-            payload.exec_payload();
+
+            //clean the running_thread
+            running_thread.retain(|x| x.0.is_finished() == false);
+
+            if payload.is_already_running(running_thread) == false {
+                match payload.exec_payload() {
+                    PayloadExec::NoThread() => (),
+                    PayloadExec::Thread(join_handle, payload) => {
+                        running_thread.push((join_handle, payload));
+                        ()
+                    }
+                }
+            }
             nb_payload = nb_payload + 1;
         }
+
+        //clean the running_thread
+        running_thread.retain(|x| x.0.is_finished() == false);
     }
 
     pub fn stop_defuse(&self, defuse_list: &Vec<Defuse>) -> bool {

