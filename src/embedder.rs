@@ -22,14 +22,20 @@ use log::warn;
 #[cfg(target_os = "windows")]
 use std::path::PathBuf;
 
-
 #[cfg(target_os = "windows")]
 fn load_dll_from_file(dll_path: &str) -> Result<libloading::Library, String> {
     debug!("{}", dll_path);
     // Load the DLL
     unsafe {
-        let lib = libloading::Library::new(dll_path)
-            .map_err(|e| format!("{}{}{}{}", encrypt_string!("Failed to load DLL: "), e, encrypt_string!(" ,dll_path: "),dll_path))?;
+        let lib = libloading::Library::new(dll_path).map_err(|e| {
+            format!(
+                "{}{}{}{}",
+                encrypt_string!("Failed to load DLL: "),
+                e,
+                encrypt_string!(" ,dll_path: "),
+                dll_path
+            )
+        })?;
 
         Ok(lib)
     }

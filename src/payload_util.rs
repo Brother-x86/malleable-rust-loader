@@ -12,12 +12,15 @@ use log::info;
 use cryptify::encrypt_string;
 
 use anyhow::Result;
-use std::fs::File;
-use std::fs::create_dir_all;
 use shellexpand;
+use std::fs::create_dir_all;
+use std::fs::File;
 
 use chksum_sha2_512 as sha2_512;
 use std::io::prelude::*;
+
+use crate::payload::Payload;
+use std::thread;
 
 pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
     let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable
@@ -73,4 +76,15 @@ pub fn same_hash_sha512(hash: &String, path: &PathBuf) -> bool {
     let digest = sha2_512::chksum(buffer).unwrap();
 
     digest.to_hex_lowercase() == *hash
+}
+
+pub fn print_running_thread(running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
+    if running_thread.len() != 0 {
+        info!("[+] RUNNING thread {}", running_thread.len());
+        for i in running_thread {
+            info!("-thread: {:?}", i.1);
+        }
+    } else {
+        info!("[+] no RUNNING thread");
+    };
 }
