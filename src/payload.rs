@@ -35,6 +35,7 @@ use crate::payload_util::create_diretory;
 use crate::payload_util::same_hash_sha512;
 #[cfg(target_os = "linux")]
 use crate::payload_util::set_permission;
+#[cfg(target_os = "linux")]
 use crate::payload_util::fail_linux_message;
 
 pub enum PayloadExec {
