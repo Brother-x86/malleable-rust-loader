@@ -33,6 +33,7 @@ use std::fs::File;
 use crate::payload_util::calculate_path;
 use crate::payload_util::create_diretory;
 use crate::payload_util::same_hash_sha512;
+#[cfg(target_os = "linux")]
 use crate::payload_util::set_permission;
 
 pub enum PayloadExec {
