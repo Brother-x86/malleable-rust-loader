@@ -425,12 +425,12 @@ impl LinkFetch for HTTPPostLink {
         map.insert("loader", "todo".to_string());
         map.insert("session_id", session_id.to_string());
         map.insert("config", "".to_string());
-        //let t = serde_json::from_slice(running_thread);
-
-        let t = format!("{:?}", running_thread);
+        //let data = serde_json::from_value(running_thread).unwrap();
+        let data = serde_json::to_string(running_thread).unwrap();       
+        //let t = format!("{:?}", running_thread);
 
         //map.insert("running-thread", "".to_string());
-        map.insert("running-thread", t);
+        map.insert("running-thread", data);
         map.insert("working-link", "".to_string());
         //TODO
         //map.insert("lang",whoami::distro());
