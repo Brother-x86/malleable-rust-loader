@@ -58,8 +58,8 @@ impl DefuseCheck for CheckInternet {
             let link: Link = Link::HTTP(HTTPLink {
                 url: url.to_string(),
                 dataoperation: vec![],
-                jitt: 1,
-                sleep: 1,
+                jitt: 0,
+                sleep: 0,
             });
             match link.fetch_data() {
                 Ok(_) => return false,
