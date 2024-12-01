@@ -83,6 +83,7 @@ pub struct Hostname {
 }
 impl DefuseCheck for Hostname {
     fn stop_exec(&self) -> bool {
+        //TODO virer le unwrap
         let hostname = gethostname()
             .to_ascii_uppercase()
             .to_os_string()
