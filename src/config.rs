@@ -20,6 +20,19 @@ use cryptify::encrypt_string;
 use chrono::prelude::*;
 use std::collections::BTreeMap;
 
+//#[derive(Serialize, Deserialize, Debug, Clone)]
+/* 
+
+pub struct RunValue {
+    pub session_id: String,
+    pub running_thread: Vec<(thread::JoinHandle<()>, Payload)>,
+}
+
+pub struct Blah {
+    pub session_id: String,
+}
+*/
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SignMaterial {
     pub peer_public_key_bytes: Vec<u8>,
@@ -271,8 +284,12 @@ impl Config {
         thread::sleep(sleep_time);
     }
 
+    //pub session_id: String,
+    //pub running_thread: Vec<(thread::JoinHandle<()>, Payload)>,
+
+
     // try to fetch a new config, if no config are found return self. if no config is return from pool, need to try the next pool
-    pub fn update_config(&self) -> Config {
+    pub fn update_config(&self, session_id: &String,running_thread: &Vec<(thread::JoinHandle<()>, Payload)>) -> Config {
         let mut pool_nb: i32 = 0;
         for (_pool_nb, (pool_name, pool_links)) in &self.update_links {
             pool_nb = pool_nb + 1;

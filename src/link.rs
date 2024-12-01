@@ -165,6 +165,7 @@ pub trait LinkFetch {
         let data = self.download_data()?;
         self.un_apply_all_dataoperations(data)
     }
+    //TODO apply all data_operation
 }
 
 impl LinkFetch for Link {
