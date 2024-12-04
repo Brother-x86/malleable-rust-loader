@@ -182,7 +182,7 @@ impl DefuseCheck for DomainJoin {
 
 #[cfg(target_os = "windows")]
 impl DefuseCheck for DomainJoin {
-    fn stop_exec(&self) -> bool {
+    fn stop_exec(&self,_config:&Config) -> bool {
         let mut domain_controller_info: *mut DOMAIN_CONTROLLER_INFOA = std::ptr::null_mut();
         let status = unsafe {
             DsGetDcNameA(

