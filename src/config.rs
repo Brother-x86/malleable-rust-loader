@@ -35,6 +35,8 @@ pub struct Config {
     pub sign_material: SignMaterial,
     pub sleep: u64,
     pub jitt: u64,
+    pub link_timeout: u64,
+    pub link_user_agent: String,
     pub date: DateTime<Utc>,
 }
 #[allow(dead_code)]
@@ -46,6 +48,8 @@ impl Config {
         defuse_payload: Vec<Defuse>,
         sleep: u64,
         jitt: u64,
+        link_timeout: u64,
+        link_user_agent: String,
     ) -> Config {
         let sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
@@ -59,9 +63,12 @@ impl Config {
             defuse_payload: defuse_payload,
             sleep: sleep,
             jitt: jitt,
+            link_timeout: link_timeout,
+            link_user_agent: link_user_agent,
             date: Utc::now(),
         }
     }
+    //TODO check if utile
     pub fn new_empty() -> Config {
         let sign_material = SignMaterial {
             peer_public_key_bytes: vec![],
@@ -75,6 +82,8 @@ impl Config {
             defuse_payload: vec![],
             sleep: 0,
             jitt: 0,
+            link_timeout: 0,
+            link_user_agent: "".to_string(),            
             date: Utc::now(),
         }
     }
@@ -87,6 +96,8 @@ impl Config {
         defuse_payload: Vec<Defuse>,
         sleep: u64,
         jitt: u64,
+        link_timeout: u64,
+        link_user_agent: String,
     ) -> Config {
         let mut new_loader = Config::new_unsigned(
             update_links,
@@ -95,6 +106,8 @@ impl Config {
             defuse_payload,
             sleep,
             jitt,
+            link_timeout,
+            link_user_agent,
         );
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
         new_loader.sign_material.peer_public_key_bytes = peer_public_key_bytes;
@@ -212,7 +225,7 @@ impl Config {
             running_thread.retain(|x| x.0.is_finished() == false);
 
             if payload.is_already_running(running_thread) == false {
-                match payload.exec_payload() {
+                match payload.exec_payload(&self) {
                     PayloadExec::NoThread() => (),
                     PayloadExec::Thread(join_handle, payload) => {
                         running_thread.push((join_handle, payload));
@@ -239,7 +252,7 @@ impl Config {
                 defuse
             );
             if check_this_defuse {
-                if defuse.stop_the_exec() {
+                if defuse.stop_the_exec(&self) {
                     match defuse.get_operator() {
                         Operator::AND => return true,
                         Operator::OR => {}
