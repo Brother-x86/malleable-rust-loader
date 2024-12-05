@@ -66,7 +66,6 @@ fn main() {
             lc!(" --------------------------------------------------------")
         );
         info!("{}{:?}", lc!("[+] Active LOADER: "), config);
-        config.print_loader_without_sign_material();
 
         info!("{}", lc!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {

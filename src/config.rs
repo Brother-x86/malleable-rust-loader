@@ -162,18 +162,6 @@ impl Config {
         debug!("{}", encrypt_string!("print_loader_compact"));
         debug!("{:?}", self);
     }
-    pub fn get_loader_without_sign_material(&self) -> String {
-        let mut print_loader: Config = self.clone();
-        let clean_sign_material = VerifSignMaterial {
-            peer_public_key_bytes: vec![],
-            sign_bytes: vec![],
-        };
-        print_loader.sign_material = clean_sign_material;
-        format!("{:#?}", print_loader)
-    }
-    pub fn print_loader_without_sign_material(&self) {
-        debug!("{}", self.get_loader_without_sign_material());
-    }
     pub fn serialize_to_file(&self, path_file: &str) {
         let serialized: String = self.concat_loader_jsondata();
         fs::write(path_file, &serialized).expect("Unable to write file");
