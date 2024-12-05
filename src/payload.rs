@@ -13,7 +13,7 @@ use std::process::Command;
 use std::{thread, time};
 
 #[cfg(target_os = "windows")]
-use crate::embedder;
+use crate::python_embedder;
 
 use log::debug;
 use log::error;
@@ -183,6 +183,8 @@ impl ExecPython {
 
     #[cfg(target_os = "windows")]
     pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
+        //use crate::python_embedder;
+
         let path: PathBuf = calculate_path(&self.path)?;
 
         info!(
@@ -194,11 +196,11 @@ impl ExecPython {
             let thread_python_path = path.clone();
             let thread_python_code = self.python_code.clone();
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
-                embedder::embedder(&thread_python_path, &thread_python_code);
+                python_embedder::embedder(&thread_python_path, &thread_python_code);
             });
             return Ok(PayloadExec::Thread(tj, Payload::ExecPython(self.clone())));
         } else {
-            embedder::embedder(&path, &self.python_code);
+            python_embedder::embedder(&path, &self.python_code);
             return Ok(PayloadExec::NoThread());
         }
     }
