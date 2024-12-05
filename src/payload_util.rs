@@ -31,7 +31,11 @@ pub fn create_diretory(path: &PathBuf) -> Result<(), anyhow::Error> {
     match path.parent() {
         Some(parent_dir) => {
             if fs::metadata(parent_dir).is_ok() == false {
-                info!("{}{:?}",encrypt_string!("[+] path not exist, create: ") , parent_dir);
+                info!(
+                    "{}{:?}",
+                    encrypt_string!("[+] path not exist, create: "),
+                    parent_dir
+                );
                 create_dir_all(parent_dir)?;
             }
         }
@@ -78,15 +82,23 @@ pub fn same_hash_sha512(hash: &String, path: &PathBuf) -> bool {
 
 pub fn print_running_thread(running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
     if running_thread.len() != 0 {
-        info!("{}{}",encrypt_string!("[+] RUNNING thread ") ,running_thread.len());
+        info!(
+            "{}{}",
+            encrypt_string!("[+] RUNNING thread "),
+            running_thread.len()
+        );
         for i in running_thread {
             info!("{}{:?}", encrypt_string!("-thread: "), i.1);
         }
     } else {
-        info!("{}",encrypt_string!("[+] no RUNNING thread"));
+        info!("{}", encrypt_string!("[+] no RUNNING thread"));
     };
 }
 
-pub fn fail_linux_message(message:String){ 
-    error!("{}{}",encrypt_string!("Its linux, impossible to run the payload: "),message);
+pub fn fail_linux_message(message: String) {
+    error!(
+        "{}{}",
+        encrypt_string!("Its linux, impossible to run the payload: "),
+        message
+    );
 }

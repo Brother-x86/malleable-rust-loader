@@ -97,22 +97,22 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 
 Fetch data with various methods, du to loader config structure, its easy to add a new Link type.
 
-- [x] HTTP : classic http download of data
-- [x] FILE : retreive data from a file present in the filesystem (an encrypted dll for example)
-- [x] MEMORY -> this permit to create a packer, or to drop specific file 
-- [ ] Websocket (todo, ez)
-- [ ] DNS (todo, hard), the plan is to use the DNSCAT protocol
-
+- [x] **HTTP** : classic http GET download of data -> to retreive
+- [X] **HTTPPostC2** : post reconnaissance data to a C2 (only to retreive a new config), the data are signed with elliptic curv -> depend of a dedicated malleable-server (its working but not released for the moment)
+- [x] **FILE** : retreive data from a file present in the filesystem (an encrypted dll for example)
+- [x] **MEMORY** : retreive data from internal memory of the loader, this permit to create a packer with dll inside, or to drop specific file into the disk.
+- [ ] **Websocket** (todo!(), ez)
+- [ ] **DNS** (todo!(), hard), the plan is to use the DNSCAT protocol, but i fail to modify an existing rust project
 ### DataOperation
 
 The way to modify fetch data from link
 
-- [x] BASE64
-- [x] ROT13
-- [x] WEBPAGE -> surrounded data with delimiters, hide data into an HTML response. (steam profile, fake website, forum or whatever)
-- [x] AEAD -> encrypt and verify data.
-- [x] STEGANO -> hide data in png (jpg seems not to work)
-- [x] REVERSE -> todo!()
+- [x] **BASE64**
+- [x] **ROT13**
+- [x] **WEBPAGE** -> surrounded data with delimiters, hide data into an HTML response. (steam profile, fake website, forum or whatever)
+- [x] **AEAD** -> encrypt and verify data.
+- [x] **STEGANO** -> hide data in png (jpg seems not to work)
+- [x] **REVERSE** -> todo!()
 
 # Design
 

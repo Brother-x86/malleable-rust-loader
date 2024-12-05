@@ -6,7 +6,7 @@ edition = "2021"
 
 
 [dependencies]
-reqwest = { version = "0.12.5", features = ["blocking"] }
+reqwest = { version = "0.12.5", features = ["blocking","json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chksum-sha2-512 = "0.0.0"
@@ -30,6 +30,15 @@ pin-project-lite = "=0.2.14"
 image = "0.21"
 chrono = { version = "0.4.38", features = ["serde"]}
 shellexpand = "3.1.0"
+whoami = "1.5.2"
+
+[dependencies.uuid]
+version = "1.11.0"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng"          # Use a faster (but still sufficiently random) RNG
+]
+#"macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
 
 
 [target.'cfg(windows)'.dependencies]
@@ -58,6 +67,8 @@ windows-sys = { version = "0.45.0" , features = [
     "Win32_System_IO",
     "Win32_Networking_ActiveDirectory",
 ]}
+
+
 
 
 [profile.release]

