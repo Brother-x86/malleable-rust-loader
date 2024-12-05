@@ -226,7 +226,7 @@ impl AeadMaterial {
     }
 }
 
-pub fn apply_all_dataoperations_bis(
+pub fn apply_all_dataoperations(
     data_operations: &mut Vec<DataOperation>,
     mut data: Vec<u8>,
 ) -> Result<Vec<u8>, anyhow::Error> {
@@ -237,7 +237,7 @@ pub fn apply_all_dataoperations_bis(
     Ok(data)
 }
 
-pub fn un_apply_all_dataoperations_bis(
+pub fn un_apply_all_dataoperations(
     dataoperation: Vec<DataOperation>,
     mut data: Vec<u8>,
 ) -> Result<Vec<u8>, anyhow::Error> {

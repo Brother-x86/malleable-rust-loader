@@ -1,5 +1,5 @@
 use log::info;
-use malleable_rust_loader::dataoperation::apply_all_dataoperations_bis;
+use malleable_rust_loader::dataoperation::apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::AeadMaterial;
 use malleable_rust_loader::dataoperation::DataOperation;
 use std::fs;
@@ -34,7 +34,7 @@ fn main() {
         "[+] Apply dataoperation in reverse order {:?}",
         &dataoperations
     );
-    data = apply_all_dataoperations_bis(&mut dataoperations, data).unwrap();
+    data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 
     fs::write(
         output_dataop.as_str(),

@@ -3,7 +3,7 @@ use crate::dataoperation::DataOperation;
 
 use std::fs;
 
-use crate::dataoperation::apply_all_dataoperations_bis;
+use crate::dataoperation::apply_all_dataoperations;
 use crate::dataoperation::AeadMaterial;
 
 use log::info;
@@ -16,7 +16,7 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
     dataoperations.push(DataOperation::AEAD(aead_mat));
 
     let mut data: Vec<u8> = loaderconf.concat_loader_jsondata().into_bytes();
-    data = apply_all_dataoperations_bis(&mut dataoperations, data).unwrap();
+    data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 
     let path_aead_conf = format!("{json_file}.aead");
     info!("[+] Encrypted loader configuration: {}", path_aead_conf);
@@ -34,7 +34,7 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
     info!("[+] Ofuscate AEAD material with ROT13+BASE64");
     let mut dataoperations: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
     let mut data: Vec<u8> = fs::read(format!("{json_file}.aead.dataop")).unwrap();
-    data = apply_all_dataoperations_bis(&mut dataoperations, data).unwrap();
+    data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
     let path_aead_material_rot13b64 = format!("{json_file}.aead.dataop.rot13b64");
     info!(
         "[+] Save ofuscated AEAD material to file: {}",
@@ -44,7 +44,7 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
 
     // create one config WEBPAGE+BASE64
     let mut data = loaderconf.concat_loader_jsondata().into_bytes();
-    data = apply_all_dataoperations_bis(
+    data = apply_all_dataoperations(
         &mut vec![DataOperation::WEBPAGE, DataOperation::BASE64],
         data,
     )
@@ -66,7 +66,7 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
         },
     }
 
-    data = apply_all_dataoperations_bis(&mut vec![DataOperation::STEGANO], data).unwrap();
+    data = apply_all_dataoperations(&mut vec![DataOperation::STEGANO], data).unwrap();
     // TODO, this is useless at this time because output data Vec<u8> are not ok to become an image
     let json_file_steg: String = format!("{json_file}.steg");
     info!("[+] Obfuscated STEGANO config: {}", json_file_steg);
