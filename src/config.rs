@@ -74,27 +74,6 @@ impl Config {
             date: Utc::now(),
         }
     }
-    //TODO check if utile
-    /* 
-    pub fn new_empty() -> Config {
-        let sign_material = VerifSignMaterial {
-            peer_public_key_bytes: vec![],
-            sign_bytes: vec![],
-        };
-        Config {
-            update_links: BTreeMap::new(),
-            sign_material: sign_material,
-            payloads: vec![],
-            defuse_update: vec![],
-            defuse_payload: vec![],
-            sleep: 0,
-            jitt: 0,
-            link_timeout: 0,
-            link_user_agent: "".to_string(),            
-            date: Utc::now(),
-        }
-    }*/
-
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
         update_links: BTreeMap<u64, (String, PoolLinks)>,

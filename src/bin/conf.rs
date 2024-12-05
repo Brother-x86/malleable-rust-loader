@@ -265,7 +265,7 @@ exec(decoded_script)
         );
         panic!()
     }
-
+    /* 
     let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([(
         1,
         (
@@ -302,8 +302,8 @@ exec(decoded_script)
             },
         ),
     )]);
-
-    /*
+*/
+    
     //let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::new();
     let pool_links: BTreeMap<u64, (String, PoolLinks)> = BTreeMap::from([
         (
@@ -386,7 +386,7 @@ exec(decoded_script)
             ),
         ),
     ]);
-    // */
+    // 
 
     // payload is define, now, CREATE the
     info!("[+] LOAD ed25519 keypair from {:?}", keypair);

