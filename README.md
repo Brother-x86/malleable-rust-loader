@@ -98,7 +98,7 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 Fetch data with various methods, du to loader config structure, its easy to add a new Link type.
 
 - [x] **HTTP** : classic http GET download of data -> to retreive
-- [X] **HTTPPostC2** : post reconnaissance data to a C2 (only to retreive a new config), the data are signed with elliptic curv -> depend of a dedicated malleable-server (its working but not released for the moment)
+- [X] **HTTPPostC2** : post reconnaissance data to a C2 (only to retreive a new config), the data send by the loader are signed with elliptic curv -> this link depend on a dedicated malleable-server (its working but not released for the moment)
 - [x] **FILE** : retreive data from a file present in the filesystem (an encrypted dll for example)
 - [x] **MEMORY** : retreive data from internal memory of the loader, this permit to create a packer with dll inside, or to drop specific file into the disk.
 - [ ] **Websocket** (todo!(), ez)
