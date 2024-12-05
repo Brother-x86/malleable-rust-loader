@@ -158,8 +158,8 @@ impl Config {
     pub fn new_fromfile(path_file: &str) -> Config {
         let loader_bytes: Vec<u8> = fs::read(path_file).unwrap();
         let l = std::str::from_utf8(&loader_bytes).unwrap();
-        let loader: Config = serde_json::from_str(l).unwrap();
-        loader
+        let config: Config = serde_json::from_str(l).unwrap();
+        config
     }
 
     pub fn print_loader(&self) {
