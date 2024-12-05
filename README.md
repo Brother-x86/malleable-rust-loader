@@ -594,7 +594,7 @@ list: ["DEBUG-W10"], operator: OR }), DomainJoin(DomainJoin { list: ["sevenkingd
 
 And we got a session in Sliver !
 
-![Sliver session](sliver_session.png?raw=true "Kaboum!")
+![Sliver session](doc/sliver_session.png?raw=true "Kaboum!")
 
 
 ## Stop Antivirus
