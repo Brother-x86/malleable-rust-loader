@@ -40,6 +40,7 @@ pub struct Config {
     pub jitt: u64,
     pub link_timeout: u64,
     pub link_user_agent: String,
+    pub loader_keypair: Vec<u8>,
     pub date: DateTime<Utc>,
 }
 #[allow(dead_code)]
@@ -53,6 +54,7 @@ impl Config {
         jitt: u64,
         link_timeout: u64,
         link_user_agent: String,
+        loader_keypair: Vec<u8>
     ) -> Config {
         let sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
@@ -68,10 +70,12 @@ impl Config {
             jitt: jitt,
             link_timeout: link_timeout,
             link_user_agent: link_user_agent,
+            loader_keypair: loader_keypair,
             date: Utc::now(),
         }
     }
     //TODO check if utile
+    /* 
     pub fn new_empty() -> Config {
         let sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
@@ -89,7 +93,7 @@ impl Config {
             link_user_agent: "".to_string(),            
             date: Utc::now(),
         }
-    }
+    }*/
 
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
@@ -101,6 +105,8 @@ impl Config {
         jitt: u64,
         link_timeout: u64,
         link_user_agent: String,
+        loader_keypair: Vec<u8>,
+
     ) -> Config {
         let mut new_loader = Config::new_unsigned(
             update_links,
@@ -111,6 +117,7 @@ impl Config {
             jitt,
             link_timeout,
             link_user_agent,
+            loader_keypair,
         );
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
         new_loader.sign_material.peer_public_key_bytes = peer_public_key_bytes;
