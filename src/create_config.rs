@@ -61,7 +61,7 @@ pub fn encrypt_config(config: Config, json_config_file: String){
 }
 
 use std::path::Path;
-pub fn initialize_loader_adaptable(config: Config, json_config_file: String) {
+pub fn initialize_all_configs(config: Config, json_config_file: String) {
     // set input image for image...
     // TODO give a list to this function
     let input_image = concat!(env!("HOME"), "/.malleable/config/troll2.jpg");

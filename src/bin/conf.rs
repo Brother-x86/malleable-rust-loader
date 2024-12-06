@@ -7,7 +7,7 @@ use malleable_rust_loader::defuse::Defuse;
 use malleable_rust_loader::defuse::DomainJoin;
 use malleable_rust_loader::defuse::Hostname;
 use malleable_rust_loader::defuse::Operator;
-use malleable_rust_loader::create_config::initialize_loader_adaptable;
+use malleable_rust_loader::create_config::initialize_all_configs;
 use malleable_rust_loader::link::FileLink;
 use malleable_rust_loader::link::HTTPLink;
 use malleable_rust_loader::link::HTTPPostC2Link;
@@ -437,5 +437,5 @@ exec(decoded_script)
     info!("[+] Serialized loader configuration: {json_file}");
     config.serialize_to_file_pretty(&json_file);
 
-    initialize_loader_adaptable(config, json_file);
+    initialize_all_configs(config, json_file);
 }

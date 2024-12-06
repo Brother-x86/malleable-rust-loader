@@ -45,6 +45,7 @@ fn main() {
     cryptify::flow_stmt!();
     let session_id: String = uuid::Uuid::new_v4().to_string();
     info!("{}{}", lc!("[+] session_id "),session_id);
+    info!("");
     
     let initial_config_encrypted = INITIAL_CONFIG_ENCRYPTED.to_vec();
     let obfuscated_config_decrypt_key = OBFUSCATED_CONFIG_DECRYPT_KEY.to_vec();

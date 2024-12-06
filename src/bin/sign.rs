@@ -1,5 +1,5 @@
 use log::info;
-use malleable_rust_loader::{config::Config, create_config::initialize_loader_adaptable};
+use malleable_rust_loader::{config::Config, create_config::initialize_all_configs};
 use std::env;
 extern crate env_logger;
 use argparse::{ArgumentParser, Store};
@@ -33,5 +33,5 @@ fn main() {
     info!("[+] Write sign_bytes to: {config_file_to_sign}");
     loader.serialize_to_file_pretty(&config_file_to_sign);
     info!("[+] Done!");
-    initialize_loader_adaptable(loader, config_file_to_sign.to_string());
+    initialize_all_configs(loader, config_file_to_sign.to_string());
 }
