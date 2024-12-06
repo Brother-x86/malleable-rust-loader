@@ -113,13 +113,14 @@ The way to modify fetch data from link
 - [x] **AEAD** -> encrypt and verify data.
 - [x] **STEGANO** -> hide data in png (jpg seems not to work)
 - [x] **REVERSE** -> todo!()
+- [x] **ZLIB**
 
 # Design
 
 ## Exec steps explanation
 
 The loader when running:
-1. Decrypt the first config file from memory
+1. Decrypt and verify the initial config file from memory
 2. Verify if defuse conditions to reload config are met or stop exec
 3. Reload its configuration by downloading a new one from first Link (various protocol)
 4. De-obfuscate collected configuration data
@@ -128,7 +129,7 @@ The loader when running:
 7. Verify if exec defuse conditions are met before next steps
 8. Run the defined payloads !
 
-If payload run in Thread, go to an other loop.
+If payload run in Thread, do an other loop. This permit to reload config during execution of multiple payload Thread ! This give an opportunity to keep the control on the loader and run more payloads !
 
 ## Execution workflow
 
