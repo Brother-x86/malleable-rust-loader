@@ -14,6 +14,8 @@ parser.add_argument('--mem3',default=False,action='store_true',help='add a file 
 parser.add_argument('--mem4',default=False,action='store_true',help='add a file in MEMORY_4 at compilation time, file should be located here: ~/.malleable/config/mem4')
 parser.add_argument('-exec_target',default='',help='[[domain/]username[:password]@]<targetName or address>, by default use the content of ~/.exec')
 parser.add_argument('-exec_method',default='psexec.py',help='Method to execute on the Windows side, default psexec.py')
+parser.add_argument('--no_exec',default=False,action='store_true',help='Compile only and drop with smb to the target but dont execute')
+#parser.add_argument('--no_drop',default=False,action='store_true',help='Compile only, dont drop to the target,dont execute')
 parser.add_argument('--ollvm',default=False,action='store_true',help='OLLVM obfuscation, add the release flag automatically')
 parser.add_argument('--release',default=False,action='store_true',help='activate the cargo release mode for compilation, sinon its debug')
 parser.add_argument('--log','--debug',default=False,action='store_true',help='activate the agent debug log into STDOUT, you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
@@ -106,10 +108,11 @@ exit
 EOF
 '''
         os.system(upload_comm)
-        log.info(f'[+] exec c:\\{filename_target} with {args.exec_method}')
-        exec_comm=f"{args.exec_method} {exec_target} c:\\\\{filename_target}"
-        log.debug(exec_comm)
-        os.system(exec_comm)
+        if not args.no_exec:
+            log.info(f'[+] exec c:\\{filename_target} with {args.exec_method}')
+            exec_comm=f"{args.exec_method} {exec_target} c:\\\\{filename_target}"
+            log.debug(exec_comm)
+            os.system(exec_comm)
     else:
         log.info('[+] compilation failed')
         os.system('rm -f config/*')

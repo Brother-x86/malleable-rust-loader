@@ -1,5 +1,6 @@
+#![cfg_attr(not(feature="logdebug"), windows_subsystem = "windows")]
+
 use malleable_rust_loader::config::Config;
-//use malleable_rust_loader::link::LinkFetch;
 use std::thread;
 
 #[macro_use]
@@ -100,6 +101,3 @@ fn main() {
         loop_nb = loop_nb + 1;
     }
 }
-
-
-/* running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) */
