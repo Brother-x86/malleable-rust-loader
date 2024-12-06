@@ -22,9 +22,13 @@ use rand::Rng;
 use ring::rand::SecureRandom;
 use ring::rand::SystemRandom;
 
+use flate2::Compression;
+use flate2::write::ZlibEncoder;
+use flate2::write::ZlibDecoder;
+use std::io::Write;
+
 use cryptify::encrypt_string;
 use log::debug;
-use log::info;
 
 struct CounterNonceSequence(u32);
 
@@ -52,6 +56,7 @@ pub enum DataOperation {
     ROT13, //only after base64 because input is String
     REVERSE,
     STEGANO,
+    ZLIB,
 }
 
 pub trait UnApplyDataOperation {
@@ -85,6 +90,17 @@ pub trait UnApplyDataOperation {
         debug!("{}", encrypt_string!("dataoperation: STEGANO decode"));
         Ok(reveal_mod(data)?)
     }
+
+    fn zlib_decompress(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("{}", encrypt_string!("dataoperation: ZLIB decode"));
+        let writer = Vec::new();
+        let mut d: ZlibDecoder<Vec<u8>> = ZlibDecoder::new(writer);
+        let _ = d.write_all(&data);
+        let writer: Vec<u8> = d.finish()?;
+        Ok(writer)
+    }
+
+
 }
 impl UnApplyDataOperation for DataOperation {
     fn un_apply_one_operation(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -94,7 +110,8 @@ impl UnApplyDataOperation for DataOperation {
             DataOperation::WEBPAGE => self.webpage_harvesting(data),
             DataOperation::AEAD(aead_material) => aead_material.decrypt_mat(data),
             DataOperation::STEGANO => self.stegano_decode_lsb(data),
-            _ => todo!(),
+            DataOperation::ZLIB => self.zlib_decompress(data),
+            DataOperation::REVERSE => todo!(),
         }
     }
 }
@@ -119,23 +136,39 @@ pub trait ApplyDataOperation {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
 
         let input_image: String = env::var("STEGANO_INPUT_IMAGE").unwrap();
-        info!(
+        let output_image: String = env::var("STEGANO_OUTPUT_IMAGE").unwrap();
+        debug!(
             "{}{}",
             encrypt_string!("STEGANO_INPUT_IMAGE: "),
             input_image
         );
-        let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
+        debug!(
+            "{}{}",
+            encrypt_string!("STEGANO_OUTPUT_IMAGE: "),
+            output_image
+        );
+       let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
 
         //TODO, try to remove this part
-        let output_image = format! {"{}.steg.png",input_image};
-        info!("{}{}", encrypt_string!("IMAGE SAVE to "), &output_image);
+        //let output_image: String = format! {"{}.stegano.png",input_image};
+        debug!("{}{}", encrypt_string!("IMAGE SAVE to "), &output_image);
         img.save(output_image).unwrap();
 
         //this part is useless as vec is not the good way to save IMAGE
         // TODO: try to img.export to vec, and then save it later differently
         Ok(img.to_vec())
     }
+
+    fn zlib_encode(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("{}", encrypt_string!("dataoperation: ZLIB encode"));
+        let mut e: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
+        let _ = e.write_all(&data);
+        let compressed_bytes = e.finish()?;
+        Ok(compressed_bytes)
+    }
 }
+
+
 impl ApplyDataOperation for DataOperation {
     fn apply_one_operation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         match self {
@@ -144,7 +177,8 @@ impl ApplyDataOperation for DataOperation {
             DataOperation::WEBPAGE => self.webpage_create(data),
             DataOperation::AEAD(aead_material) => aead_material.encrypt_mat(data),
             DataOperation::STEGANO => self.stegano_encode_lsb(data),
-            _ => todo!(),
+            DataOperation::ZLIB => self.zlib_encode(data),
+            DataOperation::REVERSE => todo!(),
         }
     }
 }
