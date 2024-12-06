@@ -80,7 +80,7 @@ def main():
 
     else:
         log.info("[+] OLLVM Compilation")
-        os.system('cp ~/.malleable/config/initial.json.aead* ~/.malleable/config/mem* config/')
+        os.system('cp ~/.malleable/config/initial.json* ~/.malleable/config/mem* config/')
         comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
         log.info(comm)
         compil_result=os.system(comm)

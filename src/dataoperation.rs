@@ -29,7 +29,6 @@ use std::io::Write;
 
 use cryptify::encrypt_string;
 use log::debug;
-use log::info;
 
 struct CounterNonceSequence(u32);
 
@@ -137,16 +136,22 @@ pub trait ApplyDataOperation {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
 
         let input_image: String = env::var("STEGANO_INPUT_IMAGE").unwrap();
-        info!(
+        let output_image: String = env::var("STEGANO_OUTPUT_IMAGE").unwrap();
+        debug!(
             "{}{}",
             encrypt_string!("STEGANO_INPUT_IMAGE: "),
             input_image
         );
-        let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
+        debug!(
+            "{}{}",
+            encrypt_string!("STEGANO_OUTPUT_IMAGE: "),
+            output_image
+        );
+       let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
 
         //TODO, try to remove this part
-        let output_image = format! {"{}.steg.png",input_image};
-        info!("{}{}", encrypt_string!("IMAGE SAVE to "), &output_image);
+        //let output_image: String = format! {"{}.stegano.png",input_image};
+        debug!("{}{}", encrypt_string!("IMAGE SAVE to "), &output_image);
         img.save(output_image).unwrap();
 
         //this part is useless as vec is not the good way to save IMAGE

