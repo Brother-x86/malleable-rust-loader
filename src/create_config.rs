@@ -47,11 +47,15 @@ pub fn encrypt_config(config: Config, json_config_file: String){
     fs::write(&path_aead_material_obfuscated, &data).expect(message);  
 
     //NEW!  
+
     let path_aead_material_obfuscated_dataop = format!("{decrypt_file}.aead.dataop.obfuscated.dataop");
     dataoperations.reverse();
+    let mut obfuscated_dataop_zlib=serde_json::to_vec(&dataoperations).unwrap();
+    let mut zlib_dataop: Vec<DataOperation> = vec![DataOperation::ZLIB];
+    obfuscated_dataop_zlib = apply_all_dataoperations(&mut zlib_dataop, obfuscated_dataop_zlib).unwrap();
     fs::write(
         &path_aead_material_obfuscated_dataop,
-        serde_json::to_string(&dataoperations).unwrap(),
+        obfuscated_dataop_zlib,
     ).expect(message);
     info!(        "[+] AEAD decryption key de-obfuscation steps: {}", path_aead_material_obfuscated_dataop    );
 }
