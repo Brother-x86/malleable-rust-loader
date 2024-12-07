@@ -161,7 +161,8 @@ pub trait ApplyDataOperation {
 
     fn zlib_encode(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: ZLIB encode"));
-        let mut e: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
+        //let mut e: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
+        let mut e: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::best());
         let _ = e.write_all(&data);
         let compressed_bytes = e.finish()?;
         Ok(compressed_bytes)
