@@ -263,8 +263,9 @@ Here you will :
 Run this:
 
 ```
-cargo run --bin initmasterkey
+apt install pkg-config openssl-devel
 rustup target add x86_64-pc-windows-gnu
+cargo run --bin initmasterkey
 ```
 
 ### .bashrc addition
