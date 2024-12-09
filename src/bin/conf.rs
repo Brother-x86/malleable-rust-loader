@@ -411,7 +411,7 @@ exec(decoded_script)
         ],
         vec![
             Defuse::Hostname(Hostname {
-                list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string()],
+                list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string() ,"Nidhogg".to_string()],
                 operator: Operator::OR,
             }),
             Defuse::DomainJoin(DomainJoin {

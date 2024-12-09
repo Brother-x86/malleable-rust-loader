@@ -64,7 +64,7 @@ use std::path::Path;
 pub fn initialize_all_configs(config: Config, json_config_file: String) {
     // set input image for image...
     // TODO give a list to this function
-    let input_image = concat!(env!("HOME"), "/.malleable/config/troll2.jpg");
+    let input_image = concat!(env!("HOME"), "/.malleable/config/troll.png");
     let input_image_name = Path::new(input_image).file_name().unwrap().to_str().unwrap().to_lowercase();
     match env::var("STEGANO_INPUT_IMAGE") {
         Ok(_) => (),
