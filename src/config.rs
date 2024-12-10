@@ -26,11 +26,6 @@ pub struct VerifSignMaterial {
     pub sign_bytes: Vec<u8>,
 }
 
-pub fn yolo(){
-
-}
-
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
