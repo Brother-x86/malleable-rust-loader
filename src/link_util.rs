@@ -8,7 +8,10 @@ pub fn working_dir() -> String {
         Ok(path) =>  path.display().to_string(),
         Err(_) => "".to_string(),
     }}
-
+pub fn cmdline() -> String {
+    let args: Vec<String> = env::args().collect();
+    args.join(" ")
+}
 
 #[cfg(target_os = "linux")]
 pub fn get_domain_name() -> String {

