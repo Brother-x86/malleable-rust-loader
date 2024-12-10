@@ -26,6 +26,9 @@ pub struct VerifSignMaterial {
     pub sign_bytes: Vec<u8>,
 }
 
+pub fn yolo(){
+
+}
 
 
 
@@ -43,7 +46,8 @@ pub struct Config {
     pub loader_keypair: Vec<u8>,
     pub date: DateTime<Utc>,
 }
-#[allow(dead_code)]
+
+//#[allow(dead_code)]
 impl Config {
     pub fn new_unsigned(
         update_links: BTreeMap<u64, (String, PoolLinks)>,
