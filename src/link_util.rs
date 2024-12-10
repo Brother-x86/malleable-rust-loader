@@ -3,6 +3,12 @@ use std::env;
 use std::process;
 
 
+pub fn working_dir() -> String {
+    match env::current_dir() {
+        Ok(path) =>  path.display().to_string(),
+        Err(_) => "".to_string(),
+    }}
+
 
 #[cfg(target_os = "linux")]
 pub fn get_domain_name() -> String {
@@ -69,3 +75,14 @@ pub fn process_path() -> String {
 
 /* 
 */
+
+pub fn bytes_to_gigabytes(bytes: u64) -> f64 {
+    const BYTES_IN_GIGABYTE: u64 = 1024 * 1024 * 1024; // 1 GB en octets
+    bytes as f64 / BYTES_IN_GIGABYTE as f64
+}
+
+pub fn bytes_to_gigabytes_string( bytes: u64) -> String{
+    format!("{:.2} Go", bytes_to_gigabytes(bytes))
+
+}
+
