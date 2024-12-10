@@ -1,3 +1,5 @@
+use crate::lsb_text_png_steganography_mod::{hide_mod, reveal_mod};
+
 use anyhow::anyhow;
 use anyhow::{Context, Result};
 
@@ -31,8 +33,6 @@ use cryptify::encrypt_string;
 use log::debug;
 
 struct CounterNonceSequence(u32);
-
-use crate::lsb_text_png_steganography_mod::{hide_mod, reveal_mod};
 use std::env;
 
 impl NonceSequence for CounterNonceSequence {
@@ -243,6 +243,7 @@ impl AeadMaterial {
         Ok(in_out)
         //Ok((in_out,tag))
     }
+    #[allow(dead_code)]
     pub fn init_aead_key_material() -> AeadMaterial {
         let rand: SystemRandom = SystemRandom::new();
         let mut key_bytes: Vec<u8> = vec![0; AES_256_GCM.key_len()];

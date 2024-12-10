@@ -28,6 +28,7 @@ fn main() {
     let output_payload: String = format!("{}{}", payload, ".aead").to_string();
 
     let mut dataoperations: Vec<DataOperation> = vec![DataOperation::ZLIB,DataOperation::AEAD(aead_mat),DataOperation::ZLIB];
+
     info!("[+] Payload open {}", payload.as_str());
     let mut data: Vec<u8> = fs::read(payload.as_str()).unwrap();
     info!(
