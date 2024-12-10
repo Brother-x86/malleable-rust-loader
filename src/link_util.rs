@@ -38,8 +38,7 @@ pub fn get_domain_name() -> String {
         domain_name_str
 }
 
-pub fn process_name_and_parent() -> (String,String) {
-    let sys: System = System::new_all();
+pub fn process_name_and_parent(sys: &System) -> (String,String) {
     let process_name:String;
     let parent_name:String;
     if let Some(p) = sys.process(Pid::from_u32(process::id())) {

