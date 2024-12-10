@@ -1,3 +1,9 @@
+use sysinfo::{System, Pid};
+use std::env;
+use std::process;
+
+
+
 #[cfg(target_os = "linux")]
 pub fn get_domain_name() -> String {
     "".to_string()
@@ -31,3 +37,36 @@ pub fn get_domain_name() -> String {
         let domain_name_str = unsafe { std::ffi::CStr::from_ptr(domain_name as _).to_str().unwrap().to_string() } ;
         domain_name_str
 }
+
+pub fn process_name_and_parent() -> (String,String) {
+    let sys: System = System::new_all();
+    let process_name:String;
+    let parent_name:String;
+    if let Some(p) = sys.process(Pid::from_u32(process::id())) {
+        process_name = p.name().to_string_lossy().to_string();
+        if let Some(pp) = p.parent() {
+            if let Some(pparent) = sys.process(pp){
+                parent_name= pparent.name().to_string_lossy().to_string();
+            }else{
+                parent_name="".to_string();
+            }
+        }else{
+            parent_name="".to_string();
+        }
+    } else {
+        process_name = "".to_string();
+        parent_name = "".to_string();
+    };
+    (process_name,parent_name)
+}
+
+pub fn process_path() -> String {
+    let process_path: String = match env::current_exe(){
+        Ok(ppp) => ppp.to_string_lossy().to_string(),
+        Err(_) => "".to_string()
+    };
+    process_path
+}
+
+/* 
+*/

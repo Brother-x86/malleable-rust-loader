@@ -35,6 +35,7 @@ flate2 = "1.0.35"
 zerofrom = "=0.1.4"
 litemap = "=0.7.3"
 yoke = "=0.7.4"
+sysinfo = "0.33.0"
 
 [dependencies.uuid]
 version = "1.11.0"
