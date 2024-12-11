@@ -263,8 +263,11 @@ Here you will :
 Run this:
 
 ```
-cargo run --bin initmasterkey
+apt install pkg-config openssl-devel gcc-mingw-w64-x86-64
 rustup target add x86_64-pc-windows-gnu
+cargo run --bin initmasterkey
+# this key should be only used for one loader:
+cargo run --bin initloadermasterkey
 ```
 
 ### .bashrc addition

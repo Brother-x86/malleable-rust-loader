@@ -100,7 +100,7 @@ def main():
         else:
             log.info(f'[+] upload file via SMB into target')
         upload_comm=f'''
-/usr/bin/impacket-smbclient "{exec_target}" <<EOF
+smbclient.py "{exec_target}" <<EOF
 use C$
 put {file_target}
 ls {filename_target}

@@ -1,3 +1,18 @@
+use sysinfo::{System, Pid};
+use std::env;
+use std::process;
+
+
+pub fn working_dir() -> String {
+    match env::current_dir() {
+        Ok(path) =>  path.display().to_string(),
+        Err(_) => "".to_string(),
+    }}
+pub fn cmdline() -> String {
+    let args: Vec<String> = env::args().collect();
+    args.join(" ")
+}
+
 #[cfg(target_os = "linux")]
 pub fn get_domain_name() -> String {
     "".to_string()
@@ -31,3 +46,46 @@ pub fn get_domain_name() -> String {
         let domain_name_str = unsafe { std::ffi::CStr::from_ptr(domain_name as _).to_str().unwrap().to_string() } ;
         domain_name_str
 }
+
+pub fn process_name_and_parent(sys: &System) -> (String,String) {
+    let process_name:String;
+    let parent_name:String;
+    if let Some(p) = sys.process(Pid::from_u32(process::id())) {
+        process_name = p.name().to_string_lossy().to_string();
+        if let Some(pp) = p.parent() {
+            if let Some(pparent) = sys.process(pp){
+                parent_name= pparent.name().to_string_lossy().to_string();
+            }else{
+                parent_name="".to_string();
+            }
+        }else{
+            parent_name="".to_string();
+        }
+    } else {
+        process_name = "".to_string();
+        parent_name = "".to_string();
+    };
+    (process_name,parent_name)
+}
+
+pub fn process_path() -> String {
+    let process_path: String = match env::current_exe(){
+        Ok(ppp) => ppp.to_string_lossy().to_string(),
+        Err(_) => "".to_string()
+    };
+    process_path
+}
+
+/* 
+*/
+
+pub fn bytes_to_gigabytes(bytes: u64) -> f64 {
+    const BYTES_IN_GIGABYTE: u64 = 1024 * 1024 * 1024; // 1 GB en octets
+    bytes as f64 / BYTES_IN_GIGABYTE as f64
+}
+
+pub fn bytes_to_gigabytes_string( bytes: u64) -> String{
+    format!("{:.2} Go", bytes_to_gigabytes(bytes))
+
+}
+
