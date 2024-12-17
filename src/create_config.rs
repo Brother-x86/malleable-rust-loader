@@ -1,12 +1,11 @@
 use crate::config::Config;
 use crate::dataoperation::DataOperation;
 use crate::link::LinkFetch;
-//use crate::poollink;
 
 use std::fs;
 
 use crate::dataoperation::apply_all_dataoperations;
-use crate::dataoperation::AeadMaterial;
+use crate::dataoperation::AesMaterial;
 
 use log::info;
 use log::debug;
@@ -17,53 +16,55 @@ pub fn encrypt_config(config: Config, json_config_file: String){
     let decrypt_file= format!("{}.encrypted",json_config_file);
 
     let mut dataoperations: Vec<DataOperation> = vec![];
-    let aead_mat: AeadMaterial = AeadMaterial::init_aead_key_material();
-    dataoperations.push(DataOperation::AEAD(aead_mat));
+    let aes_mat: AesMaterial = AesMaterial::generate_aes_material();
+    dataoperations.push(DataOperation::AES(aes_mat));
 
     let mut data: Vec<u8> = config.concat_loader_jsondata().into_bytes();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 
-    let path_aead_conf = format!("{decrypt_file}.aead");
-    info!("[+] AEAD encrypted loader config: {}", path_aead_conf);
-    fs::write(&path_aead_conf, &data).expect(message);
+    let path_aes_conf = format!("{decrypt_file}.aes");
+    info!("[+] AES encrypted loader config: {}", path_aes_conf);
+    fs::write(&path_aes_conf, &data).expect(message);
 
-    let path_aead_material = format!("{decrypt_file}.aead.dataop");
-    info!("[+] AEAD decryption key material: {}", path_aead_material);
+    let path_aes_material = format!("{decrypt_file}.aes.dataop");
+    info!("[+] AES decryption key material: {}", path_aes_material);
     fs::write(
-        &path_aead_material,
+        &path_aes_material,
         serde_json::to_string(&dataoperations).unwrap(),
     ).expect(message);
 
-    // Ofuscate AEAD material with ROT13+BASE64
+    // Ofuscate AES material with ROT13+BASE64
     let mut dataoperations: Vec<DataOperation> = vec![DataOperation::ROT13, DataOperation::BASE64,DataOperation::ZLIB];
     
-    let mut data: Vec<u8> = fs::read(format!("{decrypt_file}.aead.dataop")).unwrap();
+    let mut data: Vec<u8> = fs::read(format!("{decrypt_file}.aes.dataop")).unwrap();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
-    let path_aead_material_obfuscated = format!("{decrypt_file}.aead.dataop.obfuscated");
+    let path_aes_material_obfuscated = format!("{decrypt_file}.aes.dataop.obfuscated");
     info!(
-        "[+] AEAD decryption key obfuscated with {:?}: {}",dataoperations,
-        path_aead_material_obfuscated
+        "[+] AES decryption key obfuscated with {:?}: {}",dataoperations,
+        path_aes_material_obfuscated
     );
-    fs::write(&path_aead_material_obfuscated, &data).expect(message);  
+    fs::write(&path_aes_material_obfuscated, &data).expect(message);  
 
     //NEW!  
 
-    let path_aead_material_obfuscated_dataop = format!("{decrypt_file}.aead.dataop.obfuscated.dataop");
+    let path_aes_material_obfuscated_dataop = format!("{decrypt_file}.aes.dataop.obfuscated.dataop");
     dataoperations.reverse();
     let mut obfuscated_dataop_zlib=serde_json::to_vec(&dataoperations).unwrap();
     let mut zlib_dataop: Vec<DataOperation> = vec![DataOperation::ZLIB];
     obfuscated_dataop_zlib = apply_all_dataoperations(&mut zlib_dataop, obfuscated_dataop_zlib).unwrap();
     fs::write(
-        &path_aead_material_obfuscated_dataop,
+        &path_aes_material_obfuscated_dataop,
         obfuscated_dataop_zlib,
     ).expect(message);
-    info!(        "[+] AEAD decryption key de-obfuscation steps: {}", path_aead_material_obfuscated_dataop    );
+    info!(        "[+] AES decryption key de-obfuscation steps: {}", path_aes_material_obfuscated_dataop    );
 }
+
+
 
 use std::path::Path;
 pub fn initialize_all_configs(config: Config, json_config_file: String) {
     // set input image for image...
-    // TODO give a list to this function
+    // TODO give a list of image to this function
     let input_image = concat!(env!("HOME"), "/.malleable/config/troll.png");
     let input_image_name = Path::new(input_image).file_name().unwrap().to_str().unwrap().to_lowercase();
     match env::var("STEGANO_INPUT_IMAGE") {
@@ -75,7 +76,6 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
             );
         },
     }
-    // /home/user/.malleable/config/initial.json.zlib.base64.stegano-troll2.jpg.png
 
     encrypt_config(config.clone(),json_config_file.clone());
     
@@ -91,7 +91,6 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
     //TODO encrypt config
 
     
-    //TOOD ajouter les operation de la config initial (et on pourrait aussi ZLIB le tout que ce soit plus ptit)
     debug!("Data operation list for Config: {:?}",dataope_list);
     for mut dataop in dataope_list{
         let mut extension_file_name="".to_string();

