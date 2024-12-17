@@ -38,16 +38,27 @@ pub struct PoolLinks {
 }
 
 impl PoolLinks {
-    pub fn update_pool(&self, config: &Config,session_id: &String,running_thread: &Vec<Payload>) -> Result<Config, anyhow::Error> {
+    pub fn update_pool(
+        &self,
+        config: &Config,
+        session_id: &String,
+        running_thread: &Vec<Payload>,
+    ) -> Result<Config, anyhow::Error> {
         match &self.pool_mode {
-            PoolMode::SIMPLE => self.update_links_simple(config,session_id,running_thread),
-            PoolMode::ADVANCED(advanced) => self.update_links_advanced(config, advanced,session_id,running_thread),
+            PoolMode::SIMPLE => self.update_links_simple(config, session_id, running_thread),
+            PoolMode::ADVANCED(advanced) => {
+                self.update_links_advanced(config, advanced, session_id, running_thread)
+            }
         }
     }
 
     //TODO update with date check and remove DECISION message, only print the config number if needed.
-    pub fn update_links_simple(&self, config: &Config,session_id: &String,running_thread: &Vec<Payload>
-) -> Result<Config, anyhow::Error> {
+    pub fn update_links_simple(
+        &self,
+        config: &Config,
+        session_id: &String,
+        running_thread: &Vec<Payload>,
+    ) -> Result<Config, anyhow::Error> {
         let advanced = Advanced {
             random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
             max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
@@ -57,14 +68,15 @@ impl PoolLinks {
             stop_new: false,    // stop if found a new conf -> not for parallel
             accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
         };
-        self.update_links_advanced(config, &advanced,session_id,running_thread)
+        self.update_links_advanced(config, &advanced, session_id, running_thread)
     }
 
     pub fn update_links_advanced(
         &self,
         config: &Config,
-        advanced: &Advanced,session_id: &String,running_thread: &Vec<Payload>
-
+        advanced: &Advanced,
+        session_id: &String,
+        running_thread: &Vec<Payload>,
     ) -> Result<Config, anyhow::Error> {
         let pool_link: Vec<Link>;
 
@@ -123,8 +135,13 @@ impl PoolLinks {
                 let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
                     thread::spawn(move || {
                         debug!("{}{}", encrypt_string!("thread begin, link: "), link_nb);
-                        let newconfig: Config =
-                            thread_link.fetch_config(&thread_config, &thread_advanced, link_nb,&thread_session_id,&thread_running_thread)?;
+                        let newconfig: Config = thread_link.fetch_config(
+                            &thread_config,
+                            &thread_advanced,
+                            link_nb,
+                            &thread_session_id,
+                            &thread_running_thread,
+                        )?;
                         debug!("{}{}", encrypt_string!("thread end, link: {}"), link_nb);
                         Ok((newconfig, link_nb))
                     });
@@ -162,7 +179,13 @@ impl PoolLinks {
                     encrypt_string!(" Link: "),
                     &link.get_target()
                 );
-                let newconfig: Config = match link.fetch_config(config, advanced, link_nb,session_id,running_thread) {
+                let newconfig: Config = match link.fetch_config(
+                    config,
+                    advanced,
+                    link_nb,
+                    session_id,
+                    running_thread,
+                ) {
                     Ok(newconfig) => {
                         info!(
                             "{}{}",

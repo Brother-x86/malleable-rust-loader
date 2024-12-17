@@ -27,7 +27,11 @@ fn main() {
     let output_dataop: String = format!("{}{}", payload, ".dataop").to_string();
     let output_payload: String = format!("{}{}", payload, ".aes").to_string();
 
-    let mut dataoperations: Vec<DataOperation> = vec![DataOperation::ZLIB,DataOperation::AES(aes_mat),DataOperation::ZLIB];
+    let mut dataoperations: Vec<DataOperation> = vec![
+        DataOperation::ZLIB,
+        DataOperation::AES(aes_mat),
+        DataOperation::ZLIB,
+    ];
 
     info!("[+] Payload open {}", payload.as_str());
     let mut data: Vec<u8> = fs::read(payload.as_str()).unwrap();

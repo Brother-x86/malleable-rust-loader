@@ -7,11 +7,9 @@ use regex::Regex;
 use rot13::rot13;
 use serde::{Deserialize, Serialize};
 
-
-
-use flate2::Compression;
-use flate2::write::ZlibEncoder;
 use flate2::write::ZlibDecoder;
+use flate2::write::ZlibEncoder;
+use flate2::Compression;
 use std::io::Write;
 
 use cryptify::encrypt_string;
@@ -70,8 +68,6 @@ pub trait UnApplyDataOperation {
         let writer: Vec<u8> = d.finish()?;
         Ok(writer)
     }
-
-
 }
 impl UnApplyDataOperation for DataOperation {
     fn un_apply_one_operation(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -118,7 +114,7 @@ pub trait ApplyDataOperation {
             encrypt_string!("STEGANO_OUTPUT_IMAGE: "),
             output_image
         );
-       let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
+        let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
 
         //TODO, try to remove this part
         //let output_image: String = format! {"{}.stegano.png",input_image};
@@ -139,7 +135,6 @@ pub trait ApplyDataOperation {
         Ok(compressed_bytes)
     }
 }
-
 
 impl ApplyDataOperation for DataOperation {
     fn apply_one_operation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -177,51 +172,69 @@ pub fn un_apply_all_dataoperations(
     Ok(data)
 }
 
-use anyhow::bail;
 use aes_gcm_siv::{
     aead::{Aead, KeyInit, OsRng},
-    Aes256GcmSiv, Nonce // Or `Aes128GcmSiv`
+    Aes256GcmSiv,
+    Nonce, // Or `Aes128GcmSiv`
 };
-
+use anyhow::bail;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct AesMaterial{
-    pub key :Vec<u8>,
-    pub nonce:[u8; 12]
+pub struct AesMaterial {
+    pub key: Vec<u8>,
+    pub nonce: [u8; 12],
 }
 impl AesMaterial {
     fn decrypt_aes(&self, ciphertext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: AES decrypt"));
-        let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> = aes_gcm_siv::aead::generic_array::GenericArray::clone_from_slice(&self.key);
+        let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> =
+            aes_gcm_siv::aead::generic_array::GenericArray::clone_from_slice(&self.key);
         let cipher = Aes256GcmSiv::new(&key);
         let nonce = Nonce::from_slice(&self.nonce); // 96-bits; unique per message
         let plaintext: Vec<u8> = match cipher.decrypt(nonce, ciphertext.as_ref()) {
             Ok(data) => data,
-            Err(e) => bail!("plaintext error: {}",e)
+            Err(e) => bail!("plaintext error: {}", e),
         };
         Ok(plaintext)
-        }
+    }
 
     fn encrypt_aes(&mut self, plaintext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: AES encrypt"));
-        let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> = aes_gcm_siv::aead::generic_array::GenericArray::clone_from_slice(&self.key);
+        let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> =
+            aes_gcm_siv::aead::generic_array::GenericArray::clone_from_slice(&self.key);
         let cipher = Aes256GcmSiv::new(&key);
-        let nonce: &aes_gcm_siv::aead::generic_array::GenericArray<u8, aes_gcm_siv::aead::generic_array::typenum::UInt<aes_gcm_siv::aead::generic_array::typenum::UInt<aes_gcm_siv::aead::generic_array::typenum::UInt<aes_gcm_siv::aead::generic_array::typenum::UInt<aes_gcm_siv::aead::generic_array::typenum::UTerm, aes_gcm_siv::aead::consts::B1>, aes_gcm_siv::aead::consts::B1>, aes_gcm_siv::aead::consts::B0>, aes_gcm_siv::aead::consts::B0>> = Nonce::from_slice(&self.nonce);
+        let nonce: &aes_gcm_siv::aead::generic_array::GenericArray<
+            u8,
+            aes_gcm_siv::aead::generic_array::typenum::UInt<
+                aes_gcm_siv::aead::generic_array::typenum::UInt<
+                    aes_gcm_siv::aead::generic_array::typenum::UInt<
+                        aes_gcm_siv::aead::generic_array::typenum::UInt<
+                            aes_gcm_siv::aead::generic_array::typenum::UTerm,
+                            aes_gcm_siv::aead::consts::B1,
+                        >,
+                        aes_gcm_siv::aead::consts::B1,
+                    >,
+                    aes_gcm_siv::aead::consts::B0,
+                >,
+                aes_gcm_siv::aead::consts::B0,
+            >,
+        > = Nonce::from_slice(&self.nonce);
         let plaintext_u8: &[u8] = &plaintext;
-        let ciphertext: Vec<u8> = match cipher.encrypt(nonce,plaintext_u8 ) {
+        let ciphertext: Vec<u8> = match cipher.encrypt(nonce, plaintext_u8) {
             Ok(data) => data,
-            Err(e) => bail!("ciphertext error: {}",e)
+            Err(e) => bail!("ciphertext error: {}", e),
         };
         Ok(ciphertext)
     }
     pub fn generate_aes_material() -> AesMaterial {
-        let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> = Aes256GcmSiv::generate_key(&mut OsRng);
+        let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> =
+            Aes256GcmSiv::generate_key(&mut OsRng);
         //TODO randomized the nonce
         // 96-bits; unique per message
-        let nonce_slice: &[u8; 12]=b"unique nonce";
-        AesMaterial{
-            key:key.as_slice().to_owned(),
-            nonce:nonce_slice.to_owned()
+        let nonce_slice: &[u8; 12] = b"unique nonce";
+        AesMaterial {
+            key: key.as_slice().to_owned(),
+            nonce: nonce_slice.to_owned(),
         }
     }
 }
