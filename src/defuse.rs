@@ -19,7 +19,7 @@ pub enum Defuse {
     CheckInternet(CheckInternet),
 }
 impl Defuse {
-    pub fn stop_the_exec(&self,config:&Config) -> bool {
+    pub fn stop_the_exec(&self, config: &Config) -> bool {
         match self {
             Defuse::Hostname(hostname) => hostname.stop_exec(config),
             Defuse::DomainJoin(domain_join) => domain_join.stop_exec(config),
@@ -44,7 +44,7 @@ pub enum Operator {
 }
 
 pub trait DefuseCheck {
-    fn stop_exec(&self,config:&Config) -> bool;
+    fn stop_exec(&self, config: &Config) -> bool;
     fn get_operator(&self) -> Operator;
 }
 
@@ -54,7 +54,7 @@ pub struct CheckInternet {
     pub operator: Operator,
 }
 impl DefuseCheck for CheckInternet {
-    fn stop_exec(&self,config:&Config) -> bool {
+    fn stop_exec(&self, config: &Config) -> bool {
         for url in &self.list {
             debug!("{}{}", encrypt_string!("check internet: "), url);
             let link: Link = Link::HTTP(HTTPLink {
@@ -84,7 +84,7 @@ pub struct Hostname {
     pub operator: Operator,
 }
 impl DefuseCheck for Hostname {
-    fn stop_exec(&self,_config:&Config) -> bool {
+    fn stop_exec(&self, _config: &Config) -> bool {
         //TODO virer le unwrap
         let hostname = gethostname()
             .to_ascii_uppercase()
@@ -119,7 +119,7 @@ pub struct Env {
     pub operator: Operator,
 }
 impl DefuseCheck for Env {
-    fn stop_exec(&self,_config:&Config) -> bool {
+    fn stop_exec(&self, _config: &Config) -> bool {
         match env::var(&self.var) {
             Ok(value) => {
                 if value == self.value {
@@ -172,7 +172,7 @@ pub struct DomainJoin {
 
 #[cfg(target_os = "linux")]
 impl DefuseCheck for DomainJoin {
-    fn stop_exec(&self,_config:&Config) -> bool {
+    fn stop_exec(&self, _config: &Config) -> bool {
         true
     }
     fn get_operator(&self) -> Operator {
@@ -182,7 +182,7 @@ impl DefuseCheck for DomainJoin {
 
 #[cfg(target_os = "windows")]
 impl DefuseCheck for DomainJoin {
-    fn stop_exec(&self,_config:&Config) -> bool {
+    fn stop_exec(&self, _config: &Config) -> bool {
         let mut domain_controller_info: *mut DOMAIN_CONTROLLER_INFOA = std::ptr::null_mut();
         let status = unsafe {
             DsGetDcNameA(

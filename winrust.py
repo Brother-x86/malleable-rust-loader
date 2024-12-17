@@ -81,7 +81,27 @@ def main():
     else:
         log.info("[+] OLLVM Compilation")
         os.system('cp ~/.malleable/config/initial.json* ~/.malleable/config/mem* config/')
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
+        #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
+        '''
+OLLVM FEATURE, cf: https://github.com/joaovarelas/Obfuscator-LLVM-16.0
+
+ACTIVATED:
+    Anti Class Dump: -enable-acdobf
+    Anti Hooking: -enable-antihook
+    Anti Debug: -enable-adb
+    Bogus Control Flow: -enable-bcfobf
+    Basic Block Splitting: -enable-splitobf
+    Instruction Substitution: -enable-subobf
+    Function CallSite Obf: -enable-fco
+    (*) String Encryption: -enable-strcry
+    Constant Encryption: -enable-constenc
+    (*) Function Wrapper: -enable-funcwra
+------
+NOT ACTIVATED:
+    (*) Control Flow Flattening: -enable-cffobf
+    (*) Indirect Branching: -enable-indibran
+        '''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra' '''
         log.info(comm)
         compil_result=os.system(comm)
 

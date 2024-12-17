@@ -37,6 +37,7 @@ litemap = "=0.7.3"
 yoke = "=0.7.4"
 # todo tester le 0.31
 sysinfo = "=0.30.0"
+aes-gcm-siv = "0.11.1"
 
 [dependencies.uuid]
 version = "1.11.0"

@@ -1,6 +1,6 @@
 use log::info;
 use malleable_rust_loader::dataoperation::apply_all_dataoperations;
-use malleable_rust_loader::dataoperation::AeadMaterial;
+use malleable_rust_loader::dataoperation::AesMaterial;
 use malleable_rust_loader::dataoperation::DataOperation;
 use std::fs;
 extern crate env_logger;
@@ -14,7 +14,7 @@ fn main() {
     {
         // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
-        ap.set_description("encrypt payload with AEAD, store encrypted payload in a .aead file and the decrypt key in .dataop");
+        ap.set_description("encrypt payload with AES, store encrypted payload in a .aes file and the decrypt key in .dataop");
 
         ap.refer(&mut payload)
             .add_argument("payload", Store, "payload to encrypt");
@@ -22,12 +22,16 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let aead_mat: AeadMaterial = AeadMaterial::init_aead_key_material();
+    let aes_mat: AesMaterial = AesMaterial::generate_aes_material();
 
     let output_dataop: String = format!("{}{}", payload, ".dataop").to_string();
-    let output_payload: String = format!("{}{}", payload, ".aead").to_string();
+    let output_payload: String = format!("{}{}", payload, ".aes").to_string();
 
-    let mut dataoperations: Vec<DataOperation> = vec![DataOperation::ZLIB,DataOperation::AEAD(aead_mat),DataOperation::ZLIB];
+    let mut dataoperations: Vec<DataOperation> = vec![
+        DataOperation::ZLIB,
+        DataOperation::AES(aes_mat),
+        DataOperation::ZLIB,
+    ];
 
     info!("[+] Payload open {}", payload.as_str());
     let mut data: Vec<u8> = fs::read(payload.as_str()).unwrap();

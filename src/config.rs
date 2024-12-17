@@ -26,7 +26,6 @@ pub struct VerifSignMaterial {
     pub sign_bytes: Vec<u8>,
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
     pub update_links: BTreeMap<u64, (String, PoolLinks)>,
@@ -53,7 +52,7 @@ impl Config {
         jitt: u64,
         link_timeout: u64,
         link_user_agent: String,
-        loader_keypair: Vec<u8>
+        loader_keypair: Vec<u8>,
     ) -> Config {
         let sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
@@ -84,7 +83,6 @@ impl Config {
         link_timeout: u64,
         link_user_agent: String,
         loader_keypair: Vec<u8>,
-
     ) -> Config {
         let mut new_loader = Config::new_unsigned(
             update_links,
@@ -260,9 +258,8 @@ impl Config {
         thread::sleep(sleep_time);
     }
 
-
     // try to fetch a new config, if no config are found return self. if no config is return from pool, need to try the next pool
-    pub fn update_config(&self, session_id: &String,running_thread: &Vec<Payload>) -> Config {
+    pub fn update_config(&self, session_id: &String, running_thread: &Vec<Payload>) -> Config {
         let mut pool_nb: i32 = 0;
         for (_pool_nb, (pool_name, pool_links)) in &self.update_links {
             pool_nb = pool_nb + 1;
@@ -273,7 +270,7 @@ impl Config {
                 encrypt_string!(" PoolLinks: "),
                 &pool_name
             );
-            match pool_links.update_pool(&self,session_id,running_thread) {
+            match pool_links.update_pool(&self, session_id, running_thread) {
                 Ok(newconf) => {
                     if self.is_same_loader(&newconf) {
                         info!(
