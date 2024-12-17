@@ -213,7 +213,7 @@ exec(decoded_script)
             thread: true,
         })];
     } else if payload == "memdll".to_string() {
-        info!("[+] Loader type choice: DllFromMemory [AES]");
+        info!("[+] Loader type choice: DllFromMemory [AES] from memory slot");
         let payload_dataoperation: Vec<DataOperation> =
             serde_json::from_slice(&fs::read(&payload_dataope).unwrap()).unwrap();
         payload_choice = vec![Payload::DllFromMemory(DllFromMemory {
