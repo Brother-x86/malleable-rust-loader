@@ -1,0 +1,25 @@
+cargo tree
+
+cargo bloat --release --bin loader  --target x86_64-pc-windows-gnu -n 120
+
+    Analyzing target/x86_64-pc-windows-gnu/release/loader.exe
+
+ File  .text     Size           Crate Name
+24.8%  82.0%   1.6MiB       [Unknown] main
+ 4.7%  15.7% 318.0KiB             std rust_eh_personality
+ 0.2%   0.6%  12.1KiB       [Unknown] __gcc_deregister_frame
+ 0.1%   0.3%   6.1KiB            ring ring_core_0_17_8_x25519_sc_muladd
+ 0.1%   0.3%   5.7KiB memorymodule_rs MemorySizeofResource
+ 0.0%   0.1%   2.8KiB            ring ring_core_0_17_8_x25519_sc_reduce
+ 0.0%   0.1%   2.4KiB            ring ring_core_0_17_8_x25519_scalar_mult_generic_masked
+ 0.0%   0.1%   1.8KiB memorymodule_rs MemoryLoadLibraryEx
+ 0.0%   0.1%   1.5KiB             std ___chkstk_ms
+ 0.0%   0.1%   1.4KiB       [Unknown] pow
+ 0.0%   0.0%     944B            ring ring_core_0_17_8_x25519_ge_frombytes_vartime
+ 0.0%   0.0%     864B       [Unknown] _pei386_runtime_relocator
+ 0.0%   0.0%     656B       [Unknown] __powi
+
+...
+ 0.0%   0.0%       8B       [Unknown] fprintf
+ 0.0%   0.0%     152B                 And 20 smaller methods. Use -n N to show more.
+30.3% 100.0%   2.0MiB                 .text section size, the file size is 6.5MiB
