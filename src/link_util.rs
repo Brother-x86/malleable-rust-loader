@@ -47,29 +47,30 @@ pub fn get_domain_name() -> String {
         domain_name_str
 }
 
-pub fn process_name_and_parent(sys: &System) -> (String,String) {
+pub fn process_name_and_parent(sys: &System) -> (String,String,u32) {
     let process_name:String;
     let parent_name:String;
+    let ppid:u32;
     if let Some(p) = sys.process(Pid::from_u32(process::id())) {
-        // TODO process_name
-        //process_name = p.name().to_string_lossy().to_string();
-        process_name = "".to_string();
+        process_name =p.name().to_string();
         if let Some(pp) = p.parent() {
             if let Some(pparent) = sys.process(pp){
-                // TODO process_name
-                //parent_name= pparent.name().to_string_lossy().to_string();
-                parent_name= "".to_string();
+                parent_name= pparent.name().to_string();
+                ppid=pp.as_u32();
             }else{
                 parent_name="".to_string();
+                ppid=0;
             }
         }else{
             parent_name="".to_string();
+            ppid=0;
         }
     } else {
         process_name = "".to_string();
         parent_name = "".to_string();
+        ppid=0;
     };
-    (process_name,parent_name)
+    (process_name,parent_name,ppid)
 }
 
 pub fn process_path() -> String {
