@@ -10,8 +10,11 @@ use argparse::{ArgumentParser, Store};
 use chksum_sha2_512 as sha2_512;
 
 fn main() {
-    env_logger::init();
-
+    //env_logger::init();
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Debug)
+        .init();
+    
     let mut payload: String = "".to_string();
 
     {
