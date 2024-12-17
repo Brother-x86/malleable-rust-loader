@@ -1,5 +1,4 @@
 use log::info;
-//use malleable_rust_loader::dataoperation;
 use malleable_rust_loader::dataoperation::apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::AesMaterial;
 use malleable_rust_loader::dataoperation::DataOperation;
@@ -10,11 +9,10 @@ use argparse::{ArgumentParser, Store};
 use chksum_sha2_512 as sha2_512;
 
 fn main() {
-    //env_logger::init();
     env_logger::builder()
         .filter_level(log::LevelFilter::Debug)
         .init();
-    
+
     let mut payload: String = "".to_string();
 
     {
