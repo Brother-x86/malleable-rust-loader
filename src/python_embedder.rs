@@ -60,7 +60,7 @@ pub fn embedder(python_path: &PathBuf, script: &str) {
     };
     unsafe {
         //let func_name = CString::new(encrypt_string!("LoadLibraryA")).unwrap();
-        let func_name = CString::new("LoadLibraryA").unwrap();
+        let func_name = CString::new(encrypt_string!("LoadLibraryA")).unwrap();
         let loadlib = kernellib
             .get::<libloading::Symbol<unsafe extern "stdcall" fn(lpFileName: &[u8]) -> i32>>(
                 func_name.as_bytes(),
