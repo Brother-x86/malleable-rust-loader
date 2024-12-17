@@ -18,7 +18,6 @@ use std::env;
 
 use chksum_sha2_512 as sha2_512;
 
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum DataOperation {
     BASE64,
@@ -31,24 +30,22 @@ pub enum DataOperation {
     SHA256(SHA256),
 }
 
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct SHA256 {
     pub hash: String,
 }
-impl SHA256{
+impl SHA256 {
     fn check_sha256(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: SHA256 verify"));
         let digest: chksum_sha2_512::Digest = sha2_512::chksum(data.clone())?;
         let digest_lowercase = digest.to_hex_lowercase();
         if digest_lowercase == self.hash {
             Ok(data)
-        }else{
+        } else {
             bail!("sha256 not verified: {}", digest_lowercase)
         }
     }
 }
-
 
 pub trait UnApplyDataOperation {
     fn un_apply_one_operation(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error>;
@@ -157,7 +154,6 @@ pub trait ApplyDataOperation {
         let compressed_bytes = e.finish()?;
         Ok(compressed_bytes)
     }
-
 }
 
 impl ApplyDataOperation for DataOperation {

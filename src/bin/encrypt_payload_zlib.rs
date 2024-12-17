@@ -1,8 +1,9 @@
 use log::info;
+//use malleable_rust_loader::dataoperation;
 use malleable_rust_loader::dataoperation::apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::AesMaterial;
-use malleable_rust_loader::dataoperation::SHA256;
 use malleable_rust_loader::dataoperation::DataOperation;
+use malleable_rust_loader::dataoperation::SHA256;
 use std::fs;
 extern crate env_logger;
 use argparse::{ArgumentParser, Store};
@@ -29,25 +30,21 @@ fn main() {
     let output_dataop: String = format!("{}{}", payload, ".dataop").to_string();
     let output_payload: String = format!("{}{}", payload, ".aes").to_string();
 
-
-
-
-
     info!("[+] Payload open {}", payload.as_str());
     let mut data: Vec<u8> = fs::read(payload.as_str()).unwrap();
 
     let digest: chksum_sha2_512::Digest = sha2_512::chksum(data.clone()).unwrap();
     let digest_lowercase: String = digest.to_hex_lowercase();
 
-
     let mut dataoperations: Vec<DataOperation> = vec![
         DataOperation::ZLIB,
         DataOperation::AES(aes_mat),
         DataOperation::ZLIB,
-        DataOperation::SHA256( SHA256{
-            hash:digest_lowercase}),
-    ];
+        DataOperation::SHA256(SHA256 {
+            hash: digest_lowercase,
+        }),
 
+    ];
 
     info!(
         "[+] Apply dataoperation in reverse order {:?}",
@@ -55,6 +52,7 @@ fn main() {
     );
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 
+    dataoperations.reverse();
     fs::write(
         output_dataop.as_str(),
         serde_json::to_string(&dataoperations).unwrap(),
