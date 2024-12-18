@@ -76,15 +76,12 @@ windows-sys = { version = "0.45.0" , features = [
     "Win32_Networking_ActiveDirectory",
 ]}
 
-
-
-
 [profile.release]
-strip = true
-opt-level = "z"
-lto = true
+lto = true 
 codegen-units = 1
-panic = "abort"
+opt-level = "z"   
+panic = 'abort'
+strip = true
 
 
 #[lib]

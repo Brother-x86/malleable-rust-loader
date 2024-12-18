@@ -7,7 +7,6 @@ use std::mem;
 
 use serde::{Deserialize, Serialize};
 
-use std::io::Cursor;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{thread, time};
@@ -246,8 +245,11 @@ pub struct WriteZip {
     pub path: String,
 }
 
+//debug SIZE TODO, find a solution
+//use std::io::Cursor;
+
 impl WriteZip {
-    pub fn write_zip(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_zip(&self, _config: &Config) -> Result<PayloadExec, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;

