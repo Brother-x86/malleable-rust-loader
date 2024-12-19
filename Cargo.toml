@@ -93,7 +93,8 @@ panic = "abort"
 
 [features]
 ollvm = []
-logdebug = []
+debug = []
+info = []
 mem1 = []
 mem2 = []
 mem3 = []

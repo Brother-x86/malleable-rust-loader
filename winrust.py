@@ -18,7 +18,8 @@ parser.add_argument('--no_exec',default=False,action='store_true',help='Compile 
 #parser.add_argument('--no_drop',default=False,action='store_true',help='Compile only, dont drop to the target,dont execute')
 parser.add_argument('--ollvm',default=False,action='store_true',help='OLLVM obfuscation, add the release flag automatically')
 parser.add_argument('--release',default=False,action='store_true',help='activate the cargo release mode for compilation, sinon its debug')
-parser.add_argument('--log','--debug',default=False,action='store_true',help='activate the agent debug log into STDOUT, you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
+parser.add_argument('--debug',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=debug .you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
+parser.add_argument('--info',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=info . you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
 
 args = parser.parse_args()
@@ -45,10 +46,13 @@ def main():
         mode='debug'
         comm_mode=''
 
-    if args.log:
-        comm_logdebug='--features logdebug'
-    else:
-        comm_logdebug=''
+    log_level=''
+    if args.debug:
+        log_level='--features debug'
+
+    if args.info:
+        log_level=f'{log_level} --features info'
+
 
     if args.exec_target == '':
         #TODO if file not present
@@ -74,14 +78,14 @@ def main():
 
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
-        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {comm_logdebug} {memory_options}'''
+        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {log_level} {memory_options}'''
         log.info(comm)
         compil_result=os.system(comm)
 
     else:
         log.info("[+] OLLVM Compilation")
         os.system('cp ~/.malleable/config/initial.json* ~/.malleable/config/mem* config/')
-        #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
+        #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
         '''
 OLLVM FEATURE, cf: https://github.com/joaovarelas/Obfuscator-LLVM-16.0
 
@@ -101,7 +105,7 @@ NOT ACTIVATED:
     (*) Control Flow Flattening: -enable-cffobf
     (*) Indirect Branching: -enable-indibran
         '''
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {comm_logdebug} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra' '''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra' '''
         log.info(comm)
         compil_result=os.system(comm)
 
