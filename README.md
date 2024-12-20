@@ -113,7 +113,7 @@ The way to modify fetch data from link
 - [x] **AES** -> encrypt data with AEAD (it's AES-GCM-SIV, cf: https://docs.rs/aes-gcm-siv/latest/aes_gcm_siv/index.html
 - [x] **STEGANO** -> hide data in png (jpg seems not to work)
 - [x] **REVERSE** -> todo!()
-- [x] **ZLIB**
+- [x] **ZLIB** -> to compress big payload (like sliver)
 
 # Design
 

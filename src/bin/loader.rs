@@ -1,4 +1,4 @@
-#![cfg_attr(not(all(feature = "debug",feature = "info")), windows_subsystem = "windows")]
+#![cfg_attr(not(any(feature = "debug",feature = "info")), windows_subsystem = "windows")]
 
 use malleable_rust_loader::config::Config;
 use std::thread;
