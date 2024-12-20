@@ -17,6 +17,7 @@ use log::debug;
 use std::env;
 
 use chksum_sha2_512 as sha2_512;
+use rand::Rng; 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum DataOperation {
@@ -250,12 +251,14 @@ impl AesMaterial {
     pub fn generate_aes_material() -> AesMaterial {
         let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> =
             Aes256GcmSiv::generate_key(&mut OsRng);
-        //TODO randomized the nonce
         // 96-bits; unique per message
-        let nonce_slice: &[u8; 12] = b"unique nonce";
+        let mut nonce = [0u8; 12];
+        rand::thread_rng().fill(&mut nonce);
+        let nonce_slice: &[u8; 12] = &nonce; 
         AesMaterial {
             key: key.as_slice().to_owned(),
             nonce: nonce_slice.to_owned(),
         }
     }
 }
+
