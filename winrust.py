@@ -21,10 +21,9 @@ parser.add_argument('--release',default=False,action='store_true',help='activate
 parser.add_argument('--debug',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=debug .you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--info',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=info . you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
+parser.add_argument('--no_loader',default=False,action='store_true',help='dont add this compil flag: --features loader')
 
 args = parser.parse_args()
-
-
 
 def main():
     log = logging.getLogger("my-logger")
@@ -38,6 +37,12 @@ def main():
     formatter = logging.Formatter("%(asctime)s %(levelname)s\t%(message)s")
     ch.setFormatter(formatter)
     log.addHandler(ch)
+
+    if not args.no_loader :
+        features_loader='--features loader'
+    else:
+        features_loader=''
+
 
     if args.release or args.ollvm:
         mode='release'
@@ -78,7 +83,8 @@ def main():
 
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
-        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {log_level} {memory_options}'''
+        # TODO enlever --features executable
+        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {log_level} {memory_options} {features_loader}'''
         log.info(comm)
         compil_result=os.system(comm)
 
@@ -105,7 +111,7 @@ NOT ACTIVATED:
     (*) Control Flow Flattening: -enable-cffobf
     (*) Indirect Branching: -enable-indibran
         '''
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra' '''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra' '''
         log.info(comm)
         compil_result=os.system(comm)
 
