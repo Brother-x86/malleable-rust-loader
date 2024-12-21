@@ -11,7 +11,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chksum-sha2-512 = "0.0.0"
 ring = "0.17.8"
-litcrypt = "0.3.0"
+#litcrypt = "0.3.0"
 rand = "0.8.5"
 libloading = "0.8.5"
 zip-extract = "0.1.3"
