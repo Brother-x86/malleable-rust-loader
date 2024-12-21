@@ -37,6 +37,7 @@ yoke = "=0.7.4"
 sysinfo = "=0.30.0"
 aes-gcm-siv = "0.11.1"
 ftail = "0.1.2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 
 [dependencies.uuid]
 version = "1.11.0"
@@ -77,6 +78,8 @@ windows = { version = "0.54.0", features = [
     "Win32_System_SystemServices",
 ] }
 
+#[target.'cfg(windows)']
+#rustflags = ["-C", "target-feature=+crt-static"]
 
 [profile.release]
 strip = true

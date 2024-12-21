@@ -42,17 +42,19 @@ const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/in
 const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes.dataop.obfuscated.dataop");
 
 pub fn run_loader() {
+    /*
     unsafe {
         MessageBoxA(None, s!("Hello from MALLEABLE: run_loader"), s!("MALLEABLE run_loader"), MB_OK);
     }
+    */
 
     #[cfg(feature = "info")]
     #[cfg(not(feature="debug"))]
     env_logger::builder().filter_level(log::LevelFilter::Info).init();
 
     // TODO this should be like that
-    //#[cfg(feature = "debug")]
-    //env_logger::builder().filter_level(log::LevelFilter::Debug).init();
+    #[cfg(feature = "debug")]
+    env_logger::builder().filter_level(log::LevelFilter::Debug).init();
 
     #[cfg(feature = "debug")]
     let log_path: &str = "C:\\Users\\user\\Desktop\\log\\";
@@ -63,6 +65,10 @@ pub fn run_loader() {
     .daily_file(info, LevelFilter::Info)
     .init().unwrap();
 
+    match tokio::runtime::Runtime::new() {
+        Ok(_)=> (),
+        Err(e) => error!("e {}",e)
+    };
 
 
     cryptify::flow_stmt!();
