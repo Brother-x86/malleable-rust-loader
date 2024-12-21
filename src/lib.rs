@@ -10,15 +10,13 @@ pub mod payload_util;
 pub mod poollink;
 pub mod python_embedder;
 
+#[cfg(feature = "loader")]
+pub mod run_loader {
+    pub mod bin;
 
-pub mod execmode {
-    #[cfg(feature = "loader")]
-    pub mod run_loader;
-
-    #[cfg(feature = "loader")]
     #[cfg(feature = "dll")]
     pub mod dll;
 }
 
 #[cfg(feature = "loader")]
-pub use execmode::run_loader::run_loader;
+pub use run_loader::bin::run_loader;

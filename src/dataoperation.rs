@@ -22,7 +22,7 @@ pub enum DataOperation {
     BASE64,
     AES(AesMaterial),
     WEBPAGE,
-    ROT13, //only after base64 because input is String
+    ROT13, // WARNING only after base64 because input is String
     REVERSE,
     STEGANO,
     ZLIB,
