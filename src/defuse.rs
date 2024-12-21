@@ -1,15 +1,16 @@
+use crate::link::{HTTPLink, Link, LinkFetch};
+use crate::config::Config;
+
 use gethostname::gethostname;
+use serde::{Deserialize, Serialize};
+use std::env;
+
+use cryptify::encrypt_string;
 use log::debug;
 #[cfg(target_os = "windows")]
 use log::error;
 use log::warn;
-use serde::{Deserialize, Serialize};
-use std::env;
 
-use crate::link::{HTTPLink, Link, LinkFetch};
-use cryptify::encrypt_string;
-
-use crate::config::Config;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Defuse {

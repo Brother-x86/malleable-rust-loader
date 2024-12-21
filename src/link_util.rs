@@ -1,6 +1,6 @@
+use sysinfo::{Pid, System};
 use std::env;
 use std::process;
-use sysinfo::{Pid, System};
 
 pub fn working_dir() -> String {
     match env::current_dir() {

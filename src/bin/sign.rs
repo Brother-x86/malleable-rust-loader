@@ -1,8 +1,10 @@
-use log::info;
 use malleable_rust_loader::{config::Config, create_config::initialize_all_configs};
+
 use std::env;
-extern crate env_logger;
 use argparse::{ArgumentParser, Store};
+
+extern crate env_logger;
+use log::info;
 
 fn main() {
     env_logger::init();

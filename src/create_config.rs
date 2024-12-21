@@ -1,15 +1,14 @@
 use crate::config::Config;
-use crate::dataoperation::DataOperation;
 use crate::link::LinkFetch;
-
-use std::fs;
-
 use crate::dataoperation::apply_all_dataoperations;
 use crate::dataoperation::AesMaterial;
+use crate::dataoperation::DataOperation;
+
+use std::fs;
+use std::env;
 
 use log::debug;
 use log::info;
-use std::env;
 
 pub fn encrypt_config(config: Config, json_config_file: String) {
     let message = "Unable to write file";
