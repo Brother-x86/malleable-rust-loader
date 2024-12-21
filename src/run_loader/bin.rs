@@ -12,6 +12,13 @@ extern crate env_logger;
 use log::info;
 use log::error;
 
+use ftail::Ftail;
+use log::LevelFilter;
+//use std::fs;
+
+use windows::{Win32::UI::WindowsAndMessaging::{MessageBoxA, MB_OK}, Win32::System::SystemServices::*,};
+use windows::core::s;  
+
 // ------ STANDARD compilation
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
@@ -35,12 +42,28 @@ const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/in
 const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes.dataop.obfuscated.dataop");
 
 pub fn run_loader() {
+    unsafe {
+        MessageBoxA(None, s!("Hello from MALLEABLE: run_loader"), s!("MALLEABLE run_loader"), MB_OK);
+    }
+
     #[cfg(feature = "info")]
     #[cfg(not(feature="debug"))]
     env_logger::builder().filter_level(log::LevelFilter::Info).init();
 
+    // TODO this should be like that
+    //#[cfg(feature = "debug")]
+    //env_logger::builder().filter_level(log::LevelFilter::Debug).init();
+
     #[cfg(feature = "debug")]
-    env_logger::builder().filter_level(log::LevelFilter::Debug).init();
+    let log_path: &str = "C:\\Users\\user\\Desktop\\log\\";
+    let info = &format!("{}",log_path);
+
+    Ftail::new()
+    .console(LevelFilter::Info)
+    .daily_file(info, LevelFilter::Info)
+    .init().unwrap();
+
+
 
     cryptify::flow_stmt!();
     let session_id: String = uuid::Uuid::new_v4().to_string();

@@ -7,6 +7,8 @@ use crate::run_loader;
 
 // cargo build --target x86_64-pc-windows-gnu  --features info  --features loader --lib --features dll
 
+// https://users.rust-lang.org/t/how-to-use-tokio-lib-with-dll-in-windows/61327/3
+
 #[no_mangle]
 #[allow(non_snake_case)]
 fn DllMain(_: usize, dw_reason: u32, _: usize) -> i32 {
