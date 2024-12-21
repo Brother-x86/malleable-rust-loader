@@ -1,23 +1,21 @@
 use crate::lsb_text_png_steganography_mod::{hide_mod, reveal_mod};
 
 use anyhow::{Context, Result};
-
+use serde::{Deserialize, Serialize};
 use base64::prelude::*;
 use regex::Regex;
 use rot13::rot13;
-use serde::{Deserialize, Serialize};
-
 use flate2::write::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::Write;
+use std::env;
+use rand::Rng; 
+use chksum_sha2_512 as sha2_512;
 
 use cryptify::encrypt_string;
 use log::debug;
-use std::env;
 
-use chksum_sha2_512 as sha2_512;
-use rand::Rng; 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum DataOperation {

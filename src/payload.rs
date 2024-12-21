@@ -1,43 +1,38 @@
+use crate::config::Config;
+use crate::link::{Link, LinkFetch};
+use crate::payload_util::calculate_path;
+use crate::payload_util::create_diretory;
+use crate::payload_util::same_hash_sha512;
+
+#[cfg(target_os = "linux")]
+use crate::payload_util::fail_linux_message;
+#[cfg(target_os = "linux")]
+use crate::payload_util::set_permission;
+
 #[cfg(target_os = "windows")]
 use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
 type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use std::mem;
+#[cfg(target_os = "windows")]
+use crate::python_embedder;
 
 use serde::{Deserialize, Serialize};
-
+use anyhow::Result;
 use std::io::Cursor;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{thread, time};
+use std::io::stdout;
+use std::io::Write;
+use std::fs::File;
 
-#[cfg(target_os = "windows")]
-use crate::python_embedder;
-
+use cryptify::encrypt_string;
 use log::debug;
 use log::error;
 use log::info;
 
-use std::io::stdout;
-use std::io::Write;
-
-use crate::config::Config;
-use crate::link::{Link, LinkFetch};
-
-use cryptify::encrypt_string;
-
-use anyhow::Result;
-
-use std::fs::File;
-
-use crate::payload_util::calculate_path;
-use crate::payload_util::create_diretory;
-#[cfg(target_os = "linux")]
-use crate::payload_util::fail_linux_message;
-use crate::payload_util::same_hash_sha512;
-#[cfg(target_os = "linux")]
-use crate::payload_util::set_permission;
 
 pub enum PayloadExec {
     NoThread(),

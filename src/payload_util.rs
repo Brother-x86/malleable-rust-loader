@@ -1,25 +1,22 @@
-use std::fs;
-use std::path::Path;
-use std::path::PathBuf;
-
-#[cfg(target_os = "linux")]
-use std::os::unix::fs::PermissionsExt;
-
-use log::error;
-use log::info;
-
-use cryptify::encrypt_string;
+use crate::payload::Payload;
 
 use anyhow::Result;
+use chksum_sha2_512 as sha2_512;
 use shellexpand;
 use std::fs::create_dir_all;
 use std::fs::File;
-
-use chksum_sha2_512 as sha2_512;
+use std::fs;
+use std::path::Path;
+use std::path::PathBuf;
 use std::io::prelude::*;
-
-use crate::payload::Payload;
 use std::thread;
+#[cfg(target_os = "linux")]
+use std::os::unix::fs::PermissionsExt;
+
+use cryptify::encrypt_string;
+use log::error;
+use log::info;
+
 
 pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
     let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable

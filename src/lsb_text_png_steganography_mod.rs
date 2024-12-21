@@ -1,16 +1,16 @@
 extern crate image;
+extern crate anyhow;
+use anyhow::Result;
+
 pub use image::{GenericImageView, ImageBuffer};
 use std::str;
 
 //mod file_helpers;
 mod hider;
 mod revealer;
-
 mod bit_helpers;
 use bit_helpers::{change_last_bit, get_bit_at, transform_u32_to_array_of_u8};
 
-extern crate anyhow;
-use anyhow::Result;
 
 pub fn hide_mod<'a>(
     payload: Vec<u8>,

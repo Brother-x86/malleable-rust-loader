@@ -26,13 +26,11 @@ use malleable_rust_loader::poollink::PoolMode;
 use ring::signature;
 use ring::signature::Ed25519KeyPair;
 use std::fs;
-
-//use malleable_rust_loader::initialloader::initialize_loader;
-
 use argparse::{ArgumentParser, Store, StoreTrue};
+
+extern crate env_logger;
 use log::error;
 use log::info;
-extern crate env_logger;
 
 use std::collections::BTreeMap;
 

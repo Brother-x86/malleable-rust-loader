@@ -1,13 +1,16 @@
-use log::info;
-use log::debug;
 use malleable_rust_loader::dataoperation::apply_all_dataoperations;
 use malleable_rust_loader::dataoperation::AesMaterial;
 use malleable_rust_loader::dataoperation::DataOperation;
 use malleable_rust_loader::dataoperation::SHA256;
+
 use std::fs;
-extern crate env_logger;
-use argparse::{ArgumentParser, Store};
 use chksum_sha2_512 as sha2_512;
+use argparse::{ArgumentParser, Store};
+
+extern crate env_logger;
+use log::info;
+use log::debug;
+
 
 fn bytes_to_megabytes(bytes: u64) -> f64 {
     const BYTES_IN_GIGABYTE: u64 = 1024 * 1024; // 1 GB en octets

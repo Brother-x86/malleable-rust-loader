@@ -5,6 +5,8 @@ use crate::run_loader;
 //https://fluxsec.red/rust-dll-windows-api
 //TODO: https://blog.nviso.eu/2020/08/04/debugging-dlls-3-techniques-to-help-you-get-started/
 
+// cargo build --target x86_64-pc-windows-gnu  --features info  --features loader --lib --features dll
+
 #[no_mangle]
 #[allow(non_snake_case)]
 fn DllMain(_: usize, dw_reason: u32, _: usize) -> i32 {

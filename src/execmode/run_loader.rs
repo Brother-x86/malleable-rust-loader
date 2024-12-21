@@ -1,22 +1,16 @@
 use crate::config::Config;
-use std::thread;
-
-//#[macro_use]
-//extern crate litcrypt;
-//use_litcrypt!();
-
-use cryptify::encrypt_string;
-
-
 use crate::dataoperation::un_apply_all_dataoperations;
 use crate::dataoperation::DataOperation;
 use crate::payload::Payload;
 use crate::payload_util::print_running_thread;
 
-use log::error;
-use log::info;
-extern crate env_logger;
+use std::thread;
 use cryptify;
+use cryptify::encrypt_string;
+
+extern crate env_logger;
+use log::info;
+use log::error;
 
 // ------ STANDARD compilation
 #[rustfmt::skip]

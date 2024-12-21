@@ -1,7 +1,8 @@
-use log::info;
 use ring::{rand, signature};
 use std::fs;
+
 extern crate env_logger;
+use log::info;
 
 //#[allow(dead_code)]
 fn initialize_master_keypair(path_file: &str) {

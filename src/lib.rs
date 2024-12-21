@@ -11,19 +11,14 @@ pub mod poollink;
 pub mod python_embedder;
 
 
-// Module regroupant les fonctionnalités
 pub mod execmode {
     #[cfg(feature = "loader")]
-    pub mod executable;
+    pub mod run_loader;
 
     #[cfg(feature = "loader")]
     #[cfg(feature = "dll")]
     pub mod dll;
-
 }
 
-
 #[cfg(feature = "loader")]
-pub use execmode::executable::run_loader;
-
-
+pub use execmode::run_loader::run_loader;

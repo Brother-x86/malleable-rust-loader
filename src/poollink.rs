@@ -1,18 +1,17 @@
 use crate::link::Link;
 use crate::link::LinkFetch;
 use crate::payload::Payload;
-use log::debug;
-use log::info;
-use log::warn;
-use serde::{Deserialize, Serialize};
-
 use crate::config::Config;
-use cryptify::encrypt_string;
 
+use serde::{Deserialize, Serialize};
+use rand::seq::SliceRandom;
 use anyhow::bail;
 use std::thread;
 
-use rand::seq::SliceRandom;
+use cryptify::encrypt_string;
+use log::debug;
+use log::info;
+use log::warn;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Advanced {
