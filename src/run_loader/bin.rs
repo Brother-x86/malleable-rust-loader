@@ -56,6 +56,7 @@ pub fn run_loader() {
     #[cfg(feature = "debug")]
     env_logger::builder().filter_level(log::LevelFilter::Debug).init();
 
+    /* 
     #[cfg(feature = "debug")]
     let log_path: &str = "C:\\Users\\user\\Desktop\\log\\";
     let info = &format!("{}",log_path);
@@ -69,7 +70,7 @@ pub fn run_loader() {
         Ok(_)=> (),
         Err(e) => error!("e {}",e)
     };
-
+    */
 
     cryptify::flow_stmt!();
     let session_id: String = uuid::Uuid::new_v4().to_string();

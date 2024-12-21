@@ -5,7 +5,7 @@ edition = "2021"
 
 
 [dependencies]
-reqwest = { version = "0.12.5", features = ["blocking","json"] }
+#reqwest = { version = "0.12.5", features = ["blocking","json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chksum-sha2-512 = "0.0.0"
@@ -37,7 +37,8 @@ yoke = "=0.7.4"
 sysinfo = "=0.30.0"
 aes-gcm-siv = "0.11.1"
 ftail = "0.1.2"
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+#tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+attohttpc = "0.28.2"
 
 [dependencies.uuid]
 version = "1.11.0"
