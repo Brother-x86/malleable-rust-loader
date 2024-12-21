@@ -2,7 +2,6 @@
 name = "malleable-rust-loader"
 version = "0.1.0"
 edition = "2021"
-#parallel-compiler = true
 
 
 [dependencies]
@@ -11,7 +10,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chksum-sha2-512 = "0.0.0"
 ring = "0.17.8"
-#litcrypt = "0.3.0"
 rand = "0.8.5"
 libloading = "0.8.5"
 zip-extract = "0.1.3"
@@ -45,7 +43,6 @@ features = [
     "v4",                # Lets you generate random UUIDs
     "fast-rng"          # Use a faster (but still sufficiently random) RNG
 ]
-#"macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
 
 
 [target.'cfg(windows)'.dependencies]
@@ -80,18 +77,12 @@ windows = { version = "0.54.0", features = [
 ] }
 
 
-
 [profile.release]
 strip = true
 opt-level = "z"
 lto = true
 codegen-units = 1
 panic = "abort"
-
-
-#[lib]
-#name = "lsb_text_png_steganography_mod"
-#path = "src/lsb_text_png_steganography_mod/lib.rs"
 
 
 [features]
