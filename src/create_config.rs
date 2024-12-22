@@ -1,11 +1,11 @@
 use crate::config::Config;
-use crate::link::LinkFetch;
 use crate::dataoperation::apply_all_dataoperations;
 use crate::dataoperation::AesMaterial;
 use crate::dataoperation::DataOperation;
+use crate::link::LinkFetch;
 
-use std::fs;
 use std::env;
+use std::fs;
 
 use log::debug;
 use log::info;
@@ -78,9 +78,10 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
         .to_lowercase();
     match env::var("STEGANO_INPUT_IMAGE") {
         Ok(_) => (),
-        Err(_) => unsafe {
-            env::set_var("STEGANO_INPUT_IMAGE", input_image);
-        },
+        Err(_) => //unsafe {
+            env::set_var("STEGANO_INPUT_IMAGE", input_image)
+        //;}
+        ,
     }
 
     encrypt_config(config.clone(), json_config_file.clone());
@@ -110,9 +111,9 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
                     json_config_file, extension_file_name, input_image_name
                 );
                 last_dataop_is_steg = true;
-                unsafe {
+                //unsafe {
                     env::set_var("STEGANO_OUTPUT_IMAGE", output_filename_steg.clone());
-                }
+                //}
             };
         }
 

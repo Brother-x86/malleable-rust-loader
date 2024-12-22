@@ -1,7 +1,7 @@
 use malleable_rust_loader::{config::Config, create_config::initialize_all_configs};
 
-use std::env;
 use argparse::{ArgumentParser, Store};
+use std::env;
 
 extern crate env_logger;
 use log::info;
@@ -29,11 +29,11 @@ fn main() {
     }
 
     info!("[+] Signing Loader from file: {config_file_to_sign} ");
-    let mut loader = Config::new_fromfile(&config_file_to_sign);
+    let mut config = Config::new_fromfile(&config_file_to_sign);
     let key_pair = Config::fromfile_master_keypair(keypair.as_str());
-    loader.sign_loader(&key_pair);
+    config.sign_loader(&key_pair);
     info!("[+] Write sign_bytes to: {config_file_to_sign}");
-    loader.serialize_to_file_pretty(&config_file_to_sign);
+    config.serialize_to_file_pretty(&config_file_to_sign);
     info!("[+] Done!");
-    initialize_all_configs(loader, config_file_to_sign.to_string());
+    initialize_all_configs(config, config_file_to_sign.to_string());
 }

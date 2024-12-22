@@ -1,6 +1,4 @@
 #[cfg(target_os = "windows")]
-use std::ffi::CString;
-#[cfg(target_os = "windows")]
 use cryptify::encrypt_string;
 #[cfg(target_os = "windows")]
 use log::debug;
@@ -10,6 +8,8 @@ use log::error;
 use log::info;
 #[cfg(target_os = "windows")]
 use log::warn;
+#[cfg(target_os = "windows")]
+use std::ffi::CString;
 #[cfg(target_os = "windows")]
 use std::path::PathBuf;
 

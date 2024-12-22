@@ -1,4 +1,7 @@
-#![cfg_attr(not(any(feature = "debug",feature = "info")), windows_subsystem = "windows")]
+#![cfg_attr(
+    not(any(feature = "debug", feature = "info")),
+    windows_subsystem = "windows"
+)]
 
 #[cfg(feature = "loader")]
 use malleable_rust_loader::run_loader;

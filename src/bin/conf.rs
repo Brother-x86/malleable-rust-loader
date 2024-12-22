@@ -23,10 +23,10 @@ use malleable_rust_loader::poollink::Advanced;
 use malleable_rust_loader::poollink::PoolLinks;
 use malleable_rust_loader::poollink::PoolMode;
 
+use argparse::{ArgumentParser, Store, StoreTrue};
 use ring::signature;
 use ring::signature::Ed25519KeyPair;
 use std::fs;
-use argparse::{ArgumentParser, Store, StoreTrue};
 
 extern crate env_logger;
 use log::error;

@@ -3,6 +3,7 @@
 debug/
 target/
 config/
+ollvm/
 
 src/bin/conf3.rs
 

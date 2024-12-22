@@ -263,7 +263,7 @@ Here you will :
 Run this:
 
 ```
-apt install pkg-config openssl-devel gcc-mingw-w64-x86-64
+apt install pkg-config openssl-devel gcc-mingw-w64-x86-64 mingw-w64 cmake
 rustup target add x86_64-pc-windows-gnu
 cargo run --bin initmasterkey
 # this key should be only used for one loader:

@@ -69,7 +69,10 @@ def main():
 
     memory_options=args.mem1*' --features mem1 ' + args.mem2*' --features mem2 ' + args.mem3*' --features mem3 ' + args.mem4*' --features mem4 '
 
-    file=f"target/x86_64-pc-windows-gnu/{mode}/{args.bin}.exe"
+    if not args.ollvm:
+        file=f"target/x86_64-pc-windows-gnu/{mode}/{args.bin}.exe"
+    else:
+        file=f"ollvm/x86_64-pc-windows-gnu/{mode}/{args.bin}.exe"
     filename=os.path.basename(file)
     filename_target=f"{args.bin}-{uuid.uuid4().hex}.exe"
     file_target=f"/tmp/{filename_target}"
@@ -91,8 +94,9 @@ def main():
     else:
         log.info("[+] OLLVM Compilation")
         os.system('cp ~/.malleable/config/initial.json* ~/.malleable/config/mem* config/')
-        #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-cffobf -enable-splitobf -enable-subobf -enable-fco -enable-strcry -enable-constenc' '''
-        '''
+        os.system('mv Cargo.lock Cargo.lock.normal')
+        os.system('cp Cargo.lock.ollvm Cargo.lock')
+        log.info('''
 OLLVM FEATURE, cf: https://github.com/joaovarelas/Obfuscator-LLVM-16.0
 
 ACTIVATED:
@@ -106,14 +110,17 @@ ACTIVATED:
     (*) String Encryption: -enable-strcry
     Constant Encryption: -enable-constenc
     (*) Function Wrapper: -enable-funcwra
-------
-NOT ACTIVATED:
     (*) Control Flow Flattening: -enable-cffobf
     (*) Indirect Branching: -enable-indibran
-        '''
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra' '''
+------
+NOT ACTIVATED:
+    N/A
+        ''')
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         log.info(comm)
         compil_result=os.system(comm)
+        os.system('cp Cargo.lock Cargo.lock.ollvm')
+        os.system('mv Cargo.lock.normal Cargo.lock')
 
     # compil_result=0 if compilation is OK
     if not compil_result:
