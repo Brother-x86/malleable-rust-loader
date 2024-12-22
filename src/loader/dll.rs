@@ -1,5 +1,5 @@
 use crate::run_loader;
-/* 
+/*
 use windows::core::s;
 use windows::{
     Win32::System::SystemServices::*,
@@ -18,7 +18,6 @@ lput malleable_rust_loader.dll
 // best explanation:
 // https://users.rust-lang.org/t/how-to-use-tokio-lib-with-dll-in-windows/61327/3
 // https://stackoverflow.com/questions/77294605/library-plugin-manager-in-rust-is-it-even-doable-right-now
-
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -39,10 +38,8 @@ fn attach() {
     */
 }
 
-
-
 // this is a backup to debug DLL into the main.rs
-/* 
+/*
 use ftail::Ftail;
 use log::LevelFilter;
 
@@ -52,18 +49,18 @@ ftail = "0.1.2"
 
 
 */
-    /* 
-    let log_path: &str = "C:\\Users\\user\\Desktop\\log\\";
-    let info = &format!("{}", log_path); 
-    Ftail::new()
-        //.console(LevelFilter::Debug)
-        .daily_file(info, LevelFilter::Info)
-        .init()
-        .unwrap();
-    */
-    /*
-    match tokio::runtime::Runtime::new() {
-        Ok(_)=> (),
-        Err(e) => error!("e {}",e)
-    };
-    */
+/*
+let log_path: &str = "C:\\Users\\user\\Desktop\\log\\";
+let info = &format!("{}", log_path);
+Ftail::new()
+    //.console(LevelFilter::Debug)
+    .daily_file(info, LevelFilter::Info)
+    .init()
+    .unwrap();
+*/
+/*
+match tokio::runtime::Runtime::new() {
+    Ok(_)=> (),
+    Err(e) => error!("e {}",e)
+};
+*/

