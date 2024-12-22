@@ -1,11 +1,11 @@
+use crate::config::Config;
 use crate::link::Link;
 use crate::link::LinkFetch;
 use crate::payload::Payload;
-use crate::config::Config;
 
-use serde::{Deserialize, Serialize};
-use rand::seq::SliceRandom;
 use anyhow::bail;
+use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 use std::thread;
 
 use cryptify::encrypt_string;

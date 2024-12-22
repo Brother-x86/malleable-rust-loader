@@ -1,11 +1,11 @@
 use crate::config::Config;
-use crate::link::LinkFetch;
 use crate::dataoperation::apply_all_dataoperations;
 use crate::dataoperation::AesMaterial;
 use crate::dataoperation::DataOperation;
+use crate::link::LinkFetch;
 
-use std::fs;
 use std::env;
+use std::fs;
 
 use log::debug;
 use log::info;

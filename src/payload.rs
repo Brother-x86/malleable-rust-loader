@@ -14,25 +14,24 @@ use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
 type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
-use std::mem;
-#[cfg(target_os = "windows")]
 use crate::python_embedder;
+#[cfg(target_os = "windows")]
+use std::mem;
 
-use serde::{Deserialize, Serialize};
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::stdout;
 use std::io::Cursor;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{thread, time};
-use std::io::stdout;
-use std::io::Write;
-use std::fs::File;
 
 use cryptify::encrypt_string;
 use log::debug;
 use log::error;
 use log::info;
-
 
 pub enum PayloadExec {
     NoThread(),

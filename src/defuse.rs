@@ -1,5 +1,5 @@
-use crate::link::{HTTPLink, Link, LinkFetch};
 use crate::config::Config;
+use crate::link::{HTTPLink, Link, LinkFetch};
 
 use gethostname::gethostname;
 use serde::{Deserialize, Serialize};
@@ -10,7 +10,6 @@ use log::debug;
 #[cfg(target_os = "windows")]
 use log::error;
 use log::warn;
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Defuse {
