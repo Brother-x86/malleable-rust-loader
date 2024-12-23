@@ -39,6 +39,7 @@ malléable : adjectif
     - [4.3 windows release compilation](#43-windows-release-compilation)
     - [4.4 windows OLLVM release compilation](#44-windows-OLLVM-release-compilation)
     - [4.5 windows compilation with payload in memory](#45-windows-compilation-with-payload-in-memory)
+    - [4.6 windows compilation into a DLL](#46-windows-compilation-into-a-DLL)
   - [5. Deploy config and payload](#5-Deploy-config-and-payload)
 - [Side scripts](#Side-scripts)
   - [Winrust](#Winrust)
@@ -91,6 +92,7 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 - [X] Windows oriented loader but support also Linux.
 - [X] OLLVM obfuscation
 - [X] Winrust side script to easily cross compil and test against a Windows.
+- [X] compile the loader into an EXE or a DLL
 
 
 ### Link
@@ -394,10 +396,12 @@ Here you will compile the loader with the initial config file.
 cargo run --bin loader
 ```
 
-### 4.2 windows debug compilation with logs
+### 4.2 windows debug compilation with logs level INFO
+
+The features 'loader' is important, the 'loader' code will not be added.
 
 ```
-cargo rustc --target x86_64-pc-windows-gnu --bin loader --features logdebug
+cargo run --target x86_64-pc-windows-gnu --bin loader --features loader --features info
 ```
 
 or with **winrust.py** (recommended)
@@ -438,6 +442,8 @@ You can also do that with winrust:
 ```
 winrust loader --ollvm
 ```
+
+the exe generated will be in the `ollvm/` directory, this is to avoid conflict with normal compilation and ollvm stuff. You will also see a new file Cargo.lock.ollvm, this is a dedicated backup lock file form OLLVM.
 
 ### 4.5 windows compilation with payload in memory
 
@@ -480,6 +486,28 @@ Or with winrust, you should use the `--mem1` option:
 ```
 winrust loader --debug --mem1
 ```
+
+### 4.6 windows compilation into a DLL
+
+If you want to create a DLL instead of an exe, you should have both features `loader` + `dll`. (In this exemple you have also the loglevel info)
+
+```
+cargo build --release --target x86_64-pc-windows-gnu  --features info --features loader --features dll --lib
+```
+
+You can choose the name of you entrypoint directly in this file:
+```
+src/loader/dll.rs
+```
+
+If you want to debug the dll, you can use the overlord.c wish is a small script helping you to load the dll named `malleable_rust_loader.dll` and exec the entrypoint `Overlord`. Compile with :
+
+```
+x86_64-w64-mingw32-gcc -o overlord.exe overlord.c -L.
+```
+
+You should have overlord.exe and malleable_rust_loader.dll in the same directory to make this work.
+The generated dll could be used with DllHijack techniques (also called Dll). see https://hijacklibs.net/ for known exe+dll and the correspondig EntryPoint.
 
 ## 5. Deploy config and payload
 
@@ -546,7 +574,7 @@ example of winrust usage (you should add the --debug option to have output for d
 ┌──(user㉿DRACONYS)-[~/malleable-rust-loader]
 └─$ winrust loader --debug
 2024-11-13 08:10:15,909 INFO	[+] NORMAL Compilation
-2024-11-13 08:10:15,909 INFO	cargo build --target x86_64-pc-windows-gnu --bin "loader"  --features logdebug 
+2024-11-13 08:10:15,909 INFO	cargo build --target x86_64-pc-windows-gnu --bin "loader"  --features info 
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
 2024-11-13 08:10:16,153 INFO	[+] compilation succeed
 2024-11-13 08:10:16,160 INFO	-rwxrwxr-x 2 user user 113M Nov 13 08:07 target/x86_64-pc-windows-gnu/debug/loader.exe
