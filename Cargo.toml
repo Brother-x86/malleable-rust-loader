@@ -83,7 +83,7 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 panic = "abort"
-
+debug = false
 
 [features]
 loader = []
@@ -99,5 +99,4 @@ mem4 = []
 
 [lib]
 name = "malleable_rust_loader"
-crate-type = ["rlib", "cdylib"]  # Par défaut, "rlib" est suffisant
-# TODO comprendre rlib cdylib
+crate-type = ["rlib", "cdylib"]
