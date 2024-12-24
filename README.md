@@ -262,10 +262,18 @@ Here you will :
 - install ~/.malleable/ working directory
 - install windows rust tools chain
 
+Install rust:
+
+https://www.rust-lang.org/tools/install
+
 Run this:
 
 ```
-apt install pkg-config openssl-devel gcc-mingw-w64-x86-64 mingw-w64 cmake
+sudo apt install pkg-config gcc-mingw-w64-x86-64 mingw-w64 cmake rustup
+sudo apt install openssl-devel 
+OR
+sudo apt install libssl-dev
+
 rustup target add x86_64-pc-windows-gnu
 cargo run --bin initmasterkey
 # this key should be only used for one loader:
