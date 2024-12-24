@@ -119,7 +119,7 @@ NOT ACTIVATED:
         comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         log.info(comm)
         compil_result=os.system(comm)
-        os.system('cp Cargo.lock Cargo.lock.ollvm')
+        os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
         os.system('mv Cargo.lock.normal Cargo.lock')
 
     # compil_result=0 if compilation is OK
