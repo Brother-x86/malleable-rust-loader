@@ -22,6 +22,7 @@ parser.add_argument('--debug',default=False,action='store_true',help='activate t
 parser.add_argument('--info',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=info . you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
 parser.add_argument('--no_loader',default=False,action='store_true',help='dont add this compil flag: --features loader')
+parser.add_argument('--dll',default=False,action='store_true',help='compile to dll')
 
 args = parser.parse_args()
 
