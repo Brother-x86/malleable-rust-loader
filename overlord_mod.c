@@ -5,7 +5,7 @@
 typedef void (__stdcall *OverlordFunc)(void);
 
 int main() {
-    HMODULE dll_handle = LoadLibrary("REPLACEME");
+    HMODULE dll_handle = LoadLibrary("malleable_rust_loader-4e5929b506e8417b89ae15ce6d2f12cf.dll");
     if (!dll_handle) {
         printf("Failed to load DLL\n");
         return 1;

@@ -73,10 +73,12 @@ def main():
         dll_options="--features dll --lib"
         dll_smb="put overlord.exe"
         file_format="dll"
+        bin_comm=""
     else:
         dll_options=""
         dll_smb=""
         file_format="exe"
+        bin_comm=f'''--bin "{args.bin}"'''
 
     if not args.ollvm:
         file=f"target/x86_64-pc-windows-gnu/{mode}/{args.bin}.{file_format}"
@@ -96,7 +98,7 @@ def main():
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
         # TODO enlever --features executable
-        comm=f'''cargo build --target x86_64-pc-windows-gnu --bin "{args.bin}" {comm_mode} {log_level} {memory_options} {features_loader} {dll_options}'''
+        comm=f'''cargo build --target x86_64-pc-windows-gnu {bin_comm} {comm_mode} {log_level} {memory_options} {features_loader} {dll_options}'''
         log.info(comm)
         compil_result=os.system(comm)
 
@@ -125,7 +127,7 @@ ACTIVATED:
 NOT ACTIVATED:
     N/A
         ''')
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc --bin "{args.bin}" --features ollvm {log_level} {memory_options} {features_loader}  {features_loader} {dll_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {bin_comm} --features ollvm {log_level} {memory_options} {features_loader}  {features_loader} {dll_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         log.info(comm)
         compil_result=os.system(comm)
         os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
@@ -137,8 +139,14 @@ NOT ACTIVATED:
 
 
         if args.dll:
-            log.info("[+] compile overlord.c into overlord.exe")
-            os.system("x86_64-w64-mingw32-gcc -o overlord.exe overlord.c -L.")
+            log.info(f"[+] modifiy overlord.c to overlord_mod.c with target dll: {filename_target}")
+            with open('overlord.c', 'r') as fichier:
+                contenu = fichier.read()  # Lire le contenu du fichier
+            contenu_modifie = contenu.replace('REPLACEME', filename_target)
+            with open('overlord_mod.c', 'w') as fichier:
+                fichier.write(contenu_modifie)
+            log.info("[+] compile overlord_mod.c into overlord.exe")
+            os.system("x86_64-w64-mingw32-gcc -o overlord.exe overlord_mod.c -L.")
 
         os.system('rm -f config/*')
         log.info(os.popen(f'ls -lah {file}').read().replace('\n',''))
