@@ -1,6 +1,5 @@
 pub mod config;
 pub mod create_config;
-pub mod rundata;
 pub mod dataoperation;
 pub mod defuse;
 pub mod link;
@@ -10,6 +9,7 @@ pub mod payload;
 pub mod payload_util;
 pub mod poollink;
 pub mod python_embedder;
+pub mod rundata;
 
 #[cfg(feature = "loader")]
 pub mod loader {

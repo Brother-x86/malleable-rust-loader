@@ -84,7 +84,10 @@ pub fn run_loader() {
 
     let running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
     let runonce: Vec<Payload> = vec![];
-    let mut run_data=RunData{running_thread:running_thread,runonce:runonce };
+    let mut run_data = RunData {
+        running_thread: running_thread,
+        runonce: runonce,
+    };
     let mut loop_nb = 1;
     loop {
         info!(
@@ -129,5 +132,3 @@ pub fn run_loader() {
         loop_nb = loop_nb + 1;
     }
 }
-
-

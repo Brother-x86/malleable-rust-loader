@@ -23,7 +23,7 @@ pub extern "system" fn MiliTech() {
     run_loader();
 }
 
-/* 
+/*
 // ya vraiment un probleme avec les thread dans le DllMain
 // idea: gerer son propre system de Thread.
 
@@ -42,11 +42,11 @@ extern "system" fn DllMain(dll_module: HINSTANCE, call_reason: DWORD, reserved: 
     const DLL_PROCESS_DETACH: DWORD = 0;
     const DLL_THREAD_ATTACH: DWORD = 2;
     const DLL_THREAD_DETACH: DWORD = 3;
-     
+
     unsafe {
         DisableThreadLibraryCalls(dll_module);
     }
-    
+
     if call_reason == DLL_PROCESS_ATTACH {
         println!("DLL_PROCESS_ATTACH");
         run_loader();

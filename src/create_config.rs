@@ -78,10 +78,12 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
         .to_lowercase();
     match env::var("STEGANO_INPUT_IMAGE") {
         Ok(_) => (),
-        Err(_) => //unsafe {
+        Err(_) =>
+        //unsafe {
+        {
             env::set_var("STEGANO_INPUT_IMAGE", input_image)
-        //;}
-        ,
+        } //;}
+          ,
     }
 
     encrypt_config(config.clone(), json_config_file.clone());
@@ -112,7 +114,7 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
                 );
                 last_dataop_is_steg = true;
                 //unsafe {
-                    env::set_var("STEGANO_OUTPUT_IMAGE", output_filename_steg.clone());
+                env::set_var("STEGANO_OUTPUT_IMAGE", output_filename_steg.clone());
                 //}
             };
         }

@@ -106,8 +106,6 @@ pub fn print_runonce(runonce: &mut Vec<Payload>) {
     };
 }
 
-
-
 pub fn fail_linux_message(message: String) {
     error!(
         "{}{}",
