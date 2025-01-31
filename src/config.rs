@@ -198,11 +198,15 @@ impl Config {
             //clean the running_thread
             run_data.running_thread.retain(|x| x.0.is_finished() == false);
 
-            if payload.is_already_running(&mut run_data.running_thread) == false {
+            if payload.is_already_running(run_data) == false {
                 match payload.exec_payload(&self) {
                     PayloadExec::NoThread() => (),
                     PayloadExec::Thread(join_handle, payload) => {
                         run_data.running_thread.push((join_handle, payload));
+                        ()
+                    },
+                    PayloadExec::RunOnce(payload) => {
+                        run_data.runonce.push(payload);
                         ()
                     }
                 }

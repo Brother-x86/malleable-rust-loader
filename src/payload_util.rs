@@ -80,7 +80,7 @@ pub fn print_running_thread(running_thread: &mut Vec<(thread::JoinHandle<()>, Pa
     if running_thread.len() != 0 {
         info!(
             "{}{}",
-            encrypt_string!("[+] RUNNING thread "),
+            encrypt_string!("[+] RUNNING thread: "),
             running_thread.len()
         );
         for i in running_thread {
@@ -90,6 +90,23 @@ pub fn print_running_thread(running_thread: &mut Vec<(thread::JoinHandle<()>, Pa
         info!("{}", encrypt_string!("[+] no RUNNING thread"));
     };
 }
+
+pub fn print_runonce(runonce: &mut Vec<Payload>) {
+    if runonce.len() != 0 {
+        info!(
+            "{}{}",
+            encrypt_string!("[+] RUNONCE payload: "),
+            runonce.len()
+        );
+        for i in runonce {
+            info!("{}{:?}", encrypt_string!("-runonce: "), i);
+        }
+    } else {
+        info!("{}", encrypt_string!("[+] no RUNONCE payload"));
+    };
+}
+
+
 
 pub fn fail_linux_message(message: String) {
     error!(

