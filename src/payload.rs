@@ -39,13 +39,6 @@ pub enum PayloadExecThread {
     Thread(thread::JoinHandle<()>, Payload),
 }
 
-/*
-pub trait ExecMode {
-    fn is_thread(&self) -> bool;
-    fn is_runonce(&self) -> bool;
-}
-*/
-
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     DllFromMemory(DllFromMemory),
