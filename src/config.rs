@@ -1,6 +1,6 @@
 use crate::defuse::{Defuse, Operator};
 use crate::payload::Payload;
-use crate::payload::PayloadExec;
+use crate::payload::PayloadExecThread;
 use crate::poollink::PoolLinks;
 use crate::rundata::RunData;
 
@@ -200,19 +200,23 @@ impl Config {
                 .running_thread
                 .retain(|x| x.0.is_finished() == false);
 
-            if payload.is_already_running(run_data) == false {
+            if payload.is_already_running_or_runonce(run_data) == false {
                 match payload.exec_payload(&self) {
-                    PayloadExec::NoThread() => (),
-                    PayloadExec::Thread(join_handle, payload) => {
+                    PayloadExecThread::NoThread() => (),
+                    PayloadExecThread::Thread(join_handle, payload) => {
                         run_data.running_thread.push((join_handle, payload));
-                        ()
-                    }
-                    PayloadExec::RunOnce(payload) => {
-                        run_data.runonce.push(payload);
                         ()
                     }
                 }
             }
+
+            // add runonce payload to the list
+            if payload.is_runonce(){
+                if !run_data.runonce.contains(&payload) {
+                    run_data.runonce.push(payload.clone());
+                }
+            }
+
             nb_payload = nb_payload + 1;
         }
 
