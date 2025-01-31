@@ -3,6 +3,7 @@ use crate::dataoperation::un_apply_all_dataoperations;
 use crate::dataoperation::DataOperation;
 use crate::payload::Payload;
 use crate::payload_util::print_running_thread;
+use crate::rundata::RunData;
 
 use cryptify;
 use cryptify::encrypt_string;
@@ -80,7 +81,9 @@ pub fn run_loader() {
     config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", encrypt_string!("[+] VERIFIED!"), "\n");
 
-    let mut running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let runonce: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let mut run_data=RunData{running_thread:running_thread,runonce:runonce };
     let mut loop_nb = 1;
     loop {
         info!(
@@ -97,7 +100,7 @@ pub fn run_loader() {
         } else {
             info!("{}", encrypt_string!("[+] UPDATE config"));
             let mut running_payload: Vec<Payload> = vec![];
-            for t in &running_thread {
+            for t in &run_data.running_thread {
                 running_payload.push(t.1.clone());
             }
 
@@ -107,11 +110,11 @@ pub fn run_loader() {
                 error!("{}", encrypt_string!("[!] DEFUSE STOP the payload exec"));
             } else {
                 info!("{}", encrypt_string!("[+] PAYLOADS exec"));
-                config.exec_payloads(&mut running_thread);
+                config.exec_payloads(&mut run_data);
             }
         }
 
-        print_running_thread(&mut running_thread);
+        print_running_thread(&mut run_data.running_thread);
         //TODO wait all thread to finish -> new option
         config.sleep_and_jitt();
         info!(
@@ -124,3 +127,5 @@ pub fn run_loader() {
         loop_nb = loop_nb + 1;
     }
 }
+
+

@@ -2,6 +2,7 @@ use crate::defuse::{Defuse, Operator};
 use crate::payload::Payload;
 use crate::payload::PayloadExec;
 use crate::poollink::PoolLinks;
+use crate::rundata::RunData;
 
 use chksum_sha2_512 as sha2_512;
 use chrono::prelude::*;
@@ -183,7 +184,7 @@ impl Config {
         signature::Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref()).unwrap()
     }
 
-    pub fn exec_payloads(&self, running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
+    pub fn exec_payloads(&self,  run_data:&mut RunData) {
         let mut nb_payload = 1;
         for payload in &self.payloads {
             info!(
@@ -195,13 +196,13 @@ impl Config {
             );
 
             //clean the running_thread
-            running_thread.retain(|x| x.0.is_finished() == false);
+            run_data.running_thread.retain(|x| x.0.is_finished() == false);
 
-            if payload.is_already_running(running_thread) == false {
+            if payload.is_already_running(&mut run_data.running_thread) == false {
                 match payload.exec_payload(&self) {
                     PayloadExec::NoThread() => (),
                     PayloadExec::Thread(join_handle, payload) => {
-                        running_thread.push((join_handle, payload));
+                        run_data.running_thread.push((join_handle, payload));
                         ()
                     }
                 }
@@ -210,7 +211,7 @@ impl Config {
         }
 
         //clean the running_thread
-        running_thread.retain(|x| x.0.is_finished() == false);
+        run_data.running_thread.retain(|x| x.0.is_finished() == false);
     }
 
     pub fn stop_defuse(&self, defuse_list: &Vec<Defuse>) -> bool {
