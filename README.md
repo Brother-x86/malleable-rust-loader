@@ -85,7 +85,10 @@ LLVM Obfuscator (OLLVM) compilation options + string encryption are also include
 - [x] **Exec** : Allow to exec a file in the filesystem with a specific commandline.
 - [x] **ExecPython** : Allow to exec python code, in conjonction with the Pyramid project of Naksyn, this allow to run exe from memory with a commandline.
 - [x] **DllFromMemory** : The Star feature, allow you to run a DLL from Memory with module memorymodule-rs wish is apure rust adaptation of fancycode/MemoryModule (https://github.com/fancycode/MemoryModule)
- 
+- [x] **ReflectivePEFromMemory** : The Star feature, allow you to run a PE from Memory with Reflective PE loader (https://github.com/Thoxy67/rspe)
+
+
+ https://github.com/Thoxy67/rspe
 ### Compilation
 
 - [X] cross compilation from linux
@@ -649,7 +652,7 @@ alias avdown="wmiexec.py -shell-type powershell $(cat ~/.exec) 'Set-MpPreference
 ## reduced size and PACK with UPX
 
 ```
-sudo upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
+upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
 ```
 
 
@@ -672,6 +675,7 @@ sudo upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
 - Thanks to Victor P. for is perfect knowledge of Rust.
 - Thanks to this awesome dockerisation of the OLLVM project https://github.com/joaovarelas/Obfuscator-LLVM-16.0 . https://vrls.ws/posts/2023/06/obfuscating-rust-binaries-using-llvm-obfuscator-ollvm/
 - Thanks to https://github.com/fancycode/MemoryModule and [memorymodule-rs](https://lib.rs/crates/memorymodule-rs)
+- Thanks to https://github.com/Thoxy67/rspe
 - Thanks to https://github.com/naksyn/Pyramid + https://github.com/naksyn/Embedder
 - And thanks to the very nice Rust community helping me well !!
 

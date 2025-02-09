@@ -1,4 +1,4 @@
-use malleable_rust_loader::dataoperation::DataOperation;
+use loader::dataoperation::DataOperation;
 
 use std::fs;
 

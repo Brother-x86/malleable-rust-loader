@@ -3,6 +3,9 @@ name = "malleable-rust-loader"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "loader"
+crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 #reqwest = { version = "0.12.5", features = ["blocking","json"] }
@@ -37,6 +40,7 @@ yoke = "=0.7.4"
 sysinfo = "=0.30.0"
 aes-gcm-siv = "0.11.1"
 attohttpc = "0.28.2"
+rspe = "0.1.2"
 
 [dependencies.uuid]
 version = "1.11.0"
@@ -96,8 +100,3 @@ mem1 = []
 mem2 = []
 mem3 = []
 mem4 = []
-
-
-[lib]
-name = "malleable_rust_loader"
-crate-type = ["rlib", "cdylib"]

@@ -4,7 +4,7 @@
 )]
 
 #[cfg(feature = "loader")]
-use malleable_rust_loader::run_loader;
+use loader::run_loader;
 
 fn main() {
     #[cfg(feature = "loader")]

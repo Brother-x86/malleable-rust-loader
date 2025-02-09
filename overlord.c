@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+//#include <unistd.h>
 
 // Déclare un type de fonction correspondant à `Overlord`
 typedef void (__stdcall *OverlordFunc)(void);
@@ -10,7 +11,8 @@ int main() {
         printf("Failed to load DLL\n");
         return 1;
     }
-
+    //printf("Le programme va dormir pendant 10 secondes...\n");
+    //sleep(10);  // Met le programme en pause pendant 10 secondes
     // Obtenez l'adresse de la fonction 'Overlord'
     OverlordFunc Overlord = (OverlordFunc)GetProcAddress(dll_handle, "Overlord");
     if (!Overlord) {

