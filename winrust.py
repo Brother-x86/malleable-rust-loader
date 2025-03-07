@@ -22,8 +22,10 @@ parser.add_argument('--debug',default=False,action='store_true',help='activate t
 parser.add_argument('--info',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=info . you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
 parser.add_argument('--no_loader',default=False,action='store_true',help='dont add this compil flag: --features loader')
+parser.add_argument('--no_dll',default=False,action='store_true',help='dont add this compil flag: --features dll')
 parser.add_argument('--dll',default=False,action='store_true',help='compile to dll')
 parser.add_argument('--proxychains',default=False,action='store_true',help='add proxychains in front of commands exec+upload command')
+parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
 
 args = parser.parse_args()
 
@@ -75,7 +77,10 @@ def main():
 
     memory_options=args.mem1*' --features mem1 ' + args.mem2*' --features mem2 ' + args.mem3*' --features mem3 ' + args.mem4*' --features mem4 '
     if args.dll:
-        dll_options="--features dll --lib"
+        if args.no_dll:
+            dll_options="--lib"
+        else:
+            dll_options="--features dll --lib"
         dll_smb="put overlord.exe"
         file_format="dll"
         bin_comm=""
@@ -84,6 +89,11 @@ def main():
         dll_smb=""
         file_format="exe"
         bin_comm=f'''--bin "{args.bin}"'''
+
+    if args.nobin:
+        bin_comm=""
+
+
 
     if not args.ollvm:
         file=f"target/x86_64-pc-windows-gnu/{mode}/{args.bin}.{file_format}"
