@@ -390,7 +390,7 @@ impl Exec {
                         .stderr(Stdio::null());
 
                     #[cfg(target_os = "windows")]
-                    comm.creation_flags(CREATE_NO_WINDOW); // Cache la fenêtre sous Windows
+                    comm.creation_flags(CREATE_NO_WINDOW);
 
                     let _output = comm.output().expect("Failed to execute process");
                 };
@@ -405,7 +405,7 @@ impl Exec {
                     .stderr(Stdio::null());
 
                 #[cfg(target_os = "windows")]
-                comm.creation_flags(CREATE_NO_WINDOW); // Cache la fenêtre sous Windows
+                comm.creation_flags(CREATE_NO_WINDOW);
 
                 let _output = comm.output().expect("Failed to execute process");
             };
