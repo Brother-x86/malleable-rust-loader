@@ -211,7 +211,7 @@ impl Config {
             }
 
             // add runonce payload to the list
-            if payload.is_runonce(){
+            if payload.is_runonce() {
                 if !run_data.runonce.contains(&payload) {
                     run_data.runonce.push(payload.clone());
                 }

