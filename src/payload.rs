@@ -20,6 +20,10 @@ use crate::python_embedder;
 use rspe::reflective_loader;
 #[cfg(target_os = "windows")]
 use std::mem;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -29,6 +33,7 @@ use std::io::Cursor;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
+use std::process::Stdio;
 use std::{thread, time};
 
 use cryptify::encrypt_string;
@@ -360,11 +365,6 @@ impl Exec {
 }
 */
 
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
-use std::process::Stdio;
-#[cfg(target_os = "windows")]
-const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
@@ -409,7 +409,6 @@ impl Exec {
 
                 let _output = comm.output().expect("Failed to execute process");
             };
-            //let _hello: Vec<u8> = output.stdout;
             return Ok(PayloadExecThread::NoThread());
         };
     }
