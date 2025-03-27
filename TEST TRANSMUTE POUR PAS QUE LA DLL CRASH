@@ -1,0 +1,36 @@
+✅ Solution plus sûre :
+
+Utilise std::mem::transmute mais avec une vérification du pointeur :
+
+use std::mem;
+use std::os::raw::c_char;
+
+type DllEntryPoint = extern "C" fn(*const c_char);
+
+let dll_entry_point = unsafe {
+    let func_ptr = mm.get_function(&thread_dll_entrypoint);
+    if func_ptr.is_null() {
+        None
+    } else {
+        Some(mem::transmute::<_, DllEntryPoint>(func_ptr))
+    }
+};
+
+if let Some(entry) = dll_entry_point {
+    entry(b"Hello depuis Rust!\0".as_ptr() as *const c_char);
+} else {
+    println!("Erreur : l'adresse de la fonction est invalide !");
+}
+
+🔹 Explication :
+
+    Vérification si le pointeur est NULL avant d'utiliser mem::transmute, ce qui évite un crash.
+
+    Utilisation d'un Option<DllEntryPoint> pour gérer proprement l'erreur.
+
+    Appel de la fonction uniquement si elle est valide.
+
+Avec cette approche, ton code est plus robuste et évite des crashs imprévus 🚀.
+
+
+https://chatgpt.com/c/67e5b43f-9930-800e-b9a8-6dc20371b87f
