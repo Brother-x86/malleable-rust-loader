@@ -3,11 +3,38 @@ import logging
 import sys
 import uuid
 import os
+
+# bin
+# no_loader/no_dll
+
+working_dir = os.path.basename(os.getcwd())
+if working_dir == "malleable-rust-loader":
+    malleable_rust_loader=True
+else:
+    malleable_rust_loader=False
+
 parser = argparse.ArgumentParser(
                     prog = 'winrust',
                     description = 'Tools to help from Linux to compile rust code Windows and then exec it into a Windows host by uploading with SMB + use some some impacket LateralMovement techniques',
                     epilog = 'by Brother')
-parser.add_argument('bin',help='target bin')
+
+if malleable_rust_loader:
+    parser.add_argument('-bin',default='loader',help='target bin')
+    parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
+elif os.path.isdir("src/bin"):
+    parser.add_argument('bin', help='target bin')
+    parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
+else:
+    import re
+    with open("Cargo.toml") as f:
+        for ligne in f:
+            m=re.search(r"name\s*=\s*\"(.*)\"$", ligne)
+            if m:
+                args_bin=m.group(1)
+                parser.add_argument('-bin',default=args_bin,help='target bin')
+                parser.add_argument('--nobin',default=True,action='store_true',help='dont use the bin value')
+                break
+
 parser.add_argument('--mem1',default=False,action='store_true',help='add a file in MEMORY_1 at compilation time, file should be located here: ~/.malleable/config/mem1')
 parser.add_argument('--mem2',default=False,action='store_true',help='add a file in MEMORY_2 at compilation time, file should be located here: ~/.malleable/config/mem2')
 parser.add_argument('--mem3',default=False,action='store_true',help='add a file in MEMORY_3 at compilation time, file should be located here: ~/.malleable/config/mem3')
@@ -21,11 +48,10 @@ parser.add_argument('--release',default=False,action='store_true',help='activate
 parser.add_argument('--debug',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=debug .you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--info',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=info . you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
-parser.add_argument('--no_loader',default=False,action='store_true',help='dont add this compil flag: --features loader')
-parser.add_argument('--no_dll',default=False,action='store_true',help='dont add this compil flag: --features dll')
+parser.add_argument('--loader',default=malleable_rust_loader,action='store_true',help='dont add this compil flag: --features loader')
+parser.add_argument('--loader_dll',default=malleable_rust_loader,action='store_true',help='dont add this compil flag: --features dll')
 parser.add_argument('--dll',default=False,action='store_true',help='compile to dll')
 parser.add_argument('--proxychains',default=False,action='store_true',help='add proxychains in front of commands exec+upload command')
-parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
 
 args = parser.parse_args()
 
@@ -42,7 +68,9 @@ def main():
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    if not args.no_loader :
+    log.debug(f"args_bin={args.bin}")
+
+    if args.loader :
         features_loader='--features loader'
     else:
         features_loader=''
@@ -77,10 +105,10 @@ def main():
 
     memory_options=args.mem1*' --features mem1 ' + args.mem2*' --features mem2 ' + args.mem3*' --features mem3 ' + args.mem4*' --features mem4 '
     if args.dll:
-        if args.no_dll:
-            dll_options="--lib"
-        else:
+        if args.loader_dll:
             dll_options="--features dll --lib"
+        else:
+            dll_options="--lib"
         dll_smb="put overlord.exe"
         file_format="dll"
         bin_comm=""
