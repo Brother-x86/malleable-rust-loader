@@ -96,7 +96,7 @@ windows-sys = { version = "0.45.0" , features = [
 ]}
 winapi = { version = "0.3.9", features = ["minwindef"] }
 ntapi = "0.4.1"
-clap = { version = "4.5.4", features = ["derive"] }
+#clap = { version = "4.5.4", features = ["derive"] }
 
 
 [dependencies.windows]

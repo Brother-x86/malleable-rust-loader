@@ -13,7 +13,13 @@ pub mod rundata;
 //pub mod local_pe_injection;
 
 pub mod local_pe_injection;
+
+/* 
+#[cfg(target_os = "windows")]
 use crate::local_pe_injection::main::local_pe_injection;
+#[cfg(target_os = "windows")]
+use crate::local_pe_injection::cmd::Args;
+*/
 
 /*pub mod local_pe_injection {
     pub mod main;

