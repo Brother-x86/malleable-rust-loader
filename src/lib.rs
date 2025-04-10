@@ -10,6 +10,16 @@ pub mod payload_util;
 pub mod poollink;
 pub mod python_embedder;
 pub mod rundata;
+//pub mod local_pe_injection;
+
+pub mod local_pe_injection;
+use crate::local_pe_injection::main::local_pe_injection;
+
+/*pub mod local_pe_injection {
+    pub mod main;
+}
+pub use local_pe_injection::main::local_pe_injection_main;
+*/
 
 #[cfg(feature = "loader")]
 pub mod loader {
