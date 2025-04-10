@@ -4,28 +4,13 @@ pub mod dataoperation;
 pub mod defuse;
 pub mod link;
 pub mod link_util;
+pub mod local_pe_injection;
 pub mod lsb_text_png_steganography_mod;
 pub mod payload;
 pub mod payload_util;
 pub mod poollink;
 pub mod python_embedder;
 pub mod rundata;
-//pub mod local_pe_injection;
-
-pub mod local_pe_injection;
-
-/* 
-#[cfg(target_os = "windows")]
-use crate::local_pe_injection::main::local_pe_injection;
-#[cfg(target_os = "windows")]
-use crate::local_pe_injection::cmd::Args;
-*/
-
-/*pub mod local_pe_injection {
-    pub mod main;
-}
-pub use local_pe_injection::main::local_pe_injection_main;
-*/
 
 #[cfg(feature = "loader")]
 pub mod loader {

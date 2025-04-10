@@ -1,15 +1,11 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 
-
-use std::ffi::c_void;
 use ntapi::ntpebteb::{PEB, TEB};
+use std::ffi::c_void;
 use windows::Win32::{
-    System::{
-        Kernel::NT_TIB,
-        Diagnostics::Debug::*,
-    },
     Foundation::{BOOL, HINSTANCE},
+    System::{Diagnostics::Debug::*, Kernel::NT_TIB},
 };
 
 const IMAGE_ORDINAL_FLAG64: u64 = 0x8000000000000000;
