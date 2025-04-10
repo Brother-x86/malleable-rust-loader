@@ -13,7 +13,6 @@ use {
     },   
 };
 
-/* 
 use windows::{
     core::PCSTR,
     Win32::{
@@ -28,23 +27,6 @@ use windows::{
         }
     },
 };
-*/
-
-// OK ### 
-use windows::core::PCSTR;
-//use windows_sys::core::PCSTR;
-use windows::Win32::Foundation::{GetLastError, HINSTANCE};
-use windows::Win32::System::Memory::*;
-use windows::Win32::System::Threading::*;
-use windows::Win32::System::SystemServices::*;
-use windows::Win32::System::Diagnostics::Debug::*;
-use windows::Win32::System::WindowsProgramming::IMAGE_THUNK_DATA64;
-use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryA};
-
-
-
-
-
 
 // TODO, ici en paramètre, on donne le type (exe/dll) et ensuite le vec_u8 et la cmdline -> qui sera Args::parsel
 pub fn local_pe_injection(param:String,export:String,data:Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
