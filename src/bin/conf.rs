@@ -145,6 +145,7 @@ fn main() {
                 sleep: 0,
             }),
             dll_entrypoint: String::from("DllInstall"),
+            commandline: String::from(""),
             thread: true,
             runonce: false,
         })];
@@ -216,6 +217,7 @@ exec(decoded_script)
                 sleep: 0,
             }),
             dll_entrypoint: String::from("DllInstall"),
+            commandline: String::from(""),
             thread: true,
             runonce: false,
         })];
