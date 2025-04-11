@@ -1,5 +1,5 @@
 #![cfg_attr(
-    not(any(feature = "debug", feature = "info")),
+    not(any(feature = "debug", feature = "info", feature = "visible")),
     windows_subsystem = "windows"
 )]
 

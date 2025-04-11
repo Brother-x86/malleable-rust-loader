@@ -47,6 +47,7 @@ parser.add_argument('--ollvm',default=False,action='store_true',help='OLLVM obfu
 parser.add_argument('--release',default=False,action='store_true',help='activate the cargo release mode for compilation, sinon its debug')
 parser.add_argument('--debug',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=debug .you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
 parser.add_argument('--info',default=False,action='store_true',help='activate the agent debug log into STDOUT, RUST_LOG=info . you should also activate rust loggin via env variable: setx RUST_LOG info /m + setx RUST_LOG info')
+parser.add_argument('--visible',default=False,action='store_true',help='dont disable the window terminal and permit to show the execution output (this options is also automatically included in info+debug)')
 parser.add_argument('--verbose','-v',default=False,action='store_true',help='verbose execution')
 parser.add_argument('--loader',default=malleable_rust_loader,action='store_true',help='dont add this compil flag: --features loader')
 parser.add_argument('--loader_dll',default=malleable_rust_loader,action='store_true',help='dont add this compil flag: --features dll')
@@ -75,6 +76,10 @@ def main():
     else:
         features_loader=''
 
+    if args.visible :
+        features_visible='--features visible'
+    else:
+        features_visible=''
 
     if args.release or args.ollvm:
         mode='release'
@@ -131,17 +136,22 @@ def main():
     filename_target=f"{args.bin}-{uuid.uuid4().hex}.{file_format}"
     file_target=f"/tmp/{filename_target}"
 
+
+    compilation_args=f"{bin_comm} {log_level} {features_visible} {memory_options} {features_loader} {dll_options}"
+
     log.debug(f"file={file}")
     log.debug(f"filename={filename}")
     log.debug(f"filename_target={filename_target}")
     log.debug(f"file_target={file_target}")
     log.debug(f"exec_target={exec_target}")
     log.debug(f"memory_options={memory_options}")
+    log.debug(f"compilation_args={compilation_args}")
+
 
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
         # TODO enlever --features executable
-        comm=f'''cargo build --target x86_64-pc-windows-gnu {bin_comm} {comm_mode} {log_level} {memory_options} {features_loader} {dll_options}'''
+        comm=f'''cargo build --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
         log.info(comm)
         compil_result=os.system(comm)
 
@@ -170,7 +180,7 @@ ACTIVATED:
 NOT ACTIVATED:
     N/A
         ''')
-        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {bin_comm} --features ollvm {log_level} {memory_options} {features_loader}  {features_loader} {dll_options} --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         log.info(comm)
         compil_result=os.system(comm)
         os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
