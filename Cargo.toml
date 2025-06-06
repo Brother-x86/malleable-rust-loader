@@ -60,9 +60,13 @@ yoke = "=0.7.4"
 # todo tester le 0.31
 sysinfo = "=0.30.0"
 aes-gcm-siv = "0.11.1"
-attohttpc = "0.28.2"
+attohttpc = "=0.28.2"
 native-tls = "=0.2.13"
 rspe = "0.1.2"
+url = "=2.5.2"
+clroxide = "1.1.1"
+
+
 
 [dependencies.uuid]
 version = "1.11.0"
