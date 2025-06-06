@@ -12,6 +12,8 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
+use std::env;
+use serde::{Deserialize, Serialize};
 
 use cryptify::encrypt_string;
 use log::error;
@@ -112,4 +114,31 @@ pub fn fail_linux_message(message: String) {
         encrypt_string!("Its linux, impossible to run the payload: "),
         message
     );
+}
+
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub enum CommandLine {
+    ArgParse(),
+    Txt(String),
+}
+
+impl CommandLine {
+    pub fn get_buffer(&self) -> Vec<String> {
+        match self.clone() {
+            CommandLine::ArgParse() => env::args().collect(),
+            CommandLine::Txt(commandline) => 
+                commandline.split_whitespace()
+                .map(|mot| mot.to_string())
+                .collect()
+        }
+    }
+    pub fn get_string(&self) -> String {
+        match self.clone() {
+            CommandLine::ArgParse() => {
+                let args: Vec<String> = env::args().collect();
+                args.join(" ")
+            }
+            CommandLine::Txt(commandline) => commandline,
+        }
+    }
 }
