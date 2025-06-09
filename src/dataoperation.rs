@@ -25,22 +25,22 @@ pub enum DataOperation {
     REVERSE,
     STEGANO,
     ZLIB,
-    SHA256(SHA256),
+    SHA512(SHA512),
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct SHA256 {
+pub struct SHA512 {
     pub hash: String,
 }
-impl SHA256 {
-    fn check_sha256(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
-        debug!("{}", encrypt_string!("dataoperation: SHA256 verify"));
+impl SHA512 {
+    fn check_sha512(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("{}", encrypt_string!("dataoperation: SHA512 verify"));
         let digest: chksum_sha2_512::Digest = sha2_512::chksum(data.clone())?;
         let digest_lowercase = digest.to_hex_lowercase();
         if digest_lowercase == self.hash {
             Ok(data)
         } else {
-            bail!("sha256 not verified: {}", digest_lowercase)
+            bail!("Failed to verify SHA512: {}", digest_lowercase)
         }
     }
 }
@@ -96,7 +96,7 @@ impl UnApplyDataOperation for DataOperation {
             DataOperation::STEGANO => self.stegano_decode_lsb(data),
             DataOperation::ZLIB => self.zlib_decompress(data),
             DataOperation::REVERSE => todo!(),
-            DataOperation::SHA256(sha256) => sha256.check_sha256(data),
+            DataOperation::SHA512(sha512) => sha512.check_sha512(data),
         }
     }
 }
@@ -164,7 +164,7 @@ impl ApplyDataOperation for DataOperation {
             DataOperation::STEGANO => self.stegano_encode_lsb(data),
             DataOperation::ZLIB => self.zlib_encode(data),
             DataOperation::REVERSE => todo!(),
-            DataOperation::SHA256(sha256) => sha256.check_sha256(data),
+            DataOperation::SHA512(sha512) => sha512.check_sha512(data),
         }
     }
 }

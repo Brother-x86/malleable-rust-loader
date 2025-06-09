@@ -26,7 +26,7 @@ pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> 
     Ok(path.to_owned())
 }
 
-pub fn create_diretory(path: &PathBuf) -> Result<(), anyhow::Error> {
+pub fn create_directory(path: &PathBuf) -> Result<(), anyhow::Error> {
     match path.parent() {
         Some(parent_dir) => {
             if fs::metadata(parent_dir).is_ok() == false {
@@ -153,6 +153,7 @@ pub fn fail_linux_message(message: String) {
 pub enum CommandLine {
     ArgParse(),
     Txt(String),
+    TxtEnrich(String),
 }
 
 impl CommandLine {
@@ -163,6 +164,8 @@ impl CommandLine {
                 .split_whitespace()
                 .map(|mot| mot.to_string())
                 .collect(),
+                CommandLine::TxtEnrich(commandline)=> vec!["prout TODO".to_string()],
+
         }
     }
     pub fn get_string(&self) -> String {
@@ -172,6 +175,42 @@ impl CommandLine {
                 args.join(" ")
             }
             CommandLine::Txt(commandline) => commandline,
+            CommandLine::TxtEnrich(commandline) => commandline,
         }
     }
 }
+
+
+
+pub fn calculate_commandline(commandline: String) -> Result<String, anyhow::Error> {
+    let expanded: std::borrow::Cow<'_, str> = shellexpand::env(&commandline).unwrap(); // Expands %APPDATA% or any other environment variable
+
+
+    // Étape 2 : Récupération du chemin du binaire courant
+    let exe_path = std::env::current_exe()?;
+    let binpath = exe_path.parent()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let binfile = exe_path.file_name()
+        .map(|f| f.to_string_lossy().to_string())
+        .unwrap_or_default();
+
+    // Étape 3 : Remplacement des variables personnalisées
+    let replaced = expanded
+        .replace("${BINPATH}", &binpath)
+        .replace("${BINFILE}", &binfile);
+    Ok(replaced)
+
+}
+
+
+/*
+
+
+pub fn calculate_comm(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
+    let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable
+    let path: &Path = Path::new(&*expanded); // Convert to a Path
+    Ok(path.to_owned())
+}
+
+*/

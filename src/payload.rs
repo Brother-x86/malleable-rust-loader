@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::link::{Link, LinkFetch};
 use crate::payload_util::calculate_path;
-use crate::payload_util::create_diretory;
+use crate::payload_util::create_directory;
 use crate::payload_util::same_hash_sha512;
 use crate::payload_util::CommandLine;
 use crate::rundata::RunData;
@@ -355,7 +355,7 @@ impl WriteZip {
         };
 
         let path: PathBuf = calculate_path(&self.path)?;
-        let _ = create_diretory(&path)?;
+        let _ = create_directory(&path)?;
 
         info!("{}{:?}", encrypt_string!("[+] Write zip: "), path);
         match zip_extract::extract(Cursor::new(archive), &path, true) {
@@ -386,7 +386,7 @@ impl WriteFile {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
-            let _ = create_diretory(&path)?;
+            let _ = create_directory(&path)?;
 
             let body: Vec<u8> = self.link.fetch_data(config)?;
 

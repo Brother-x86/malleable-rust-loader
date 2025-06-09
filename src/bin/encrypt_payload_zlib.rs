@@ -1,7 +1,7 @@
 use loader::dataoperation::apply_all_dataoperations;
 use loader::dataoperation::AesMaterial;
 use loader::dataoperation::DataOperation;
-use loader::dataoperation::SHA256;
+use loader::dataoperation::SHA512;
 
 use argparse::{ArgumentParser, Store};
 use chksum_sha2_512 as sha2_512;
@@ -52,7 +52,7 @@ fn main() {
         DataOperation::ZLIB,
         DataOperation::AES(aes_mat),
         DataOperation::ZLIB,
-        DataOperation::SHA256(SHA256 {
+        DataOperation::SHA512(SHA512 {
             hash: digest_lowercase,
         }),
     ];
