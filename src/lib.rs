@@ -11,6 +11,7 @@ pub mod payload_util;
 pub mod poollink;
 pub mod python_embedder;
 pub mod rundata;
+pub mod utils;
 
 #[cfg(feature = "loader")]
 pub mod loader {

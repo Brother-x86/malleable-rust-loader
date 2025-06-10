@@ -8,6 +8,7 @@ use crate::link_util::process_path;
 use crate::link_util::working_dir;
 use crate::payload::Payload;
 use crate::poollink::Advanced;
+use crate::utils::expand_arg;
 
 use anyhow::bail;
 use anyhow::Result;
@@ -260,8 +261,8 @@ impl LinkFetch for Link {
 
 impl LinkFetch for FileLink {
     fn download_data(&self, _config: &Config) -> Result<Vec<u8>, anyhow::Error> {
-        debug!("{}{}", encrypt_string!("File Open: "), &self.get_target());
-        let file_bytes: Vec<u8> = fs::read(self.get_target())?;
+        debug!("{}{}", encrypt_string!("File Open: "), &self.get_target());        
+        let file_bytes: Vec<u8> = fs::read(expand_arg(self.get_target())?)?;
         Ok(file_bytes)
     }
     fn download_data_post(
