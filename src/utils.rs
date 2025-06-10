@@ -1,7 +1,7 @@
+use log::debug;
 use rand::Rng;
 use regex::Regex;
 use std::path::PathBuf;
-use log::debug;
 
 fn generate_random_hex(n: usize) -> String {
     let mut rng = rand::thread_rng();

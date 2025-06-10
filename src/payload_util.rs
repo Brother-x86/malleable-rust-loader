@@ -134,10 +134,8 @@ impl CommandLine {
         match self.clone() {
             CommandLine::ArgParse() => Ok(env::args().collect()),
             //CommandLine::Txt(commandline) => Ok(shlex::split(&commandline).ok_or(anyhow::anyhow!("shlex failed"))?),
-            CommandLine::Txt(commandline) => {
-                shlex::split(&expand_arg(commandline)?)
-                    .ok_or(anyhow::anyhow!(encrypt_string!("shlex get_buffer failed")))
-            }
+            CommandLine::Txt(commandline) => shlex::split(&expand_arg(commandline)?)
+                .ok_or(anyhow::anyhow!(encrypt_string!("shlex get_buffer failed"))),
         }
     }
     pub fn get_string(&self) -> Result<String, anyhow::Error> {
@@ -150,7 +148,6 @@ impl CommandLine {
         }
     }
 }
-
 
 //TODO il faudrait aussi ajouter BINFILE et BINPATH ici:
 
