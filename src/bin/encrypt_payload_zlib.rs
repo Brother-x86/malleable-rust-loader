@@ -20,6 +20,7 @@ fn main() {
     env_logger::builder()
         .filter_level(log::LevelFilter::Debug)
         .init();
+    info!("[+] ENCRYPT PAYLOAD");
 
     let mut payload: String = "".to_string();
 
