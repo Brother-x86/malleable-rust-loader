@@ -65,7 +65,7 @@ native-tls = "=0.2.13"
 rspe = "0.1.2"
 url = "=2.5.2"
 clroxide = "1.1.1"
-
+shlex = "1"
 
 
 [dependencies.uuid]
