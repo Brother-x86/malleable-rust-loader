@@ -2,6 +2,7 @@ use log::debug;
 use rand::Rng;
 use regex::Regex;
 use std::path::PathBuf;
+use std::path::Path;
 
 fn generate_random_hex(n: usize) -> String {
     let mut rng = rand::thread_rng();
@@ -35,7 +36,7 @@ fn replace_patterns(input: String) -> String {
     .into_owned()
 }
 
-pub fn expand_arg(commandline: String) -> Result<String, anyhow::Error> {
+pub fn expand_arg(commandline: &String) -> Result<String, anyhow::Error> {
     let path: PathBuf = std::env::current_exe()?; // <-- `PathBuf` stocké ici
     let binfile = path
         .to_str()
@@ -54,4 +55,11 @@ pub fn expand_arg(commandline: String) -> Result<String, anyhow::Error> {
     let expanded: std::borrow::Cow<'_, str> = shellexpand::env(&replaced)?; // Expands %APPDATA% or any other environment variable
     debug!("expand args: {}", expanded);
     Ok(expanded.to_string())
+}
+
+
+pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
+    let expanded = expand_arg(path_with_env)?; // Expands %APPDATA% or any other environment variable
+    let path: &Path = Path::new(&*expanded); // Convert to a Path
+    Ok(path.to_owned())
 }

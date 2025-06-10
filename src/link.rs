@@ -262,7 +262,7 @@ impl LinkFetch for Link {
 impl LinkFetch for FileLink {
     fn download_data(&self, _config: &Config) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}{}", encrypt_string!("File Open: "), &self.get_target());
-        let file_bytes: Vec<u8> = fs::read(expand_arg(self.get_target())?)?;
+        let file_bytes: Vec<u8> = fs::read(expand_arg(&self.get_target())?)?;
         Ok(file_bytes)
     }
     fn download_data_post(

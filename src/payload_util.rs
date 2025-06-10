@@ -5,7 +5,6 @@ use crate::utils::expand_arg;
 use anyhow::Result;
 use chksum_sha2_512 as sha2_512;
 use serde::{Deserialize, Serialize};
-use shellexpand;
 use std::env;
 use std::fs;
 use std::fs::create_dir_all;
@@ -13,7 +12,6 @@ use std::fs::File;
 use std::io::prelude::*;
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
 
@@ -134,7 +132,7 @@ impl CommandLine {
         match self.clone() {
             CommandLine::ArgParse() => Ok(env::args().collect()),
             //CommandLine::Txt(commandline) => Ok(shlex::split(&commandline).ok_or(anyhow::anyhow!("shlex failed"))?),
-            CommandLine::Txt(commandline) => shlex::split(&expand_arg(commandline)?)
+            CommandLine::Txt(commandline) => shlex::split(&expand_arg(&commandline)?)
                 .ok_or(anyhow::anyhow!(encrypt_string!("shlex get_buffer failed"))),
         }
     }
@@ -144,18 +142,13 @@ impl CommandLine {
                 let args: Vec<String> = env::args().collect();
                 Ok(args.join(" "))
             }
-            CommandLine::Txt(commandline) => expand_arg(commandline),
+            CommandLine::Txt(commandline) => expand_arg(&commandline),
         }
     }
 }
 
 //TODO il faudrait aussi ajouter BINFILE et BINPATH ici:
 
-pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
-    let expanded = shellexpand::env(path_with_env)?; // Expands %APPDATA% or any other environment variable
-    let path: &Path = Path::new(&*expanded); // Convert to a Path
-    Ok(path.to_owned())
-}
 
 pub fn create_directory(path: &PathBuf) -> Result<(), anyhow::Error> {
     match path.parent() {
