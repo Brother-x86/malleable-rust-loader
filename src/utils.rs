@@ -1,8 +1,8 @@
 use log::debug;
 use rand::Rng;
 use regex::Regex;
-use std::path::PathBuf;
 use std::path::Path;
+use std::path::PathBuf;
 
 fn generate_random_hex(n: usize) -> String {
     let mut rng = rand::thread_rng();
@@ -56,7 +56,6 @@ pub fn expand_arg(commandline: &String) -> Result<String, anyhow::Error> {
     debug!("expand args: {}", expanded);
     Ok(expanded.to_string())
 }
-
 
 pub fn calculate_path(path_with_env: &String) -> Result<PathBuf, anyhow::Error> {
     let expanded = expand_arg(path_with_env)?; // Expands %APPDATA% or any other environment variable

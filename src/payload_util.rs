@@ -149,7 +149,6 @@ impl CommandLine {
 
 //TODO il faudrait aussi ajouter BINFILE et BINPATH ici:
 
-
 pub fn create_directory(path: &PathBuf) -> Result<(), anyhow::Error> {
     match path.parent() {
         Some(parent_dir) => {
