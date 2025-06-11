@@ -282,14 +282,16 @@ impl ExecPython {
 
 pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     //TODO encrypt this str
-    let banner: &str = r#"
+    let malleable=encrypt_string!("Malleable");
+    let loader=encrypt_string!("LOADER");
+    let banner: &str = &format!(r#"
                                  ╓╖
                          , ▒╗,  ▒▒▒▒╖   ╓▒▒
-  Malleable                ░░▒▒▒╖▒▒▒▒╣╣╖▒▒▒┐
+  {malleable}                ░░▒▒▒╖▒▒▒▒╣╣╖▒▒▒┐
  ┬─┐┬ ┬┌─┐┌┬┐        ▒▒@▒╓▒░░░░░░▒▒▒▒▒▒▒▒▒╢▓╖╓╓╖H┐
  ├┬┘│ │└─┐ │          ▒░░░░▒``▒░░░░░▒▒▒▒▒▒╢▒╢╢▒▒░`
  ┴└─└─┘└─┘ ┴   ,╓╓╓╥           ░░░░░░░▒▒▒▒▒▒▒▒▒╢╢
-   LOADER      `  ▒`               ░░░░▒▒▒▒▒▒▒╢╢▒╣▒ÑH╗
+   {loader}      `  ▒`               ░░░░▒▒▒▒▒▒▒╢╢▒╣▒ÑH╗
                           ,▄       ░░░▒▒▒▒▒▒▒╢▒▒▒╢▒▒▒╜
                ╓╖       ╓  ██     ░▓``██▒▒▒▒▒▒▒╢▒╢╣╣
                 │       █████▌   ░▐█,▄███▒▒░░▒▒▒▒╢╢╢@╖
@@ -302,9 +304,8 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
                       ╙ ▒░▒╢╢╣╢▓╢╗              ▒╙░░▒╢▒╢╜╨╢▒
                         ╙▒░▒╢▒╣╣╣╨          ░ `  ░▒░║╣╢╜   `
                           "╨▒╜╢╢Ñ                  ░▒╜
-                                                 ``a "#;
+                                                 ``a "#);
 
-    info!("{}", encrypt_string!("BANNER"));
     let sleep_time = time::Duration::from_millis(3);
     for c in banner.chars() {
         print!("{}", c);
@@ -317,10 +318,10 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     Ok(PayloadExecThread::NoThread())
 }
 
+
 pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
     std::process::exit(0);
 }
-
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct WriteZip {
     pub link: Link,
