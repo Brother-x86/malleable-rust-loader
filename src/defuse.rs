@@ -2,9 +2,9 @@ use crate::config::Config;
 use crate::link::{HTTPLink, Link, LinkFetch};
 
 use gethostname::gethostname;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::env;
-use regex::Regex;
 
 use cryptify::encrypt_string;
 use log::debug;
@@ -222,11 +222,7 @@ impl DefuseCheck for DomainJoin {
             if defuse_to_upper
                 == unsafe { std::ffi::CStr::from_ptr(domain_name as _).to_str().unwrap() }
             {
-                debug!(
-                    "{}{:?}",
-                    encrypt_string!("Defuse MATCH: "),
-                    defuse_to_upper
-                );
+                debug!("{}{:?}", encrypt_string!("Defuse MATCH: "), defuse_to_upper);
                 return false;
             } else {
                 debug!("{}{:?}", encrypt_string!("Defuse FAIL: "), defuse_to_upper);
@@ -239,7 +235,6 @@ impl DefuseCheck for DomainJoin {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Command {
     pub regex: String,
@@ -251,24 +246,33 @@ impl DefuseCheck for Command {
         // -Xms512M -Xmx4096M -Dclipchamp.session.id clipchamp-tools.jar --workflow=ingest+analyze+render
         // Construit la ligne de commande complète
         let full_cmdline: String = env::args().collect::<Vec<_>>().join(" ");
-    
+
         // Compile la regex
         match Regex::new(&self.regex) {
             Ok(re) => {
                 if re.is_match(&full_cmdline) {
                     debug!("{}", encrypt_string!("Defuse MATCH: regex ok"));
-                    return false
+                    return false;
                 } else {
-                    debug!("{}{:?}", encrypt_string!("Defuse FAIL: regex not match: "), self.regex);
-                    return true
+                    debug!(
+                        "{}{:?}",
+                        encrypt_string!("Defuse FAIL: regex not match: "),
+                        self.regex
+                    );
+                    return true;
                 }
             }
             Err(e) => {
-                debug!("{}{:?}{}{}", encrypt_string!("Defuse FAIL: regex not match: "), self.regex, encrypt_string!(" ,error="),e);
-                return true
+                debug!(
+                    "{}{:?}{}{}",
+                    encrypt_string!("Defuse FAIL: regex not match: "),
+                    self.regex,
+                    encrypt_string!(" ,error="),
+                    e
+                );
+                return true;
             }
         }
-    
     }
     fn get_operator(&self) -> Operator {
         self.operator

