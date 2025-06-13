@@ -232,7 +232,7 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
     );
     let c_commandline = CString::new(dll_commandline).unwrap_or_else(|e| {
         error!("Error in CString conversion: {}", e);
-        // WARNING: unwrap and return empty. probably its better to return an error instead of something NULL
+        // WARNING: unwrap and return empty. probably its better to return an error instead of something NULL.
         CString::new("").unwrap()
     });
     info!("{}", encrypt_string!("dll_entry_point()"),);
