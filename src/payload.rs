@@ -443,6 +443,14 @@ impl Exec {
 
                     #[cfg(target_os = "windows")]
                     comm.creation_flags(CREATE_NO_WINDOW);
+/*
+TODO to fix:
+
+thread '<unnamed>' panicked at src/payload.rs:447:49:
+Failed to execute process: Os { code: 2, kind: NotFound, message: "Le fichier spécifié est introuvable." }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+*/
 
                     let _output = comm.output().expect("Failed to execute process");
                 };
@@ -450,7 +458,7 @@ impl Exec {
             return Ok(PayloadExecThread::Thread(tj, Payload::Exec(self.clone())));
         } else {
             if self.visible {
-                let _output = comm.spawn().expect("Failed to execute process");
+                let _output = comm.spawn()?;
             } else {
                 comm.stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -459,7 +467,7 @@ impl Exec {
                 #[cfg(target_os = "windows")]
                 comm.creation_flags(CREATE_NO_WINDOW);
 
-                let _output = comm.output().expect("Failed to execute process");
+                let _output = comm.output()?;
             };
             return Ok(PayloadExecThread::NoThread());
         };

