@@ -1,7 +1,8 @@
 use crate::config::Config;
 use crate::link::Link;
 use crate::link::LinkFetch;
-use crate::payload::Payload;
+//use crate::payload::Payload;
+use crate::rundata::RunData;
 
 use anyhow::bail;
 use rand::seq::SliceRandom;
@@ -41,12 +42,13 @@ impl PoolLinks {
         &self,
         config: &Config,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
     ) -> Result<Config, anyhow::Error> {
         match &self.pool_mode {
-            PoolMode::SIMPLE => self.update_links_simple(config, session_id, running_thread),
+            PoolMode::SIMPLE => self.update_links_simple(config, session_id, run_data),
             PoolMode::ADVANCED(advanced) => {
-                self.update_links_advanced(config, advanced, session_id, running_thread)
+                self.update_links_advanced(config, advanced, session_id, run_data)
             }
         }
     }
@@ -56,7 +58,8 @@ impl PoolLinks {
         &self,
         config: &Config,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
     ) -> Result<Config, anyhow::Error> {
         let advanced = Advanced {
             random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
@@ -67,7 +70,7 @@ impl PoolLinks {
             stop_new: false,    // stop if found a new conf -> not for parallel
             accept_old: false, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
         };
-        self.update_links_advanced(config, &advanced, session_id, running_thread)
+        self.update_links_advanced(config, &advanced, session_id, run_data)
     }
 
     pub fn update_links_advanced(
@@ -75,7 +78,8 @@ impl PoolLinks {
         config: &Config,
         advanced: &Advanced,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
     ) -> Result<Config, anyhow::Error> {
         let pool_link: Vec<Link>;
 
@@ -125,12 +129,14 @@ impl PoolLinks {
                     &link.get_target()
                 );
                 //parallel
+                //let yolo = run_data.clone();
 
                 let thread_link = link.clone();
                 let thread_config = config.clone();
                 let thread_advanced = advanced.clone();
                 let thread_session_id = session_id.clone();
-                let thread_running_thread = running_thread.clone();
+                let thread_run_data = run_data.clone();
+                //let thread_run_data = (*run_data).clone();
                 let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
                     thread::spawn(move || {
                         debug!("{}{}", encrypt_string!("thread begin, link: "), link_nb);
@@ -139,7 +145,7 @@ impl PoolLinks {
                             &thread_advanced,
                             link_nb,
                             &thread_session_id,
-                            &thread_running_thread,
+                            &thread_run_data,
                         )?;
                         debug!("{}{}", encrypt_string!("thread end, link: {}"), link_nb);
                         Ok((newconfig, link_nb))
@@ -183,7 +189,7 @@ impl PoolLinks {
                     advanced,
                     link_nb,
                     session_id,
-                    running_thread,
+                    run_data,
                 ) {
                     Ok(newconfig) => {
                         info!(

