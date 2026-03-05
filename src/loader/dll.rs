@@ -22,6 +22,10 @@ pub extern "system" fn MicroTech() {
 pub extern "system" fn MiliTech() {
     run_loader();
 }
+#[no_mangle]
+pub extern "system" fn DllInstall() {
+    run_loader();
+}
 
 /*
 // ya vraiment un probleme avec les thread dans le DllMain

@@ -16,6 +16,7 @@ pub mod utils;
 #[cfg(feature = "loader")]
 pub mod loader {
     pub mod main;
+    pub mod service_malleable;
 
     #[cfg(feature = "dll")]
     pub mod dll;
