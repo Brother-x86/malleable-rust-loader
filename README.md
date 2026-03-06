@@ -670,6 +670,21 @@ upx -9 -v --ultra-brute  target/x86_64-pc-windows-gnu/release/loader.exe
 - More way to defeat static analysis -> tricks are welcome!
 
 
+# Dependance problem:
+
+```
+sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0
+cargo generate-lockfile -Z minimal-versions
+?
+cargo build --locked
+
+Ensuite toujours compiler avec :
+cargo build --locked
+ou
+cargo build --frozen
+```
+
+
 # Credits and Thanks
 
 - Thanks to Victor P. for is perfect knowledge of Rust.

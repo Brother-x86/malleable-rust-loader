@@ -158,6 +158,7 @@ def main():
     else:
         log.info("[+] OLLVM Compilation")
         os.system('cp ~/.malleable/config/initial.json* ~/.malleable/config/mem* config/')
+        # DEBUG probleme compilation
         os.system('mv Cargo.lock Cargo.lock.normal')
         os.system('cp Cargo.lock.ollvm Cargo.lock')
         log.info('''
@@ -183,6 +184,7 @@ NOT ACTIVATED:
         comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         log.info(comm)
         compil_result=os.system(comm)
+        # DEBUG probleme compilation
         os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
         os.system('mv Cargo.lock.normal Cargo.lock')
 
