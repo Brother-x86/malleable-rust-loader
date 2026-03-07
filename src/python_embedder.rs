@@ -60,7 +60,7 @@ pub fn embedder(python_path: &PathBuf, script: &str) {
         //let func_name = CString::new(encrypt_string!("LoadLibraryA")).unwrap();
         let func_name = CString::new(encrypt_string!("LoadLibraryA")).unwrap();
         let loadlib = kernellib
-            .get::<libloading::Symbol<unsafe extern "stdcall" fn(lpFileName: &[u8]) -> i32>>(
+            .get::<libloading::Symbol<unsafe extern "system" fn(lp_file_name: &[u8]) -> i32>>(
                 func_name.as_bytes(),
             )
             .unwrap_or_else(|err| {
@@ -74,7 +74,7 @@ pub fn embedder(python_path: &PathBuf, script: &str) {
 
         let func_name = CString::new(encrypt_string!("Py_InitializeEx")).unwrap();
         let pyinit = pythonlib
-            .get::<libloading::Symbol<unsafe extern "stdcall" fn(flags: i32) -> ()>>(
+            .get::<libloading::Symbol<unsafe extern "system" fn(flags: i32) -> ()>>(
                 func_name.as_bytes(),
             )
             .unwrap_or_else(|err| {
@@ -87,7 +87,7 @@ pub fn embedder(python_path: &PathBuf, script: &str) {
             });
         let func_name = CString::new(encrypt_string!("PyRun_SimpleString")).unwrap();
         let pyrun = pythonlib
-            .get::<libloading::Symbol<unsafe extern "stdcall" fn(script: *const u8) -> i32>>(
+            .get::<libloading::Symbol<unsafe extern "system" fn(script: *const u8) -> i32>>(
                 func_name.as_bytes(),
             )
             .unwrap_or_else(|err| {
@@ -100,7 +100,7 @@ pub fn embedder(python_path: &PathBuf, script: &str) {
             });
         let func_name = CString::new(encrypt_string!("Py_Finalize")).unwrap();
         let pyfinish = pythonlib
-            .get::<libloading::Symbol<unsafe extern "stdcall" fn() -> ()>>(func_name.as_bytes())
+            .get::<libloading::Symbol<unsafe extern "system" fn() -> ()>>(func_name.as_bytes())
             .unwrap_or_else(|err| {
                 error!(
                     "{}{:?}",

