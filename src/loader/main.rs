@@ -103,8 +103,9 @@ pub fn run_loader() {
         session_id: session_id.clone(),
     };
 
-    // ICI pour tenter d'extraire les CONFIG backup
-    config.restore_backup_config_from_file();
+    info!("{}", encrypt_string!("[+] RESTORE config from backup file"));
+    config=config.restore_backup_config_from_file(&session_id,&run_data);
+    info!("");
 
     loop {
         info!(

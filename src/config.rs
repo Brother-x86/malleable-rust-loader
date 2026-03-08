@@ -1,10 +1,12 @@
 use crate::dataoperation::apply_all_dataoperations;
 use crate::defuse::{Defuse, Operator};
 use crate::link::FileLink;
+use crate::link::Link;
 use crate::payload::Payload;
 use crate::payload::PayloadExecThread;
 use crate::payload_util::create_directory;
 use crate::poollink::PoolLinks;
+use crate::poollink::PoolMode;
 use crate::rundata::RunData;
 use crate::utils::calculate_path;
 use crate::utils::calculate_path_reverse;
@@ -416,46 +418,10 @@ impl Config {
                 encrypt_string!(" PoolLinks: "),
                 &pool_name
             );
-            match pool_links.update_pool(&self, session_id, run_data) {
-                Ok(newconf) => {
-                    if self.is_same_loader(&newconf) {
-                        info!(
-                            "{}",
-                            encrypt_string!(
-                                "[+] the new config is identical to the current config"
-                            )
-                        );
-                        info!(
-                            "{}",
-                            encrypt_string!(
-                                "[+] DECISION: keep the same active CONFIG, and run the payloads"
-                            )
-                        );
-                    } else {
-                        info!(
-                            "{}",
-                            encrypt_string!("the new config is different from the current config")
-                        );
-                        info!(
-                            "{}",
-                            encrypt_string!(
-                                "[+] DECISION: replace the active CONFIG, and run the payloads"
-                            )
-                        );
-                        self.backup_config();
-                    }
-
-                    return newconf;
-                }
-                Err(error) => {
-                    warn!(
-                        "{}{}",
-                        encrypt_string!("[+] Switch to next PoolLinks, reason: "),
-                        error
-                    );
-                    ()
-                }
-            };
+            if let Some(newconf) = self.handle_pool_update(pool_links, session_id, run_data, false)
+            {
+                return newconf;
+            }
         }
         warn!(
             "{}",
@@ -523,11 +489,13 @@ impl Config {
         }
     }
 
-    pub fn restore_backup_config_from_file(&self) {
-        info!(
-            "{}",
-            encrypt_string!("[+] RESTORE config from backup file")
-        );
+    pub fn restore_backup_config_from_file(
+        &self,
+        session_id: &String,
+        run_data: &RunData,
+    ) -> Config {
+        //TODO
+        let mut file_links = vec![];
         for backup_file in &self.backup_config {
             debug!("{}{:?}", encrypt_string!("[+] backup_file: "), backup_file);
             match calculate_path_reverse(&backup_file.file_path) {
@@ -545,6 +513,29 @@ impl Config {
                             possible_paths
                         );
                     }
+
+                    for path in possible_paths {
+                        let file_path = match path.into_os_string().into_string() {
+                            Ok(s) => s,
+                            Err(os) => {
+                                warn!(
+                                    "{}{:?}",
+                                    encrypt_string!("[!] Invalid non-UTF8 path, skipping: "),
+                                    os
+                                );
+                                continue;
+                            }
+                        };
+
+                        let fff: Link = Link::FILE(FileLink {
+                            file_path,
+                            dataoperation: backup_file.dataoperation.clone(),
+                            jitt: 0,
+                            sleep: 0,
+                        });
+
+                        file_links.push(fff);
+                    }
                 }
                 Err(e) => {
                     warn!(
@@ -554,6 +545,82 @@ impl Config {
                         e
                     );
                 }
+            }
+        }
+
+        let pool_links = PoolLinks {
+            pool_mode: PoolMode::SIMPLE,
+            pool_links: file_links,
+        };
+
+        if let Some(newconf) = self.handle_pool_update(&pool_links, session_id, run_data, true) {
+            return newconf;
+        };
+        info!(
+            "{}",
+            encrypt_string!("[+] DECISION: keep the same active CONFIG")
+        );
+        self.to_owned()
+    }
+
+    fn handle_pool_update(
+        &self,
+        pool_links: &PoolLinks,
+        session_id: &String,
+        run_data: &RunData,
+        restore_config: bool,
+    ) -> Option<Self> {
+        match pool_links.update_pool(&self, session_id, run_data) {
+            Ok(newconf) => {
+                let run_payload: String = if restore_config {
+                    "\n".to_string()
+                } else {
+                    format!("{}", encrypt_string!(", and run the payloads"))
+                };
+
+                debug!("actual config payload: {:?}",self.payloads);
+                debug!("NEW config payload: {:?}",newconf.payloads);
+                if self.is_same_loader(&newconf) {
+                    info!(
+                        "{}",
+                        encrypt_string!("[+] the new config is identical to the current config")
+                    );
+                    info!(
+                        "{}{}",
+                        encrypt_string!("[+] DECISION: keep the same active CONFIG"),
+                        run_payload
+                    );
+                } else {
+                    info!(
+                        "{}",
+                        encrypt_string!("the new config is different from the current config")
+                    );
+                    info!(
+                        "{}{}",
+                        encrypt_string!("[+] DECISION: replace the active CONFIG"),
+                        run_payload
+                    );
+                    if !restore_config { 
+                        newconf.backup_config();
+                    }
+                }
+
+                Some(newconf)
+            }
+            Err(error) => {
+                let problem: String = if restore_config {
+                    format!(
+                        "{}",
+                        encrypt_string!("[+] Fail to restore config, reason: \n")
+                    )
+                } else {
+                    format!(
+                        "{}",
+                        encrypt_string!("[+] Switch to next PoolLinks, reason: ")
+                    )
+                };
+                warn!("{}{}", problem, error);
+                None
             }
         }
     }
