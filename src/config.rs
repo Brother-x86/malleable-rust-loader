@@ -521,16 +521,15 @@ impl Config {
                 );
             }
         }
-        //let path: PathBuf = calculate_path(&backup_file.file_path).unwrap();
-        //info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
-
-        //let serialized: String = serde_json::to_string_pretty(&self).unwrap();
-        //fs::write(path, &serialized).expect("Unable to write file");
     }
 
     pub fn restore_backup_config_from_file(&self) {
+        info!(
+            "{}",
+            encrypt_string!("[+] RESTORE config from backup file")
+        );
         for backup_file in &self.backup_config {
-            info!("{}{:?}", encrypt_string!("[+] backup_file: "), backup_file);
+            debug!("{}{:?}", encrypt_string!("[+] backup_file: "), backup_file);
             match calculate_path_reverse(&backup_file.file_path) {
                 Ok(possible_paths) => {
                     if possible_paths.is_empty() {
@@ -540,7 +539,7 @@ impl Config {
                             backup_file.file_path
                         );
                     } else {
-                        info!(
+                        debug!(
                             "{}{:?}",
                             encrypt_string!("[+] possible_path: "),
                             possible_paths
