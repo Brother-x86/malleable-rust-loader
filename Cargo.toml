@@ -67,6 +67,7 @@ url = "=2.5.2"
 clroxide = "1.1.1"
 shlex = "1"
 #windows-service = "0.8.0"
+walkdir = "2"
 
 [dependencies.uuid]
 version = "1.11.0"

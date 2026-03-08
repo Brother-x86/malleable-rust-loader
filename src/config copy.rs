@@ -1,4 +1,3 @@
-use crate::dataoperation::apply_all_dataoperations;
 use crate::defuse::{Defuse, Operator};
 use crate::link::FileLink;
 use crate::payload::Payload;
@@ -471,13 +470,13 @@ impl Config {
     pub fn backup_config(&self) {
         for backup_file in &self.backup_config {
             info!("{}{:?}", encrypt_string!("[+] backup_file: "), backup_file);
-            self.backup_config_to_file(&mut backup_file.clone());
+            self.backup_config_to_file(backup_file);
         }
     }
 
     // TODO reste a faire, il ne faut PAS backuper la config en clair, mais bien lui appliquer une suite de dataopération bien définie.
     // ensuite, il faudra appliquer une logique de chargement de cette config si existante et plus récente etc... au lancement du loader
-    pub fn backup_config_to_file(&self, backup_file: &mut FileLink) {
+    pub fn backup_config_to_file(&self, backup_file: &FileLink) {
         match calculate_path(&backup_file.file_path) {
             Ok(path) => {
                 if let Err(e) = create_directory(&path) {
@@ -491,10 +490,9 @@ impl Config {
 
                 info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
 
-                let data: Vec<u8> = self.clone().concat_loader_jsondata().into_bytes();
-                match apply_all_dataoperations(&mut backup_file.dataoperation, data) {
-                    Ok(data) => {
-                        if let Err(e) = fs::write(&path, &data) {
+                match serde_json::to_string_pretty(&self) {
+                    Ok(serialized) => {
+                        if let Err(e) = fs::write(&path, &serialized) {
                             warn!(
                                 "{}{:?} - {:?}",
                                 encrypt_string!("[!] Failed to write backup file: "),
@@ -506,7 +504,7 @@ impl Config {
                     Err(e) => {
                         warn!(
                             "{}{:?}",
-                            encrypt_string!("[!] Failed to apply_all_dataoperations: "),
+                            encrypt_string!("[!] Failed to serialize backup object: "),
                             e
                         );
                     }

@@ -3,9 +3,9 @@ use rand::Rng;
 use regex::Regex;
 use std::path::Path;
 use std::path::PathBuf;
-use std::env;
-use anyhow::{anyhow, Context, Result};
-use walkdir::WalkDir;
+
+const DEFAULT_RANDOMHEX_LEN: usize = 8;
+const DEFAULT_RANDOMINT_LEN: usize = 6;
 
 fn generate_random_hex(n: usize) -> String {
     let mut rng = rand::thread_rng();
@@ -24,80 +24,13 @@ fn generate_random_int(n: usize) -> String {
     format!("{:0width$}", num, width = n) // avec padding pour garder N chiffres
 }
 
-// CHATGPT code replacement 03-08-2026
+use anyhow::{anyhow, Context, Result};
+use walkdir::WalkDir;
 
+fn replace_patterns(input: String) -> String {
+    let re = Regex::new(r"\$\{(RANDOMHEX|RANDOMINT):(\d+)\}").unwrap();
 
-// -----------------------------------------------------------------------------
-// Regex builders
-// -----------------------------------------------------------------------------
-
-fn random_placeholder_regex() -> Regex {
-    Regex::new(r"\$\{(RANDOMHEX|RANDOMINT):(\d+)\}").unwrap()
-}
-
-fn env_placeholder_regex() -> Regex {
-    Regex::new(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}").unwrap()
-}
-
-// -----------------------------------------------------------------------------
-// Expansions
-// -----------------------------------------------------------------------------
-
-/// Remplace uniquement:
-/// - ${BINFILE}
-/// - ${BINPATH}
-/// - ${ENVVAR}
-///
-/// Ne touche PAS à:
-/// - ${RANDOMHEX:8}
-/// - ${RANDOMINT:2}
-pub fn expand_arg_no_random(input: &str) -> Result<String> {
-    let exe_path = env::current_exe()?;
-    let binfile = exe_path
-        .to_str()
-        .ok_or_else(|| anyhow!("Chemin invalide UTF-8 pour current_exe"))?;
-
-    let exe_parent = exe_path
-        .parent()
-        .ok_or_else(|| anyhow!("Impossible de récupérer le parent de current_exe"))?;
-
-    let binpath = exe_parent
-        .to_str()
-        .ok_or_else(|| anyhow!("Chemin invalide UTF-8 pour le parent de current_exe"))?;
-
-    let replaced = input
-        .replace("${BINFILE}", binfile)
-        .replace("${BINPATH}", binpath);
-
-    let env_re = env_placeholder_regex();
-
-    let expanded = env_re.replace_all(&replaced, |caps: &regex::Captures| {
-        let key = &caps[1];
-
-        match key {
-            // déjà traités au-dessus
-            "BINFILE" => binfile.to_string(),
-            "BINPATH" => binpath.to_string(),
-
-            // IMPORTANT:
-            // ici on ne touche pas aux mots-clés random
-            "RANDOMHEX" | "RANDOMINT" => caps[0].to_string(),
-
-            // variable d'environnement classique
-            _ => env::var(key).unwrap_or_else(|_| caps[0].to_string()),
-        }
-    });
-
-    Ok(expanded.into_owned())
-}
-
-/// Remplace les patterns random:
-/// - ${RANDOMHEX:8}
-/// - ${RANDOMINT:2}
-fn replace_patterns(input: &str) -> String {
-    let re = random_placeholder_regex();
-
-    re.replace_all(input, |caps: &regex::Captures| {
+    re.replace_all(&input, |caps: &regex::Captures| {
         let kind = &caps[1];
         let len: usize = caps[2].parse().unwrap_or(1);
 
@@ -110,35 +43,52 @@ fn replace_patterns(input: &str) -> String {
     .into_owned()
 }
 
-/// Expansion complète:
-/// 1. variables statiques / env
-/// 2. random
-pub fn expand_arg(input: &str) -> Result<String> {
-    let expanded = expand_arg_no_random(input)?;
-    let final_value = replace_patterns(&expanded);
-    debug!("expand args: {}", final_value);
-    Ok(final_value)
+/// Remplace BINFILE / BINPATH / variables d'env, mais ne touche pas aux RANDOM*
+pub fn expand_arg_no_random(commandline: &str) -> Result<String> {
+    let exe_path = std::env::current_exe()?;
+    let binfile = exe_path
+        .to_str()
+        .ok_or_else(|| anyhow!("Chemin invalide UTF-8 pour current_exe"))?;
+
+    let exe_parent = exe_path
+        .parent()
+        .ok_or_else(|| anyhow!("Impossible de récupérer le parent de current_exe"))?;
+
+    let binpath = exe_parent
+        .to_str()
+        .ok_or_else(|| anyhow!("Chemin invalide UTF-8 pour le parent de current_exe"))?;
+
+    let replaced = commandline
+        .replace("${BINFILE}", binfile)
+        .replace("${BINPATH}", binpath);
+
+    let protected = protect_random_placeholders(&replaced);
+
+    let expanded = shellexpand::env(&protected)?;
+    let restored = restore_random_placeholders(&expanded);
+
+    Ok(restored)
 }
 
-// -----------------------------------------------------------------------------
-// Forward path
-// -----------------------------------------------------------------------------
+pub fn expand_arg(commandline: &str) -> Result<String> {
+    let expanded = expand_arg_no_random(commandline)?;
+    let replaced = replace_patterns(expanded);
+    debug!("expand args: {}", replaced);
+    Ok(replaced)
+}
 
 pub fn calculate_path(path_with_env: &str) -> Result<PathBuf> {
     let expanded = expand_arg(path_with_env)?;
     Ok(PathBuf::from(expanded))
 }
 
-// -----------------------------------------------------------------------------
-// Reverse path
-// -----------------------------------------------------------------------------
-
 fn contains_random_placeholder(s: &str) -> bool {
-    random_placeholder_regex().is_match(s)
+    static PATTERN: &str = r"\$\{(?:RANDOMHEX|RANDOMINT)(?::\d+)?\}";
+    Regex::new(PATTERN).unwrap().is_match(s)
 }
 
 fn build_reverse_regex(pattern: &str) -> Result<Regex> {
-    let re = random_placeholder_regex();
+    let re = Regex::new(r"\$\{(RANDOMHEX|RANDOMINT)(?::(\d+))?\}")?;
 
     let mut out = String::from("(?i)^");
     let mut last = 0;
@@ -148,9 +98,14 @@ fn build_reverse_regex(pattern: &str) -> Result<Regex> {
         out.push_str(&regex::escape(&pattern[last..m.start()]));
 
         let kind = &caps[1];
-        let len: usize = caps[2]
-            .parse()
-            .with_context(|| format!("Longueur invalide dans {}", &caps[0]))?;
+        let len: usize = caps
+            .get(2)
+            .and_then(|m| m.as_str().parse::<usize>().ok())
+            .unwrap_or_else(|| match kind {
+                "RANDOMHEX" => DEFAULT_RANDOMHEX_LEN,
+                "RANDOMINT" => DEFAULT_RANDOMINT_LEN,
+                _ => 1,
+            });
 
         match kind {
             "RANDOMHEX" => out.push_str(&format!(r"[A-Fa-f0-9]{{{}}}", len)),
@@ -167,7 +122,8 @@ fn build_reverse_regex(pattern: &str) -> Result<Regex> {
     Ok(Regex::new(&out)?)
 }
 
-/// Prend le plus profond préfixe fixe avant le premier composant contenant un RANDOM*
+
+/// Prend le plus profond préfixe fixe avant le premier composant contenant RANDOM*
 fn find_search_root(pattern: &str) -> PathBuf {
     let path = Path::new(pattern);
     let mut root = PathBuf::new();
@@ -198,10 +154,12 @@ fn find_search_root(pattern: &str) -> PathBuf {
     }
 }
 
-/// Retourne tous les chemins du filesystem correspondant au pattern
+/// Retourne tous les chemins du filesystem qui pourraient correspondre
+/// à un pattern initialement passé à calculate_path()
 pub fn calculate_path_reverse(path_with_env: &str) -> Result<Vec<PathBuf>> {
-    let expanded_pattern = expand_arg_no_random(path_with_env)?;
+    let expanded_pattern: String = expand_arg_no_random(path_with_env)?;
 
+    // S'il n'y a pas de RANDOM*, on retombe sur un comportement simple
     if !contains_random_placeholder(&expanded_pattern) {
         let concrete = PathBuf::from(expand_arg(path_with_env)?);
         return Ok(if concrete.exists() {
@@ -224,8 +182,11 @@ pub fn calculate_path_reverse(path_with_env: &str) -> Result<Vec<PathBuf>> {
         .into_iter()
         .filter_map(|e| e.ok())
     {
-        let candidate = entry.path().to_string_lossy();
+        if !entry.file_type().is_file() {
+            continue;
+        }
 
+        let candidate = entry.path().to_string_lossy();
         if re.is_match(&candidate) {
             matches.push(entry.path().to_path_buf());
         }
