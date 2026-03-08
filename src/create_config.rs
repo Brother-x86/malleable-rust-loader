@@ -107,7 +107,7 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
         for onedataop in &dataop {
             let extension: String = format!(".{:?}", onedataop).to_lowercase();
             extension_file_name.push_str(&extension);
-            if onedataop == &DataOperation::STEGANO {
+            if let DataOperation::STEGANO(_) = onedataop {
                 output_filename_steg = format!(
                     "{}{}-{}.png",
                     json_config_file, extension_file_name, input_image_name

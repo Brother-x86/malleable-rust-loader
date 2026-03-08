@@ -23,9 +23,15 @@ pub enum DataOperation {
     WEBPAGE,
     ROT13, // WARNING only after base64 because input is String
     REVERSE,
-    STEGANO,
+    STEGANO(InputImage),
     ZLIB,
     SHA512(SHA512),
+}
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct InputImage {
+    pub path: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -93,7 +99,7 @@ impl UnApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_decode(data),
             DataOperation::WEBPAGE => self.webpage_harvesting(data),
             DataOperation::AES(aes_material) => aes_material.decrypt_aes(data),
-            DataOperation::STEGANO => self.stegano_decode_lsb(data),
+            DataOperation::STEGANO(_input_picture) => self.stegano_decode_lsb(data),
             DataOperation::ZLIB => self.zlib_decompress(data),
             DataOperation::REVERSE => todo!(),
             DataOperation::SHA512(sha512) => sha512.check_sha512(data),
@@ -117,9 +123,10 @@ pub trait ApplyDataOperation {
         Ok(format!("!!!{}!!!", std::str::from_utf8(&data)?).into_bytes())
     }
 
-    fn stegano_encode_lsb(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+    fn stegano_encode_lsb(&self, data: Vec<u8>, input_image:String) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
 
+        // DEBUG
         let input_image: String = env::var("STEGANO_INPUT_IMAGE").unwrap();
         let output_image: String = env::var("STEGANO_OUTPUT_IMAGE").unwrap();
         debug!(
@@ -161,7 +168,7 @@ impl ApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_encode(data),
             DataOperation::WEBPAGE => self.webpage_create(data),
             DataOperation::AES(aes_material) => aes_material.encrypt_aes(data),
-            DataOperation::STEGANO => self.stegano_encode_lsb(data),
+            DataOperation::STEGANO(input_picture) => {let input_picture=input_picture.path.clone() ; self.stegano_encode_lsb(data,input_picture) },
             DataOperation::ZLIB => self.zlib_encode(data),
             DataOperation::REVERSE => todo!(),
             DataOperation::SHA512(sha512) => sha512.check_sha512(data),
