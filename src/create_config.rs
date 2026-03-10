@@ -65,17 +65,17 @@ pub fn encrypt_config(config: Config, json_config_file: String) {
     );
 }
 
-use std::path::Path;
+//use std::path::Path;
 pub fn initialize_all_configs(config: Config, json_config_file: String) {
     // set input image for image...
     // TODO give a list of image to this function
     let input_image = concat!(env!("HOME"), "/.malleable/config/troll.png");
-    let input_image_name = Path::new(input_image)
-        .file_name()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_lowercase();
+    //let input_image_name = Path::new(input_image)
+        //.file_name()
+        //.unwrap()
+        //.to_str()
+        //.unwrap()
+        //.to_lowercase();
     match env::var("STEGANO_INPUT_IMAGE") {
         Ok(_) => (),
         Err(_) =>
@@ -102,21 +102,11 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
     debug!("Data operation list for Config: {:?}", dataope_list);
     for mut dataop in dataope_list {
         let mut extension_file_name = "".to_string();
-        let mut output_filename_steg: String = "".to_string();
-        let mut last_dataop_is_steg: bool = false;
+        let output_filename_steg: String = "TODO output_filename_steg".to_string();
+        let last_dataop_is_steg: bool = false;
         for onedataop in &dataop {
             let extension: String = format!(".{:?}", onedataop).to_lowercase();
             extension_file_name.push_str(&extension);
-            if let DataOperation::STEGANO(_) = onedataop {
-                output_filename_steg = format!(
-                    "{}{}-{}.png",
-                    json_config_file, extension_file_name, input_image_name
-                );
-                last_dataop_is_steg = true;
-                //unsafe {
-                env::set_var("STEGANO_OUTPUT_IMAGE", output_filename_steg.clone());
-                //}
-            };
         }
 
         let mut data: Vec<u8> = config.clone().concat_loader_jsondata().into_bytes();

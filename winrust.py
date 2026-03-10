@@ -8,7 +8,7 @@ import os
 # no_loader/no_dll
 
 working_dir = os.path.basename(os.getcwd())
-if working_dir == "malleable-rust-loader":
+if "malleable-rust-loader" in working_dir:
     malleable_rust_loader=True
 else:
     malleable_rust_loader=False

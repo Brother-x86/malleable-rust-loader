@@ -1,4 +1,5 @@
 use crate::lsb_text_png_steganography_mod::{hide_mod, reveal_mod};
+use crate::link_noconfig::LinkFetchNoConfig;
 
 use anyhow::{Context, Result};
 use base64::prelude::*;
@@ -10,8 +11,9 @@ use rand::Rng;
 use regex::Regex;
 use rot13::rot13;
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::io::Write;
+use image::DynamicImage;
+use image::ImageFormat;
 
 use cryptify::encrypt_string;
 use log::debug;
@@ -23,16 +25,12 @@ pub enum DataOperation {
     WEBPAGE,
     ROT13, // WARNING only after base64 because input is String
     REVERSE,
-    STEGANO(InputImage),
+    STEGANO(LinkNoConfig,String),
     ZLIB,
     SHA512(SHA512),
 }
 
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct InputImage {
-    pub path: String,
-}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct SHA512 {
@@ -99,7 +97,7 @@ impl UnApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_decode(data),
             DataOperation::WEBPAGE => self.webpage_harvesting(data),
             DataOperation::AES(aes_material) => aes_material.decrypt_aes(data),
-            DataOperation::STEGANO(_input_picture) => self.stegano_decode_lsb(data),
+            DataOperation::STEGANO(_image_link, _image_path) => self.stegano_decode_lsb(data),
             DataOperation::ZLIB => self.zlib_decompress(data),
             DataOperation::REVERSE => todo!(),
             DataOperation::SHA512(sha512) => sha512.check_sha512(data),
@@ -107,6 +105,7 @@ impl UnApplyDataOperation for DataOperation {
     }
 }
 
+use crate::link_noconfig::LinkNoConfig;
 pub trait ApplyDataOperation {
     fn apply_one_operation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error>;
     fn base64_encode(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -123,31 +122,31 @@ pub trait ApplyDataOperation {
         Ok(format!("!!!{}!!!", std::str::from_utf8(&data)?).into_bytes())
     }
 
-    fn stegano_encode_lsb(&self, data: Vec<u8>, input_image:String) -> Result<Vec<u8>, anyhow::Error> {
-        debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
+    //fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&mut LinkNoConfig, image_output_path:&mut String) -> Result<Vec<u8>, anyhow::Error> {
+    fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&LinkNoConfig, image_output_path:&String) -> Result<Vec<u8>, anyhow::Error> {
+            debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
 
-        // DEBUG
-        let input_image: String = env::var("STEGANO_INPUT_IMAGE").unwrap();
-        let output_image: String = env::var("STEGANO_OUTPUT_IMAGE").unwrap();
         debug!(
-            "{}{}",
+            "{}{:?}",
             encrypt_string!("STEGANO_INPUT_IMAGE: "),
-            input_image
+            input_image_link
         );
         debug!(
             "{}{}",
             encrypt_string!("STEGANO_OUTPUT_IMAGE: "),
-            output_image
+            image_output_path
         );
-        let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, &input_image);
+        // let bytes: Vec<u8> = input_image_link.fetch_data(config)?;
+        // AIE AIE AIE AIE bad fix
+        let bytes: Vec<u8> = input_image_link.fetch_data_noconfig()?;
+        //let bytes: Vec<u8> = vec![];
+        let carrier: DynamicImage = image::load_from_memory_with_format(&bytes, ImageFormat::PNG).unwrap();
+        //let carrier: image::DynamicImage = image::open(carrier_path).unwrap();
+        let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, carrier);
 
-        //TODO, try to remove this part
-        //let output_image: String = format! {"{}.stegano.png",input_image};
-        debug!("{}{}", encrypt_string!("IMAGE SAVE to "), &output_image);
-        img.save(output_image).unwrap();
+        debug!("{}{}", encrypt_string!("IMAGE SAVE to "), &image_output_path);
+        img.save(image_output_path).unwrap();
 
-        //this part is useless as vec is not the good way to save IMAGE
-        // TODO: try to img.export to vec, and then save it later differently
         Ok(img.to_vec())
     }
 
@@ -168,7 +167,12 @@ impl ApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_encode(data),
             DataOperation::WEBPAGE => self.webpage_create(data),
             DataOperation::AES(aes_material) => aes_material.encrypt_aes(data),
-            DataOperation::STEGANO(input_picture) => {let input_picture=input_picture.path.clone() ; self.stegano_encode_lsb(data,input_picture) },
+            // AIE AIE AIE
+            DataOperation::STEGANO(image_link,image_output_path) => {
+                let image_link_clone = image_link.clone();
+                let image_output_path_clone = image_output_path.clone();
+                self.stegano_encode_lsb(data, &image_link_clone, &image_output_path_clone)},
+            //DataOperation::STEGANO(image_link,image_output_path) => todo!(),
             DataOperation::ZLIB => self.zlib_encode(data),
             DataOperation::REVERSE => todo!(),
             DataOperation::SHA512(sha512) => sha512.check_sha512(data),

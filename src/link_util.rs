@@ -2,6 +2,10 @@ use std::env;
 use std::process;
 use sysinfo::{Pid, System};
 
+use crate::utils::expand_arg;
+use std::fs;
+use cryptify::encrypt_string;
+
 pub fn working_dir() -> String {
     match env::current_dir() {
         Ok(path) => path.display().to_string(),
@@ -96,4 +100,12 @@ pub fn bytes_to_gigabytes(bytes: u64) -> f64 {
 
 pub fn bytes_to_gigabytes_string(bytes: u64) -> String {
     format!("{:.2} Go", bytes_to_gigabytes(bytes))
+}
+
+use log::debug;
+
+pub fn read_file(target:&String)-> Result<Vec<u8>, anyhow::Error>{
+    debug!("{}{}", encrypt_string!("File Open: "), target);
+    let file_bytes: Vec<u8> = fs::read(expand_arg(target)?)?;
+    Ok(file_bytes)
 }

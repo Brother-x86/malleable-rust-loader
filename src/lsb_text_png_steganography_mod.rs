@@ -3,7 +3,7 @@ extern crate image;
 use anyhow::Result;
 
 pub use image::{GenericImageView, ImageBuffer};
-use std::str;
+//use std::str;
 
 //mod file_helpers;
 mod bit_helpers;
@@ -13,11 +13,11 @@ use bit_helpers::{change_last_bit, get_bit_at, transform_u32_to_array_of_u8};
 
 pub fn hide_mod<'a>(
     payload: Vec<u8>,
-    carrier_path: &'a str,
+    carrier: image::DynamicImage,
 ) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     //let payload = file_helpers::get_file_string(payload_path);
     let payload_bytes = &payload;
-    let carrier = image::open(carrier_path).unwrap();
+    //let carrier: image::DynamicImage = image::open(carrier_path).unwrap();
 
     let (carrier_x_limit, carrier_y_limit) = carrier.dimensions();
 
