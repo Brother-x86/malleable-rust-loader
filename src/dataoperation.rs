@@ -26,7 +26,7 @@ pub enum DataOperation {
     WEBPAGE,
     ROT13, // WARNING only after base64 because input is String
     REVERSE,
-    STEGANO(LinkNoConfig,String),
+    STEGANO(LinkNoConfig),
     ZLIB,
     SHA512(SHA512),
 }
@@ -39,7 +39,7 @@ impl DataOperation{
             DataOperation::WEBPAGE=> encrypt_string!("webpage"),
             DataOperation::ROT13 => encrypt_string!("rot13"), // WARNING only after base64 because input is String
             DataOperation::REVERSE => encrypt_string!("reverse"),
-            DataOperation::STEGANO(_,_)=> encrypt_string!("stegano"),
+            DataOperation::STEGANO(_)=> encrypt_string!("stegano"),
             DataOperation::ZLIB=> encrypt_string!("zlib"),
             DataOperation::SHA512(_)=> encrypt_string!("sha512"),
         }
@@ -112,7 +112,7 @@ impl UnApplyDataOperation for DataOperation {
             DataOperation::ROT13 => self.rot13_decode(data),
             DataOperation::WEBPAGE => self.webpage_harvesting(data),
             DataOperation::AES(aes_material) => aes_material.decrypt_aes(data),
-            DataOperation::STEGANO(_image_link, _image_path) => self.stegano_decode_lsb(data),
+            DataOperation::STEGANO(_image_link) => self.stegano_decode_lsb(data),
             DataOperation::ZLIB => self.zlib_decompress(data),
             DataOperation::REVERSE => todo!(),
             DataOperation::SHA512(sha512) => sha512.check_sha512(data),
@@ -138,29 +138,17 @@ pub trait ApplyDataOperation {
     }
 
     //fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&mut LinkNoConfig, image_output_path:&mut String) -> Result<Vec<u8>, anyhow::Error> {
-    fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&LinkNoConfig, image_output_path:&String) -> Result<Vec<u8>, anyhow::Error> {
-            debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
-
+    fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&LinkNoConfig) -> Result<Vec<u8>, anyhow::Error> {
+        debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
         debug!(
             "{}{:?}",
             encrypt_string!("STEGANO_INPUT_IMAGE: "),
             input_image_link
         );
-        debug!(
-            "{}{}",
-            encrypt_string!("STEGANO_OUTPUT_IMAGE: "),
-            image_output_path
-        );
-        // let bytes: Vec<u8> = input_image_link.fetch_data(config)?;
-        // AIE AIE AIE AIE bad fix
         let bytes: Vec<u8> = input_image_link.fetch_data_noconfig()?;
-        //let bytes: Vec<u8> = vec![];
         let carrier: DynamicImage = image::load_from_memory_with_format(&bytes, ImageFormat::PNG).unwrap();
-        //let carrier: image::DynamicImage = image::open(carrier_path).unwrap();
         let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, carrier);
 
-        debug!("{}{}", encrypt_string!("NOT :::: IMAGE SAVE to "), &image_output_path);
-        //img.save(image_output_path).unwrap();
         let mut output_data = Vec::new();
         DynamicImage::ImageRgb8(img).write_to(&mut Cursor::new(&mut output_data), ImageFormat::PNG)?;
         Ok(output_data)
@@ -185,10 +173,9 @@ impl ApplyDataOperation for DataOperation {
             DataOperation::WEBPAGE => self.webpage_create(data),
             DataOperation::AES(aes_material) => aes_material.encrypt_aes(data),
             // AIE AIE AIE
-            DataOperation::STEGANO(image_link,image_output_path) => {
+            DataOperation::STEGANO(image_link) => {
                 let image_link_clone = image_link.clone();
-                let image_output_path_clone = image_output_path.clone();
-                self.stegano_encode_lsb(data, &image_link_clone, &image_output_path_clone)},
+                self.stegano_encode_lsb(data, &image_link_clone)},
             //DataOperation::STEGANO(image_link,image_output_path) => todo!(),
             DataOperation::ZLIB => self.zlib_encode(data),
             DataOperation::REVERSE => todo!(),

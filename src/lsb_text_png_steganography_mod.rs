@@ -15,13 +15,12 @@ pub fn hide_mod<'a>(
     payload: Vec<u8>,
     carrier: image::DynamicImage,
 ) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
-    //let payload = file_helpers::get_file_string(payload_path);
-    let payload_bytes = &payload;
-    //let carrier: image::DynamicImage = image::open(carrier_path).unwrap();
 
+    let payload_bytes = &payload;
     let (carrier_x_limit, carrier_y_limit) = carrier.dimensions();
 
     let number_of_bytes_in_payload = payload_bytes.len() as u32;
+    //TODO a supprimer
     if hider::is_payload_too_large(number_of_bytes_in_payload, carrier_x_limit, carrier_y_limit) {
         panic!("Payload is too large for the carrier image");
     };

@@ -65,47 +65,6 @@ pub fn encrypt_config(config: Config, json_config_file: String) {
     );
 }
 
-//use std::path::Path;
-pub fn initialize_all_configs2(config: Config, json_config_file: String) {
-    encrypt_config(config.clone(), json_config_file.clone());
-
-    // collect all dataoperation
-    let mut dataope_list: Vec<Vec<DataOperation>> = vec![];
-    for (_pool_nb, (_pool_name, pool)) in config.update_links.clone() {
-        for update_link in pool.pool_links {
-            let dataope = update_link.get_dataoperation();
-            if dataope_list.contains(&dataope) == false {
-                dataope_list.push(dataope);
-            }
-        }
-    }
-    //TODO encrypt config
-
-    debug!("Data operation list for Config: {:?}", dataope_list);
-    for mut dataop in dataope_list {
-        let mut extension_file_name = "".to_string();
-        let output_filename_steg: String = "TODO_output_filename_steg".to_string();
-        //let last_dataop_is_steg: bool = matches!(dataop, DataOperation::STEGANO(_, _));
-        let last_dataop_is_steg: bool = false;
-        for onedataop in &dataop {
-            let extension: String = format!(".{:?}", onedataop).to_lowercase();
-            extension_file_name.push_str(&extension);
-        }
-
-        let mut data: Vec<u8> = config.clone().concat_loader_jsondata().into_bytes();
-        data = apply_all_dataoperations(&mut dataop, data).unwrap();
-
-        let output_filename: String;
-        if last_dataop_is_steg == false {
-            output_filename = format!("{}{}", json_config_file, extension_file_name);
-            debug!("output_filename: {}", output_filename);
-            fs::write(&output_filename, &data).expect("Unable to write file");
-        } else {
-            output_filename = output_filename_steg;
-        }
-        info!("Write CONFIG: {}", output_filename);
-    }
-}
 
 pub fn collect_all_data_operation(config: &Config) -> Vec<Vec<DataOperation>> {
     let mut dataope_list: Vec<Vec<DataOperation>> = vec![];
@@ -122,7 +81,7 @@ pub fn collect_all_data_operation(config: &Config) -> Vec<Vec<DataOperation>> {
 
 pub fn create_extension_filename(dataop: &Vec<DataOperation>) -> String {
     let mut extension_file_name = "".to_string();
-    let end_with_stegano: bool = matches!(dataop.first(), Some(DataOperation::STEGANO(_,_)));
+    let end_with_stegano: bool = matches!(dataop.first(), Some(DataOperation::STEGANO(_)));
 
     for onedataop in dataop {
         extension_file_name=format!("{}.{}",extension_file_name,&onedataop.name());
@@ -147,8 +106,8 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
             jitt: 0,
             sleep: 0,
         };
-        debug!("output_filelink: {:?}", &output_filelink);
 
+        debug!("output_filelink: {:?}", &output_filelink);
         config.backup_config_to_file(&mut output_filelink);
     }
 }
