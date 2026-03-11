@@ -205,8 +205,9 @@ NOT ACTIVATED:
             with open('overlord_mod.c', 'w') as fichier:
                 fichier.write(contenu_modifie)
             log.info("[+] compile overlord_mod.c into overlord.exe")
-            os.system("x86_64-w64-mingw32-gcc -o overlord.exe overlord_mod.c -L.")
-
+            os.system("x86_64-w64-mingw32-gcc -o /home/user/shared/overlord.exe overlord_mod.c -L.")
+            os.system("rm overlord_mod.c")
+                        
         os.system('rm -f config/*')
         log.info(os.popen(f'ls -lah {file}').read().replace('\n',''))
         log.info(os.popen(f'file {file}').read().replace('\n',''))
