@@ -111,7 +111,7 @@ def main():
     memory_options=args.mem1*' --features mem1 ' + args.mem2*' --features mem2 ' + args.mem3*' --features mem3 ' + args.mem4*' --features mem4 '
     if args.dll:
         if args.loader_dll:
-            dll_options="--features dll --lib"
+            dll_options="--features dll --lib --crate-type=cdylib"
         else:
             dll_options="--lib"
         dll_smb="put overlord.exe"
@@ -152,7 +152,7 @@ def main():
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
         # TODO enlever --features executable
-        comm=f'''cargo build --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
+        comm=f'''cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
         log.info(comm)
         compil_result=os.system(comm)
 
@@ -185,7 +185,7 @@ NOT ACTIVATED:
 
         log.info('OLLVM FEATURE: ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230')        
         #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
-        comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo build {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
         log.info(comm)
         compil_result=os.system(comm)
         # DEBUG probleme compilation
@@ -207,7 +207,7 @@ NOT ACTIVATED:
             log.info("[+] compile overlord_mod.c into overlord.exe")
             os.system("x86_64-w64-mingw32-gcc -o /home/user/shared/overlord.exe overlord_mod.c -L.")
             os.system("rm overlord_mod.c")
-                        
+
         os.system('rm -f config/*')
         log.info(os.popen(f'ls -lah {file}').read().replace('\n',''))
         log.info(os.popen(f'file {file}').read().replace('\n',''))
