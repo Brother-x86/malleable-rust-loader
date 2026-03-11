@@ -1,5 +1,4 @@
 use loader::lsb_text_png_steganography_mod::reveal_mod;
-//hide_mod
 use std::fs;
 use std::env;
 

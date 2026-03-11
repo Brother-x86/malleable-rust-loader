@@ -83,9 +83,12 @@ pub fn create_extension_filename(dataop: &Vec<DataOperation>) -> String {
     let mut extension_file_name = "".to_string();
     let end_with_stegano: bool = matches!(dataop.first(), Some(DataOperation::STEGANO(_)));
 
-    for onedataop in dataop {
+    let mut data_op_reverse=dataop.clone();
+    data_op_reverse.reverse();
+    for onedataop in data_op_reverse {
         extension_file_name=format!("{}.{}",extension_file_name,&onedataop.name());
     };
+    
     if end_with_stegano {
         format!("{}.png",extension_file_name)
     }else{
