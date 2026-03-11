@@ -139,8 +139,6 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
     let dataope_list = collect_all_data_operation(&config);
     debug!("Data operation list for Config: {:?}", dataope_list);
     for dataop in dataope_list {
-        //let end_with_stegano: bool = matches!(dataop.first(), Some(DataOperation::STEGANO(_,_)));
-        //debug!("End with STEGANO: {}", end_with_stegano);
         let output_filepath   =  format!("{}{}{}",env!("HOME"), "/.malleable/config/initial.json",create_extension_filename(&dataop) );
  
         let mut output_filelink:FileLink = FileLink{
@@ -152,8 +150,6 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
         debug!("output_filelink: {:?}", &output_filelink);
 
         config.backup_config_to_file(&mut output_filelink);
-        //    pub fn backup_config_to_file(&self, backup_file: &mut FileLink) {
-
     }
 }
 
