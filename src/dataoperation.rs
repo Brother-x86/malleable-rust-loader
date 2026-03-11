@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use image::DynamicImage;
 use image::ImageFormat;
+use std::io::Cursor;
 
 use cryptify::encrypt_string;
 use log::debug;
@@ -30,6 +31,20 @@ pub enum DataOperation {
     SHA512(SHA512),
 }
 
+impl DataOperation{
+    pub fn name(&self) -> String {
+        match self {
+            DataOperation::BASE64 => encrypt_string!("base64"),
+            DataOperation::AES(_) => encrypt_string!("aes"),
+            DataOperation::WEBPAGE=> encrypt_string!("webpage"),
+            DataOperation::ROT13 => encrypt_string!("rot13"), // WARNING only after base64 because input is String
+            DataOperation::REVERSE => encrypt_string!("reverse"),
+            DataOperation::STEGANO(_,_)=> encrypt_string!("stegano"),
+            DataOperation::ZLIB=> encrypt_string!("zlib"),
+            DataOperation::SHA512(_)=> encrypt_string!("sha512"),
+        }
+    }
+}
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -144,10 +159,12 @@ pub trait ApplyDataOperation {
         //let carrier: image::DynamicImage = image::open(carrier_path).unwrap();
         let img: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = hide_mod(data, carrier);
 
-        debug!("{}{}", encrypt_string!("IMAGE SAVE to "), &image_output_path);
-        img.save(image_output_path).unwrap();
-
-        Ok(img.to_vec())
+        debug!("{}{}", encrypt_string!("NOT :::: IMAGE SAVE to "), &image_output_path);
+        //img.save(image_output_path).unwrap();
+        let mut output_data = Vec::new();
+        DynamicImage::ImageRgb8(img).write_to(&mut Cursor::new(&mut output_data), ImageFormat::PNG)?;
+        Ok(output_data)
+        //Ok(img.to_vec())
     }
 
     fn zlib_encode(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
