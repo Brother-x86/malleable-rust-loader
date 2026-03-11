@@ -1,0 +1,2 @@
+compare OLLVM with Ghydra
+dont save every config to disk, add bool
