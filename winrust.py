@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(
                     prog = 'winrust',
                     description = 'Tools to help from Linux to compile rust code Windows and then exec it into a Windows host by uploading with SMB + use some some impacket LateralMovement techniques',
                     epilog = 'by Brother')
-
+#if True:
 if malleable_rust_loader:
     parser.add_argument('-bin',default='loader',help='target bin')
     parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
@@ -185,7 +185,8 @@ NOT ACTIVATED:
 
         log.info('OLLVM FEATURE: ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230')        
         #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
-        comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
+        #comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
+        comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -e RUSTFLAGS="-C llvm-args=--enable-bcfobf -C llvm-args=--enable-antihook -C llvm-args=--enable-allobf -C llvm-args=--enable-acdobf -C llvm-args=--enable-cffobf -C llvm-args=--enable-fco -C llvm-args=--enable-funcwra -C llvm-args=--enable-indibran -C llvm-args=--enable-name-compression -C llvm-args=--enable-splitobf -C llvm-args=--enable-subobf" -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -C llvm-args="--enable-bcfobf --enable-antihook --enable-allobf --enable-acdobf --enable-cffobf --enable-fco --enable-funcwra --enable-indibran --enable-name-compression --enable-splitobf --enable-subobf" '''
         log.info(comm)
         compil_result=os.system(comm)
         # DEBUG probleme compilation
