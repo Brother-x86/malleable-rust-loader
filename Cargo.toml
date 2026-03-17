@@ -15,12 +15,6 @@ codegen-units = 1
 panic = "abort"
 debug = false
 
-[build]
-rustflags = [
-  "--remap-path-prefix=/root/.cargo/=.",
-  "--remap-path-prefix=src/=src/",
-]
-
 [features]
 loader = []
 dll = []

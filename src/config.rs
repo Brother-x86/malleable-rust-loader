@@ -578,8 +578,6 @@ impl Config {
                     format!("{}", encrypt_string!(", and run the payloads"))
                 };
 
-                debug!("actual config payload: {:?}",self.payloads);
-                debug!("NEW config payload: {:?}",newconf.payloads);
                 if self.is_same_loader(&newconf) {
                     info!(
                         "{}",
