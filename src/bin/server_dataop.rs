@@ -1,12 +1,12 @@
-use loader::dataoperation::DataOperation;
+use loader::dataoperation::DO;
 
 use std::fs;
 
 fn main() {
     let dataop = vec![
-        DataOperation::BASE64,
-        DataOperation::ZLIB,
-        DataOperation::BASE64,
+        DO::BASE64,
+        DO::ZLIB,
+        DO::BASE64,
     ];
     fs::write(
         concat!(env!("HOME"), "/.malleable/config/server.dataop"),

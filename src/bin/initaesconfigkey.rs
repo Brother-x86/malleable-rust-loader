@@ -1,5 +1,5 @@
-use loader::dataoperation::AesMaterial;
-use loader::dataoperation::DataOperation;
+use loader::dataoperation::AM;
+use loader::dataoperation::DO;
 use std::fs;
 
 extern crate env_logger;
@@ -12,9 +12,9 @@ fn main() {
     info!("[+] GENERATE aes key to encrypt all config");
 
     let aeskey_path: String = format!("{}{}",env!("HOME"), "/.malleable/config/config.aes");
-    let aes_mat: AesMaterial = AesMaterial::generate_aes_material();
+    let aes_mat: AM = AM::generate_aes_material();
 
-    let dataop: DataOperation = DataOperation::AES(aes_mat);
+    let dataop: DO = DO::AM(aes_mat);
     fs::write(
         &aeskey_path,
         serde_json::to_string(&dataop).unwrap(),

@@ -1,6 +1,6 @@
 use loader::dataoperation::apply_all_dataoperations;
-use loader::dataoperation::AesMaterial;
-use loader::dataoperation::DataOperation;
+use loader::dataoperation::AM;
+use loader::dataoperation::DO;
 use loader::dataoperation::SHA512;
 
 use argparse::{ArgumentParser, Store};
@@ -35,7 +35,7 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let aes_mat: AesMaterial = AesMaterial::generate_aes_material();
+    let aes_mat: AM = AM::generate_aes_material();
 
     let output_dataop: String = format!("{}{}", payload, ".dataop").to_string();
     let output_payload: String = format!("{}{}", payload, ".aes").to_string();
@@ -49,11 +49,11 @@ fn main() {
     let digest: chksum_sha2_512::Digest = sha2_512::chksum(data.clone()).unwrap();
     let digest_lowercase: String = digest.to_hex_lowercase();
 
-    let mut dataoperations: Vec<DataOperation> = vec![
-        DataOperation::ZLIB,
-        DataOperation::AES(aes_mat),
-        DataOperation::ZLIB,
-        DataOperation::SHA512(SHA512 {
+    let mut dataoperations: Vec<DO> = vec![
+        DO::ZLIB,
+        DO::AM(aes_mat),
+        DO::ZLIB,
+        DO::SHA512(SHA512 {
             hash: digest_lowercase,
         }),
     ];

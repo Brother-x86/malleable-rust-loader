@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::CCC;
 use crate::link::Link;
 use crate::link::LinkFetch;
 //use crate::payload::Payload;
@@ -40,11 +40,11 @@ pub struct PoolLinks {
 impl PoolLinks {
     pub fn update_pool(
         &self,
-        config: &Config,
+        config: &CCC,
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-    ) -> Result<Config, anyhow::Error> {
+    ) -> Result<CCC, anyhow::Error> {
         match &self.pool_mode {
             PoolMode::SIMPLE => self.update_links_simple(config, session_id, run_data),
             PoolMode::ADVANCED(advanced) => {
@@ -56,11 +56,11 @@ impl PoolLinks {
     //TODO update with date check and remove DECISION message, only print the config number if needed.
     pub fn update_links_simple(
         &self,
-        config: &Config,
+        config: &CCC,
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-    ) -> Result<Config, anyhow::Error> {
+    ) -> Result<CCC, anyhow::Error> {
         let advanced = Advanced {
             random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
             max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
@@ -75,12 +75,12 @@ impl PoolLinks {
 
     pub fn update_links_advanced(
         &self,
-        config: &Config,
+        config: &CCC,
         advanced: &Advanced,
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-    ) -> Result<Config, anyhow::Error> {
+    ) -> Result<CCC, anyhow::Error> {
         let pool_link: Vec<Link>;
 
         // create pool_links
@@ -112,12 +112,12 @@ impl PoolLinks {
 
         let pool_link_len: usize = pool_link.len();
         let mut link_nb: i32 = 0;
-        let mut newconfig_list: Vec<(Config, i32)> = vec![];
+        let mut newconfig_list: Vec<(CCC, i32)> = vec![];
 
         // fetch pool_links and choose a VALID config
         if advanced.parallel {
             info!("{}", encrypt_string!("[+] fetch all link in parallel"));
-            let mut handle_list: Vec<thread::JoinHandle<Result<(Config, i32), anyhow::Error>>> =
+            let mut handle_list: Vec<thread::JoinHandle<Result<(CCC, i32), anyhow::Error>>> =
                 vec![];
             for link in pool_link {
                 link_nb = link_nb + 1;
@@ -137,10 +137,10 @@ impl PoolLinks {
                 let thread_session_id = session_id.clone();
                 let thread_run_data = run_data.clone();
                 //let thread_run_data = (*run_data).clone();
-                let handle: thread::JoinHandle<Result<(Config, i32), anyhow::Error>> =
+                let handle: thread::JoinHandle<Result<(CCC, i32), anyhow::Error>> =
                     thread::spawn(move || {
                         debug!("{}{}", encrypt_string!("thread begin, link: "), link_nb);
-                        let newconfig: Config = thread_link.fetch_config(
+                        let newconfig: CCC = thread_link.fetch_config(
                             &thread_config,
                             &thread_advanced,
                             link_nb,
@@ -184,7 +184,7 @@ impl PoolLinks {
                     encrypt_string!(" Link: "),
                     &link.get_target()
                 );
-                let newconfig: Config = match link.fetch_config(
+                let newconfig: CCC = match link.fetch_config(
                     config,
                     advanced,
                     link_nb,
@@ -225,10 +225,10 @@ impl PoolLinks {
 
     pub fn choose_config_from_config_list(
         &self,
-        config: &Config,
+        config: &CCC,
         _advanced: &Advanced,
-        config_list: Vec<(Config, i32)>,
-    ) -> Result<Config, anyhow::Error> {
+        config_list: Vec<(CCC, i32)>,
+    ) -> Result<CCC, anyhow::Error> {
         if config_list.len() == 0 {
             bail!(
                 "{}",
@@ -244,7 +244,7 @@ impl PoolLinks {
             encrypt_string!("[+] Begin to choose the config to return from pool")
         );
 
-        let mut config_choosen: Config = config_list[0].0.clone();
+        let mut config_choosen: CCC = config_list[0].0.clone();
         let mut nb_choosen: i32 = config_list[0].1.clone();
         debug!(
             "{}{}",

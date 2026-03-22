@@ -1,7 +1,7 @@
-use crate::config::Config;
+use crate::config::CCC;
 use crate::dataoperation::apply_all_dataoperations;
-use crate::dataoperation::AesMaterial;
-use crate::dataoperation::DataOperation;
+use crate::dataoperation::AM;
+use crate::dataoperation::DO;
 use crate::link::FileLink;
 use crate::link::LinkFetch;
 
@@ -10,13 +10,13 @@ use std::fs;
 use log::debug;
 use log::info;
 
-pub fn encrypt_config(config: Config, json_config_file: String) {
+pub fn encrypt_config(config: CCC, json_config_file: String) {
     let message = "Unable to write file";
     let decrypt_file = format!("{}.encrypted", json_config_file);
 
-    let mut dataoperations: Vec<DataOperation> = vec![];
-    let aes_mat: AesMaterial = AesMaterial::generate_aes_material();
-    dataoperations.push(DataOperation::AES(aes_mat));
+    let mut dataoperations: Vec<DO> = vec![];
+    let aes_mat: AM = AM::generate_aes_material();
+    dataoperations.push(DO::AM(aes_mat));
 
     let mut data: Vec<u8> = config.concat_loader_jsondata().into_bytes();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
@@ -34,10 +34,10 @@ pub fn encrypt_config(config: Config, json_config_file: String) {
     .expect(message);
 
     // Ofuscate AES material with ROT13+BASE64
-    let mut dataoperations: Vec<DataOperation> = vec![
-        DataOperation::ROT13,
-        DataOperation::BASE64,
-        DataOperation::ZLIB,
+    let mut dataoperations: Vec<DO> = vec![
+        DO::ROT13,
+        DO::BASE64,
+        DO::ZLIB,
     ];
 
     let mut data: Vec<u8> = fs::read(format!("{decrypt_file}.aes.dataop")).unwrap();
@@ -55,7 +55,7 @@ pub fn encrypt_config(config: Config, json_config_file: String) {
         format!("{decrypt_file}.aes.dataop.obfuscated.dataop");
     dataoperations.reverse();
     let mut obfuscated_dataop_zlib = serde_json::to_vec(&dataoperations).unwrap();
-    let mut zlib_dataop: Vec<DataOperation> = vec![DataOperation::ZLIB];
+    let mut zlib_dataop: Vec<DO> = vec![DO::ZLIB];
     obfuscated_dataop_zlib =
         apply_all_dataoperations(&mut zlib_dataop, obfuscated_dataop_zlib).unwrap();
     fs::write(&path_aes_material_obfuscated_dataop, obfuscated_dataop_zlib).expect(message);
@@ -66,8 +66,8 @@ pub fn encrypt_config(config: Config, json_config_file: String) {
 }
 
 
-pub fn collect_all_data_operation(config: &Config) -> Vec<Vec<DataOperation>> {
-    let mut dataope_list: Vec<Vec<DataOperation>> = vec![];
+pub fn collect_all_data_operation(config: &CCC) -> Vec<Vec<DO>> {
+    let mut dataope_list: Vec<Vec<DO>> = vec![];
     for (_pool_nb, (_pool_name, pool)) in config.update_links.clone() {
         for update_link in pool.pool_links {
             let dataope = update_link.get_dataoperation();
@@ -79,9 +79,9 @@ pub fn collect_all_data_operation(config: &Config) -> Vec<Vec<DataOperation>> {
     return dataope_list;
 }
 
-pub fn create_extension_filename(dataop: &Vec<DataOperation>) -> String {
+pub fn create_extension_filename(dataop: &Vec<DO>) -> String {
     let mut extension_file_name = "".to_string();
-    let end_with_stegano: bool = matches!(dataop.first(), Some(DataOperation::STEGANO(_)));
+    let end_with_stegano: bool = matches!(dataop.first(), Some(DO::STTG(_)));
 
     let mut data_op_reverse=dataop.clone();
     data_op_reverse.reverse();
@@ -96,7 +96,7 @@ pub fn create_extension_filename(dataop: &Vec<DataOperation>) -> String {
     }
 }
 
-pub fn initialize_all_configs(config: Config, json_config_file: String) {
+pub fn initialize_all_configs(config: CCC, json_config_file: String) {
     encrypt_config(config.clone(), json_config_file.clone());
     let dataope_list = collect_all_data_operation(&config);
     debug!("Data operation list for Config: {}", serde_json::to_string(&dataope_list).unwrap_or_default());

@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::CCC;
 use crate::link::{HTTPLink, Link, LinkFetch};
 
 use gethostname::gethostname;
@@ -22,7 +22,7 @@ pub enum Defuse {
     Command(Command),
 }
 impl Defuse {
-    pub fn stop_the_exec(&self, config: &Config) -> bool {
+    pub fn stop_the_exec(&self, config: &CCC) -> bool {
         match self {
             Defuse::Hostname(hostname) => hostname.stop_exec(config),
             Defuse::DomainJoin(domain_join) => domain_join.stop_exec(config),
@@ -50,7 +50,7 @@ pub enum Operator {
 }
 
 pub trait DefuseCheck {
-    fn stop_exec(&self, config: &Config) -> bool;
+    fn stop_exec(&self, config: &CCC) -> bool;
     fn get_operator(&self) -> Operator;
 }
 
@@ -61,7 +61,7 @@ pub struct CheckInternet {
     pub operator: Operator,
 }
 impl DefuseCheck for CheckInternet {
-    fn stop_exec(&self, config: &Config) -> bool {
+    fn stop_exec(&self, config: &CCC) -> bool {
         for url in &self.list {
             debug!("{}{}", encrypt_string!("check internet: "), url);
             let link: Link = Link::HTTP(HTTPLink {
@@ -95,7 +95,7 @@ pub struct Hostname {
     pub operator: Operator,
 }
 impl DefuseCheck for Hostname {
-    fn stop_exec(&self, _config: &Config) -> bool {
+    fn stop_exec(&self, _config: &CCC) -> bool {
         //TODO virer le unwrap
         let hostname = gethostname()
             .to_ascii_uppercase()
@@ -130,7 +130,7 @@ pub struct Env {
     pub operator: Operator,
 }
 impl DefuseCheck for Env {
-    fn stop_exec(&self, _config: &Config) -> bool {
+    fn stop_exec(&self, _config: &CCC) -> bool {
         match env::var(&self.var) {
             Ok(value) => {
                 if value == self.value {
@@ -183,7 +183,7 @@ pub struct DomainJoin {
 
 #[cfg(target_os = "linux")]
 impl DefuseCheck for DomainJoin {
-    fn stop_exec(&self, _config: &Config) -> bool {
+    fn stop_exec(&self, _config: &CCC) -> bool {
         true
     }
     fn get_operator(&self) -> Operator {
@@ -193,7 +193,7 @@ impl DefuseCheck for DomainJoin {
 
 #[cfg(target_os = "windows")]
 impl DefuseCheck for DomainJoin {
-    fn stop_exec(&self, _config: &Config) -> bool {
+    fn stop_exec(&self, _config: &CCC) -> bool {
         let mut domain_controller_info: *mut DOMAIN_CONTROLLER_INFOA = std::ptr::null_mut();
         let status = unsafe {
             DsGetDcNameA(
@@ -248,7 +248,7 @@ pub struct Command {
     pub operator: Operator,
 }
 impl DefuseCheck for Command {
-    fn stop_exec(&self, _config: &Config) -> bool {
+    fn stop_exec(&self, _config: &CCC) -> bool {
         //let cmdline = String::from(r#"^.*-Xms512M -Xmx4096M .*-Dclipchamp.session.id.*clipchamp-tools.jar.*--workflow=ingest"#);
         // -Xms512M -Xmx4096M -Dclipchamp.session.id clipchamp-tools.jar --workflow=ingest+analyze+render
         // Construit la ligne de commande complète

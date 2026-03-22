@@ -1,4 +1,4 @@
-use loader::{config::Config, create_config::initialize_all_configs};
+use loader::{config::CCC, create_config::initialize_all_configs};
 
 use argparse::{ArgumentParser, Store};
 use std::env;
@@ -29,8 +29,8 @@ fn main() {
     }
 
     info!("[+] Signing Loader from file: {config_file_to_sign} ");
-    let mut config = Config::new_fromfile(&config_file_to_sign);
-    let key_pair = Config::fromfile_master_keypair(keypair.as_str());
+    let mut config = CCC::new_fromfile(&config_file_to_sign);
+    let key_pair = CCC::fromfile_master_keypair(keypair.as_str());
     config.sign_loader(&key_pair);
     info!("[+] Write sign_bytes to: {config_file_to_sign}");
     config.serialize_to_file_pretty(&config_file_to_sign);

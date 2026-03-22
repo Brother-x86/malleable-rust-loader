@@ -6,7 +6,7 @@ pub mod link;
 pub mod link_util;
 pub mod link_noconfig;
 pub mod local_pe_injection;
-pub mod lsb_text_png_ste_mod;
+pub mod sttg;
 pub mod payload;
 pub mod payload_util;
 pub mod poollink;

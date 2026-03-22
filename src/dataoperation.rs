@@ -1,4 +1,4 @@
-use crate::lsb_text_png_ste_mod::{hide_mod, reveal_mod};
+use crate::sttg::{hide_mod, reveal_mod};
 use crate::link_noconfig::LinkFetchNoConfig;
 
 use anyhow::{Context, Result};
@@ -21,33 +21,36 @@ use log::debug;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 #[serde(rename = "do")]
-pub enum DataOperation {
+pub enum DO {
     #[serde(rename = "bb")]
     BASE64,
     #[serde(rename = "ai")]
-    AES(AesMaterial),
+    AM(AM),
+    #[serde(rename = "WP")]
     WEBPAGE,
+    #[serde(rename = "RR")]
     ROT13, // WARNING only after base64 because input is String
+    #[serde(rename = "RS")]
     REVERSE,
     #[serde(rename = "sn")]
-    STEGANO(LinkNoConfig),
-    #[serde(rename = "zb")]
+    STTG(LinkNoConfig),
+    #[serde(rename = "ZL")]
     ZLIB,
-    #[serde(rename = "s52")]
+    #[serde(rename = "S5")]
     SHA512(SHA512),
 }
 
-impl DataOperation{
+impl DO{
     pub fn name(&self) -> String {
         match self {
-            DataOperation::BASE64 => encrypt_string!("base64"),
-            DataOperation::AES(_) => encrypt_string!("aes"),
-            DataOperation::WEBPAGE=> encrypt_string!("webpage"),
-            DataOperation::ROT13 => encrypt_string!("rot13"), // WARNING only after base64 because input is String
-            DataOperation::REVERSE => encrypt_string!("reverse"),
-            DataOperation::STEGANO(_)=> encrypt_string!("stegano"),
-            DataOperation::ZLIB=> encrypt_string!("zlib"),
-            DataOperation::SHA512(_)=> encrypt_string!("sha512"),
+            DO::BASE64 => encrypt_string!("base64"),
+            DO::AM(_) => encrypt_string!("aes"),
+            DO::WEBPAGE=> encrypt_string!("webpage"),
+            DO::ROT13 => encrypt_string!("rot13"), // WARNING only after base64 because input is String
+            DO::REVERSE => encrypt_string!("reverse"),
+            DO::STTG(_)=> encrypt_string!("stegano"),
+            DO::ZLIB=> encrypt_string!("zlib"),
+            DO::SHA512(_)=> encrypt_string!("sha512"),
         }
     }
 }
@@ -113,17 +116,17 @@ pub trait UnApplyDataOperation {
         Ok(writer)
     }
 }
-impl UnApplyDataOperation for DataOperation {
+impl UnApplyDataOperation for DO {
     fn un_apply_one_operation(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         match self {
-            DataOperation::BASE64 => self.base64_decode(data),
-            DataOperation::ROT13 => self.rot13_decode(data),
-            DataOperation::WEBPAGE => self.webpage_harvesting(data),
-            DataOperation::AES(aes_material) => aes_material.decrypt_aes(data),
-            DataOperation::STEGANO(_image_link) => self.stegano_decode_lsb(data),
-            DataOperation::ZLIB => self.zlib_decompress(data),
-            DataOperation::REVERSE => todo!(),
-            DataOperation::SHA512(sha512) => sha512.check_sha512(data),
+            DO::BASE64 => self.base64_decode(data),
+            DO::ROT13 => self.rot13_decode(data),
+            DO::WEBPAGE => self.webpage_harvesting(data),
+            DO::AM(aes_material) => aes_material.decrypt_aes(data),
+            DO::STTG(_image_link) => self.stegano_decode_lsb(data),
+            DO::ZLIB => self.zlib_decompress(data),
+            DO::REVERSE => todo!(),
+            DO::SHA512(sha512) => sha512.check_sha512(data),
         }
     }
 }
@@ -173,27 +176,27 @@ pub trait ApplyDataOperation {
     }
 }
 
-impl ApplyDataOperation for DataOperation {
+impl ApplyDataOperation for DO {
     fn apply_one_operation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         match self {
-            DataOperation::BASE64 => self.base64_encode(data),
-            DataOperation::ROT13 => self.rot13_encode(data),
-            DataOperation::WEBPAGE => self.webpage_create(data),
-            DataOperation::AES(aes_material) => aes_material.encrypt_aes(data),
+            DO::BASE64 => self.base64_encode(data),
+            DO::ROT13 => self.rot13_encode(data),
+            DO::WEBPAGE => self.webpage_create(data),
+            DO::AM(aes_material) => aes_material.encrypt_aes(data),
             // AIE AIE AIE
-            DataOperation::STEGANO(image_link) => {
+            DO::STTG(image_link) => {
                 let image_link_clone = image_link.clone();
                 self.stegano_encode_lsb(data, &image_link_clone)},
             //DataOperation::STEGANO(image_link,image_output_path) => todo!(),
-            DataOperation::ZLIB => self.zlib_encode(data),
-            DataOperation::REVERSE => todo!(),
-            DataOperation::SHA512(sha512) => sha512.check_sha512(data),
+            DO::ZLIB => self.zlib_encode(data),
+            DO::REVERSE => todo!(),
+            DO::SHA512(sha512) => sha512.check_sha512(data),
         }
     }
 }
 
 pub fn apply_all_dataoperations(
-    data_operations: &mut Vec<DataOperation>,
+    data_operations: &mut Vec<DO>,
     mut data: Vec<u8>,
 ) -> Result<Vec<u8>, anyhow::Error> {
     data_operations.reverse();
@@ -204,7 +207,7 @@ pub fn apply_all_dataoperations(
 }
 
 pub fn un_apply_all_dataoperations(
-    dataoperation: Vec<DataOperation>,
+    dataoperation: Vec<DO>,
     mut data: Vec<u8>,
 ) -> Result<Vec<u8>, anyhow::Error> {
     for operation in dataoperation {
@@ -222,14 +225,13 @@ use aes_gcm_siv::{
 use anyhow::bail;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-#[serde(rename = "am")]
-pub struct AesMaterial {
+pub struct AM {
     #[serde(rename = "k")]
     pub key: Vec<u8>,
     #[serde(rename = "n")]
     pub nonce: [u8; 12],
 }
-impl AesMaterial {
+impl AM {
     fn decrypt_aes(&self, ciphertext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: AES decrypt"));
         let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> =
@@ -271,14 +273,14 @@ impl AesMaterial {
         };
         Ok(ciphertext)
     }
-    pub fn generate_aes_material() -> AesMaterial {
+    pub fn generate_aes_material() -> AM {
         let key: aes_gcm_siv::aead::generic_array::GenericArray<u8, _> =
             Aes256GcmSiv::generate_key(&mut OsRng);
         // 96-bits; unique per message
         let mut nonce = [0u8; 12];
         rand::thread_rng().fill(&mut nonce);
         let nonce_slice: &[u8; 12] = &nonce;
-        AesMaterial {
+        AM {
             key: key.as_slice().to_owned(),
             nonce: nonce_slice.to_owned(),
         }
