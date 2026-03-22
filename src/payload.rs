@@ -1,5 +1,5 @@
 use crate::config::CCC;
-use crate::link::{Link, LinkFetch};
+use crate::link::{Lk, LinkFetch};
 use crate::payload_util::create_directory;
 use crate::payload_util::same_hash_sha512;
 use crate::payload_util::CommandLine;
@@ -172,7 +172,7 @@ impl PO {
 #[serde(rename = "dme")]
 pub struct DLM {
     #[serde(rename = "lk")]
-    pub link: Link,
+    pub link: Lk,
     #[serde(rename = "ep")]
     pub dll_entrypoint: String,
     #[serde(rename = "cc")]
@@ -339,7 +339,7 @@ pub fn stoploader() -> Result<POT, anyhow::Error> {
 }
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct WZ {
-    pub link: Link,
+    pub link: Lk,
     pub path: String,
     pub retry: i32, //-1 infinite; pour le download
     pub runonce: bool,
@@ -391,7 +391,7 @@ impl WZ {
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct WF {
-    pub link: Link,
+    pub link: Lk,
     pub path: String,
     pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
     pub runonce: bool,
@@ -572,7 +572,7 @@ use crate::local_pe_injection::main::local_pe_injection;
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct LPJ {
     #[serde(rename = "ll")]
-    pub link: Link,
+    pub link: Lk,
     #[serde(rename = "cl")]
     pub commandline: CommandLine,
     #[serde(rename = "de")]
@@ -624,7 +624,7 @@ use clroxide::clr::Clr;
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct DTN {
     #[serde(rename = "ll")]
-    pub link: Link,
+    pub link: Lk,
     #[serde(rename = "ci")]
     pub commandline: CommandLine,
     #[serde(rename = "te")]

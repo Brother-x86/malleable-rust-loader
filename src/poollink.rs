@@ -1,5 +1,5 @@
 use crate::config::CCC;
-use crate::link::Link;
+use crate::link::Lk;
 use crate::link::LinkFetch;
 //use crate::payload::Payload;
 use crate::rundata::RunData;
@@ -26,18 +26,18 @@ pub struct Advanced {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub enum PoolMode {
+pub enum POLM {
     SIMPLE,
     ADVANCED(Advanced),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct PoolLinks {
-    pub pool_mode: PoolMode,
-    pub pool_links: Vec<Link>,
+pub struct POLKS {
+    pub pool_mode: POLM,
+    pub pool_links: Vec<Lk>,
 }
 
-impl PoolLinks {
+impl POLKS {
     pub fn update_pool(
         &self,
         config: &CCC,
@@ -46,8 +46,8 @@ impl PoolLinks {
         run_data: &RunData,
     ) -> Result<CCC, anyhow::Error> {
         match &self.pool_mode {
-            PoolMode::SIMPLE => self.update_links_simple(config, session_id, run_data),
-            PoolMode::ADVANCED(advanced) => {
+            POLM::SIMPLE => self.update_links_simple(config, session_id, run_data),
+            POLM::ADVANCED(advanced) => {
                 self.update_links_advanced(config, advanced, session_id, run_data)
             }
         }
@@ -81,7 +81,7 @@ impl PoolLinks {
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
     ) -> Result<CCC, anyhow::Error> {
-        let pool_link: Vec<Link>;
+        let pool_link: Vec<Lk>;
 
         // create pool_links
         if advanced.random != 0 {
@@ -91,7 +91,7 @@ impl PoolLinks {
                 advanced.random,
                 self.pool_links.len()
             );
-            let sample: Vec<Link> = self
+            let sample: Vec<Lk> = self
                 .pool_links
                 .choose_multiple(
                     &mut rand::thread_rng(),
