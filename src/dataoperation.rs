@@ -19,7 +19,7 @@ use std::io::Cursor;
 use cryptify::encrypt_string;
 use log::debug;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum DataOperation {
     BASE64,
     AES(AesMaterial),
@@ -47,7 +47,7 @@ impl DataOperation{
 }
 
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct SHA512 {
     pub hash: String,
 }
@@ -141,9 +141,9 @@ pub trait ApplyDataOperation {
     fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&LinkNoConfig) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
         debug!(
-            "{}{:?}",
-            encrypt_string!("STEGANO_INPUT_IMAGE: "),
-            input_image_link
+            "{}{}",
+            encrypt_string!("STEGANO_INPUT_IMAGE: "),            
+            serde_json::to_string(&input_image_link).unwrap_or_default()
         );
         let bytes: Vec<u8> = input_image_link.fetch_data_noconfig()?;
         let carrier: DynamicImage = image::load_from_memory_with_format(&bytes, ImageFormat::PNG).unwrap();
@@ -213,7 +213,7 @@ use aes_gcm_siv::{
 };
 use anyhow::bail;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct AesMaterial {
     pub key: Vec<u8>,
     pub nonce: [u8; 12],

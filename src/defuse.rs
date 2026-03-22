@@ -12,7 +12,7 @@ use log::debug;
 use log::error;
 use log::warn;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Defuse {
     Hostname(Hostname),
     Env(Env),

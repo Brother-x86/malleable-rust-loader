@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use cryptify::encrypt_string;
 use log::info;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum LinkNoConfig {
     FILE(FileLink),
     MEMORY(MemoryLink),

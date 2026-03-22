@@ -186,7 +186,9 @@ NOT ACTIVATED:
         log.info('OLLVM FEATURE: ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230')        
         #comm=f'''sudo docker run -v $(pwd):/projects/ -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ghcr.io/joaovarelas/obfuscator-llvm-16.0 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -Cdebuginfo=0 -Cstrip=symbols -Cpanic=abort -Copt-level=3 -Cllvm-args='-enable-acdobf -enable-antihook -enable-adb -enable-bcfobf -enable-splitobf -enable-subobf -enable-fco -enable-funcwra -enable-cffobf -enable-indibran' '''
         #comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
-        comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -e RUSTFLAGS="-C llvm-args=--enable-bcfobf -C llvm-args=--enable-antihook -C llvm-args=--enable-allobf -C llvm-args=--enable-acdobf -C llvm-args=--enable-cffobf -C llvm-args=--enable-fco -C llvm-args=--enable-funcwra -C llvm-args=--enable-indibran -C llvm-args=--enable-name-compression -C llvm-args=--enable-splitobf -C llvm-args=--enable-subobf" -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -C llvm-args="--enable-bcfobf --enable-antihook --enable-allobf --enable-acdobf --enable-cffobf --enable-fco --enable-funcwra --enable-indibran --enable-name-compression --enable-splitobf --enable-subobf" '''
+        #comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -e RUSTFLAGS="-C llvm-args=--enable-bcfobf -C llvm-args=--enable-antihook -C llvm-args=--enable-allobf -C llvm-args=--enable-acdobf -C llvm-args=--enable-cffobf -C llvm-args=--enable-fco -C llvm-args=--enable-funcwra -C llvm-args=--enable-indibran -C llvm-args=--enable-name-compression -C llvm-args=--enable-splitobf -C llvm-args=--enable-subobf" -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release -- -C llvm-args="--enable-bcfobf --enable-antihook --enable-allobf --enable-acdobf --enable-cffobf --enable-fco --enable-funcwra --enable-indibran --enable-name-compression --enable-splitobf --enable-subobf" '''
+        # --enable-allobf activation de TOUT.
+        comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e LITCRYPT_ENCRYPT_KEY="$LITCRYPT_ENCRYPT_KEY" -e CARGO_TARGET_DIR=ollvm -e RUSTFLAGS="-C llvm-args=--enable-bcfobf -C llvm-args=--enable-antihook -C llvm-args=--enable-strcry -C llvm-args=--strcry_prob=100 -C llvm-args=--enable-constenc -C llvm-args=--enable-acdobf -C llvm-args=--enable-cffobf -C llvm-args=--enable-fco -C llvm-args=--enable-funcwra -C llvm-args=--enable-indibran -C llvm-args=--enable-name-compression -C llvm-args=--enable-splitobf -C llvm-args=--enable-subobf" -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
         log.info(comm)
         compil_result=os.system(comm)
         # DEBUG probleme compilation
@@ -196,6 +198,8 @@ NOT ACTIVATED:
     # compil_result=0 if compilation is OK
     if not compil_result:
         log.info('[+] compilation succeed')
+        log.info(f'[+] strings {file_target} > /home/user/shared/last.strings')
+        os.system(f'strings {file_target} > /home/user/shared/last.strings')
 
 
         if args.dll:

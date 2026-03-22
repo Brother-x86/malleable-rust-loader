@@ -32,7 +32,7 @@ pub struct PE {
 }
 
 /// Struct representing a base relocation entry.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct BASE_RELOCATION_ENTRY {
     pub data: u16,
 }

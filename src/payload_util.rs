@@ -90,7 +90,7 @@ pub fn print_running_thread(
             running_thread.len()
         );
         for i in running_thread {
-            info!("{}{:?}", encrypt_string!("-thread: "), i.1);
+            info!("{}{}", encrypt_string!("-thread: "), serde_json::to_string(&i.1).unwrap_or_default() );
         }
     } else {
         info!("{}{}", encrypt_string!("[+] no RUNNING "), msg);
@@ -106,7 +106,7 @@ pub fn print_runonce(runonce: &mut Vec<Payload>, msg: String) {
             runonce.len()
         );
         for i in runonce {
-            info!("{}{:?}", encrypt_string!("-runonce: "), i);
+            info!("{}{}", encrypt_string!("-runonce: "), serde_json::to_string(i).unwrap_or_default());
         }
     } else {
         info!("{}{}", encrypt_string!("[+] no RUNONCE "), msg);
@@ -121,7 +121,7 @@ pub fn fail_linux_message(message: String) {
     );
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub enum CommandLine {
     ArgParse(),
     Txt(String),

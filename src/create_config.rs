@@ -44,8 +44,8 @@ pub fn encrypt_config(config: Config, json_config_file: String) {
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
     let path_aes_material_obfuscated = format!("{decrypt_file}.aes.dataop.obfuscated");
     info!(
-        "[+] AES decryption key obfuscated with {:?}: {}",
-        dataoperations, path_aes_material_obfuscated
+        "[+] AES decryption key obfuscated with {}: {}",
+        serde_json::to_string(&dataoperations).unwrap_or_default(), path_aes_material_obfuscated
     );
     fs::write(&path_aes_material_obfuscated, &data).expect(message);
 
@@ -99,7 +99,7 @@ pub fn create_extension_filename(dataop: &Vec<DataOperation>) -> String {
 pub fn initialize_all_configs(config: Config, json_config_file: String) {
     encrypt_config(config.clone(), json_config_file.clone());
     let dataope_list = collect_all_data_operation(&config);
-    debug!("Data operation list for Config: {:?}", dataope_list);
+    debug!("Data operation list for Config: {}", serde_json::to_string(&dataope_list).unwrap_or_default());
     for dataop in dataope_list {
         let output_filepath   =  format!("{}{}{}",env!("HOME"), "/.malleable/config/initial.json",create_extension_filename(&dataop) );
  
@@ -110,7 +110,7 @@ pub fn initialize_all_configs(config: Config, json_config_file: String) {
             sleep: 0,
         };
 
-        debug!("output_filelink: {:?}", &output_filelink);
+        debug!("output_filelink: {}",serde_json::to_string(&output_filelink).unwrap_or_default());
         config.backup_config_to_file(&mut output_filelink);
     }
 }

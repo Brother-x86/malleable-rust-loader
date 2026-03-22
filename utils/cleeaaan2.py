@@ -52,6 +52,7 @@ def nettoyer_pe_rs():
                         #print(f"[-] Masquage de : {match.decode(errors='ignore')}")
                         # Remplacement par des null bytes de même longueur (critique pour les offsets PE)
                         remplacement = b'\x00' * len(match)
+                        #remplacement = b'\x11' * len(match)
                         data_nettoyee = data_nettoyee.replace(match, remplacement)
                         total_trouves += 1
             except re.error as e:

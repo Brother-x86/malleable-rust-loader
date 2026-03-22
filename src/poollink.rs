@@ -14,7 +14,7 @@ use log::debug;
 use log::info;
 use log::warn;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct Advanced {
     pub random: u64, // fetch only x random link from pool and ignore the other, (0 not set)
     pub max_link_broken: u64, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
@@ -25,13 +25,13 @@ pub struct Advanced {
     pub accept_old: bool, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum PoolMode {
     SIMPLE,
     ADVANCED(Advanced),
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct PoolLinks {
     pub pool_mode: PoolMode,
     pub pool_links: Vec<Link>,

