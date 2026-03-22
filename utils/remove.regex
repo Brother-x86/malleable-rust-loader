@@ -7,3 +7,4 @@
 (?:[a-zA-Z0-9]+::){1,4}[a-zA-Z0-9]+
 struct\s[a-zA-Z0-9]+\swith\s\d+\selements
 /src/index.crates
+DllFromMemory

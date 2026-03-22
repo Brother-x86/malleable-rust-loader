@@ -1,4 +1,4 @@
-use crate::lsb_text_png_steganography_mod::{hide_mod, reveal_mod};
+use crate::lsb_text_png_ste_mod::{hide_mod, reveal_mod};
 use crate::link_noconfig::LinkFetchNoConfig;
 
 use anyhow::{Context, Result};
