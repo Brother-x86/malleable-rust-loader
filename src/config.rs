@@ -29,7 +29,7 @@ use log::warn;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename = "vf")]
-pub struct VerifSignMaterial {
+pub struct VSM { // VerifSignMaterial
     #[serde(rename = "pb")]
     pub peer_public_key_bytes: Vec<u8>,
     #[serde(rename = "sb")]
@@ -61,7 +61,7 @@ pub struct CCC {
     pub decoy_before_payload: bool, // on verra
 
     #[serde(rename = "sm")]
-    pub sign_material: VerifSignMaterial,
+    pub sign_material: VSM,
     #[serde(rename = "sp")]
     pub sleep: u64,
     #[serde(rename = "jt")]
@@ -97,7 +97,7 @@ impl CCC {
         link_user_agent: String,
         loader_keypair: Vec<u8>,
     ) -> CCC {
-        let sign_material = VerifSignMaterial {
+        let sign_material = VSM {
             peer_public_key_bytes: vec![],
             sign_bytes: vec![],
         };
@@ -178,7 +178,7 @@ impl CCC {
         let sign_data = self.return_sign_data();
         let sig: signature::Signature = key_pair.sign(&sign_data);
         let sign_bytes = sig.as_ref();
-        let sign_material = VerifSignMaterial {
+        let sign_material = VSM {
             peer_public_key_bytes: peer_public_key_bytes,
             sign_bytes: sign_bytes.to_vec(),
         };

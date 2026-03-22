@@ -6,3 +6,4 @@ ardaku/whoami
 rust
 RUST
 lib.rs
+struct\s[a-zA-Z0-9]+\swith\s\d+\selement
