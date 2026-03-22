@@ -59,8 +59,8 @@ fn main() {
     ];
 
     info!(
-        "[+] Apply dataoperation in reverse order {:?}",
-        &dataoperations
+        "[+] Apply dataoperation in reverse order {}",
+        serde_json::to_string(&dataoperations).unwrap_or_default()
     );
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 

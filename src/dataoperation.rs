@@ -20,14 +20,20 @@ use cryptify::encrypt_string;
 use log::debug;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename = "do")]
 pub enum DataOperation {
+    #[serde(rename = "bb")]
     BASE64,
+    #[serde(rename = "ai")]
     AES(AesMaterial),
     WEBPAGE,
     ROT13, // WARNING only after base64 because input is String
     REVERSE,
+    #[serde(rename = "sn")]
     STEGANO(LinkNoConfig),
+    #[serde(rename = "zb")]
     ZLIB,
+    #[serde(rename = "s52")]
     SHA512(SHA512),
 }
 
@@ -48,7 +54,9 @@ impl DataOperation{
 
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename = "s5")]
 pub struct SHA512 {
+    #[serde(rename = "hh")]
     pub hash: String,
 }
 impl SHA512 {
@@ -80,7 +88,7 @@ pub trait UnApplyDataOperation {
     fn webpage_harvesting(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: WEBPAGE harvesting"));
         let haystack = String::from_utf8_lossy(&*data);
-        let re = Regex::new(r"!!!(?<loader>\S+)!!!").unwrap();
+        let re = Regex::new(r"!!!(?<ll>\S+)!!!").unwrap();
 
         let Some(caps) = re.captures(&haystack) else {
             let e: Result<Vec<u8>, anyhow::Error> = Err(anyhow::Error::msg(encrypt_string!(
@@ -88,7 +96,7 @@ pub trait UnApplyDataOperation {
             )));
             return e;
         };
-        Ok(caps["loader"].as_bytes().to_vec())
+        Ok(caps["ll"].as_bytes().to_vec())
     }
 
     fn stegano_decode_lsb(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -214,8 +222,11 @@ use aes_gcm_siv::{
 use anyhow::bail;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename = "am")]
 pub struct AesMaterial {
+    #[serde(rename = "k")]
     pub key: Vec<u8>,
+    #[serde(rename = "n")]
     pub nonce: [u8; 12],
 }
 impl AesMaterial {

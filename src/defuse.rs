@@ -13,6 +13,7 @@ use log::error;
 use log::warn;
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename = "df")]
 pub enum Defuse {
     Hostname(Hostname),
     Env(Env),
@@ -41,7 +42,8 @@ impl Defuse {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
+#[serde(rename = "oo")]
 pub enum Operator {
     AND,
     OR,
@@ -52,7 +54,8 @@ pub trait DefuseCheck {
     fn get_operator(&self) -> Operator;
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename = "ci")]
 pub struct CheckInternet {
     pub list: Vec<String>,
     pub operator: Operator,
@@ -82,9 +85,13 @@ impl DefuseCheck for CheckInternet {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, 
+    Clone)]
+#[serde(rename = "ht")]
 pub struct Hostname {
+    #[serde(rename = "lt")]
     pub list: Vec<String>,
+    #[serde(rename = "oa")]
     pub operator: Operator,
 }
 impl DefuseCheck for Hostname {
@@ -116,7 +123,7 @@ impl DefuseCheck for Hostname {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Env {
     pub var: String,
     pub value: String,
@@ -168,7 +175,7 @@ use windows_sys::Win32::{
     Networking::ActiveDirectory::{DsGetDcNameA, DOMAIN_CONTROLLER_INFOA},
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DomainJoin {
     pub list: Vec<String>,
     pub operator: Operator,
@@ -235,7 +242,7 @@ impl DefuseCheck for DomainJoin {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Command {
     pub regex: String,
     pub operator: Operator,

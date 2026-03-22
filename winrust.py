@@ -198,8 +198,6 @@ NOT ACTIVATED:
     # compil_result=0 if compilation is OK
     if not compil_result:
         log.info('[+] compilation succeed')
-        log.info(f'[+] strings {file_target} > /home/user/shared/last.strings')
-        os.system(f'strings {file_target} > /home/user/shared/last.strings')
 
 
         if args.dll:
@@ -219,6 +217,8 @@ NOT ACTIVATED:
         log.info(os.popen(f'sha256sum {file}').read().replace('\n',''))
         log.info(os.popen(f'sha1sum {file}').read().replace('\n',''))
         os.system(f'cp {file} {file_target}')
+        log.info(f'[+] strings {file_target} > /home/user/malleable-rust-loader/winrust.strings')
+        os.system(f'strings {file_target} > /home/user/malleable-rust-loader/winrust.strings')
 
         if not args.no_drop:
             if args.verbose:
