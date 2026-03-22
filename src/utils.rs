@@ -7,6 +7,8 @@ use std::env;
 use anyhow::{anyhow, Context, Result};
 use walkdir::WalkDir;
 
+use cryptify::encrypt_string;
+
 fn generate_random_hex(n: usize) -> String {
     let mut rng = rand::thread_rng();
     (0..n)
@@ -55,19 +57,24 @@ pub fn expand_arg_no_random(input: &str) -> Result<String> {
     let exe_path = env::current_exe()?;
     let binfile = exe_path
         .to_str()
-        .ok_or_else(|| anyhow!("Chemin invalide UTF-8 pour current_exe"))?;
+        .ok_or_else(|| anyhow!(format!("{}",encrypt_string!("Chemin invalide UTF-8"))))?;
 
     let exe_parent = exe_path
         .parent()
-        .ok_or_else(|| anyhow!("Impossible de récupérer le parent de current_exe"))?;
+        .ok_or_else(|| anyhow!(format!("{}",encrypt_string!("Impossible récup le parent"))))?;
 
     let binpath = exe_parent
         .to_str()
-        .ok_or_else(|| anyhow!("Chemin invalide UTF-8 pour le parent de current_exe"))?;
+        .ok_or_else(|| anyhow!(format!("{}",encrypt_string!("Chemin invalide UTF-8 pour le parent"))))?;
 
+    /* 
     let replaced = input
         .replace("${BINFILE}", binfile)
         .replace("${BINPATH}", binpath);
+    */
+    let replaced = input
+        .replace(&format!("{}",encrypt_string!("${BINFILE}")), binfile)
+        .replace(&format!("{}",encrypt_string!("${BINPATH}")), binpath);
 
     let env_re = env_placeholder_regex();
 
@@ -144,7 +151,7 @@ fn build_reverse_regex(pattern: &str) -> Result<Regex> {
     let mut last = 0;
 
     for caps in re.captures_iter(pattern) {
-        let m = caps.get(0).context("capture regex invalide")?;
+        let m = caps.get(0).context(format!("{}",encrypt_string!("capture regex invalide")))?;
         out.push_str(&regex::escape(&pattern[last..m.start()]));
 
         let kind = &caps[1];

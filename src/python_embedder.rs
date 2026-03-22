@@ -49,7 +49,7 @@ pub fn embedder(python_path: &PathBuf, script: &str) {
     // let pythonlib = unsafe { LoadLibraryA(dll_path.as_ptr() as LPCSTR) };
     debug!("{}", encrypt_string!("load python310.dll"));
     let python_path_str = python_path.to_str().unwrap();
-    let pythonlib = match load_dll_from_file(&format!("{}{}", &python_path_str, "python310.dll")) {
+    let pythonlib = match load_dll_from_file(&format!("{}{}", &python_path_str, encrypt_string!("python310.dll"))) {
         Ok(pythonlib) => pythonlib,
         Err(err) => {
             error!("{}", err);

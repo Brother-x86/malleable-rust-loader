@@ -21,12 +21,18 @@ def nettoyer_pe_rs():
     fichier_sortie = fichier_entree + ".clean.exe"
     nom_regex = 'remove.regex'
 
+
     if not os.path.exists(fichier_entree):
         print(f"❌ Erreur : '{fichier_entree}' introuvable.")
         return
 
     try:
-        with open(fichier_entree, 'rb') as f:
+        os.system(f"cp {fichier_entree} {fichier_entree}.tmp")
+        print(f"🔥 strip --strip-all into {fichier_entree}.tmp")
+        os.system(f"strip --strip-all {fichier_entree}.tmp")
+           
+
+        with open(f"{fichier_entree}.tmp", 'rb') as f:
             data_nettoyee = f.read()
 
         motifs = charger_motifs(nom_regex)

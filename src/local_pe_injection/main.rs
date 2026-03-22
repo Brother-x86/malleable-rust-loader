@@ -12,6 +12,7 @@ use {
         ptr::null_mut,
     },
 };
+use cryptify::encrypt_string;
 
 /*
 use windows::{
@@ -444,7 +445,7 @@ fn fixing_arguments(args: &str) -> Result<(), String> {
         );
 
         let current_exe = std::env::current_exe()
-            .map_err(|e| format!("Failed to get current exe path: {}", e))?;
+            .map_err(|e| format!("{}{}", encrypt_string!("Failed to get current exe path: ") ,e))?;
         let path_name = format!("\"{}\" {}\0", current_exe.to_string_lossy(), args)
             .encode_utf16()
             .collect::<Vec<u16>>();

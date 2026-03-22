@@ -1,10 +1,8 @@
 .io-[a-z0-9]+/[a-zA-Z0-9\._\-\+]+/
-(?:[/\\][a-zA-Z0-9._\-]+){1,5}\.rs
-\.cargo/registry/src/index\.crates\.io-[a-z0-9]+/[a-zA-Z0-9\._\-]+/src
-.io-[a-z0-9]+/[a-zA-Z0-9\._\-]+/src
-\.crates\.io-[a-z0-9]+/.+
-\.cargo/registry
-(?:[a-zA-Z0-9]+::){1,4}[a-zA-Z0-9]+
-struct\s[a-zA-Z0-9]+\swith\s\d+\selements
-/src/index.crates
-DllFromMemory
+(?:[/\\][a-zA-Z0-9._\-]+){1,3}\.rs
+/root/\.cargo/registry/src/index\.crates
+rust-1\.89\.0
+ardaku/whoami
+rust
+RUST
+lib.rs

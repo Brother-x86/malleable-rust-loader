@@ -69,6 +69,7 @@ def main():
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
+    log.info("Winrust start 🔥")
     log.debug(f"args_bin={args.bin}")
 
     if args.loader :
@@ -192,9 +193,12 @@ NOT ACTIVATED:
         log.info(comm)
         compil_result=os.system(comm)
         # DEBUG probleme compilation
-        os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
-        os.system('mv Cargo.lock.normal Cargo.lock')
+        if os.path.exists('Cargo.lock'):
+            os.system('cp -rf Cargo.lock Cargo.lock.ollvm')
 
+        if os.path.exists('Cargo.lock.normal'):
+            os.system('mv Cargo.lock.normal Cargo.lock')
+            
     # compil_result=0 if compilation is OK
     if not compil_result:
         log.info('[+] compilation succeed')

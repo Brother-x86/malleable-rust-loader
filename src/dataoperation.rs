@@ -240,7 +240,7 @@ impl AM {
         let nonce = Nonce::from_slice(&self.nonce); // 96-bits; unique per message
         let plaintext: Vec<u8> = match cipher.decrypt(nonce, ciphertext.as_ref()) {
             Ok(data) => data,
-            Err(e) => bail!("plaintext error: {}", e),
+            Err(e) => bail!("{} {}",encrypt_string!("plaintext error:"), e),
         };
         Ok(plaintext)
     }
@@ -269,7 +269,7 @@ impl AM {
         let plaintext_u8: &[u8] = &plaintext;
         let ciphertext: Vec<u8> = match cipher.encrypt(nonce, plaintext_u8) {
             Ok(data) => data,
-            Err(e) => bail!("ciphertext error: {}", e),
+            Err(e) => bail!("{} {}",encrypt_string!("ciphertext error:"), e),
         };
         Ok(ciphertext)
     }
