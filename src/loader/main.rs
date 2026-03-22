@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::dataoperation::un_apply_all_dataoperations;
 use crate::dataoperation::DataOperation;
-use crate::payload::Payload;
+use crate::payload::PO;
 //use crate::payload_util::print_running_thread;
 //use crate::payload_util::print_runonce;
 use crate::payload_util::print_rundata;
@@ -85,12 +85,12 @@ pub fn run_loader() {
     config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", encrypt_string!("[+] VERIFIED!"), "\n");
 
-    let running_thread_payload: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
-    let runonce_payload: Vec<Payload> = vec![];
-    let running_thread_decoy_update: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
-    let runonce_decoy_update: Vec<Payload> = vec![];
-    let running_thread_decoy_payload: Vec<(thread::JoinHandle<()>, Payload)> = vec![];
-    let runonce_decoy_payload: Vec<Payload> = vec![];
+    let running_thread_payload: Vec<(thread::JoinHandle<()>, PO)> = vec![];
+    let runonce_payload: Vec<PO> = vec![];
+    let running_thread_decoy_update: Vec<(thread::JoinHandle<()>, PO)> = vec![];
+    let runonce_decoy_update: Vec<PO> = vec![];
+    let running_thread_decoy_payload: Vec<(thread::JoinHandle<()>, PO)> = vec![];
+    let runonce_decoy_payload: Vec<PO> = vec![];
     
     let mut run_data = RunData {
         running_thread_payload: running_thread_payload,

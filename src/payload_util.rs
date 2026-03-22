@@ -1,4 +1,4 @@
-use crate::payload::Payload;
+use crate::payload::PO;
 use crate::rundata::RunData;
 use crate::utils::expand_arg;
 
@@ -79,7 +79,7 @@ pub fn print_rundata(run_data: &mut RunData) {
 }
 
 pub fn print_running_thread(
-    running_thread: &mut Vec<(thread::JoinHandle<()>, Payload)>,
+    running_thread: &mut Vec<(thread::JoinHandle<()>, PO)>,
     msg: String,
 ) {
     if running_thread.len() != 0 {
@@ -97,7 +97,7 @@ pub fn print_running_thread(
     };
 }
 
-pub fn print_runonce(runonce: &mut Vec<Payload>, msg: String) {
+pub fn print_runonce(runonce: &mut Vec<PO>, msg: String) {
     if runonce.len() != 0 {
         info!(
             "{}{}: {}",

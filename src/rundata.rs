@@ -1,17 +1,17 @@
-use crate::payload::Payload;
+use crate::payload::PO;
 use std::thread;
 
 
 //#[derive(Clone)]
 pub struct RunData {
-    pub running_thread_payload: Vec<(thread::JoinHandle<()>, Payload)>,
-    pub runonce_payload: Vec<Payload>,
+    pub running_thread_payload: Vec<(thread::JoinHandle<()>, PO)>,
+    pub runonce_payload: Vec<PO>,
 
-    pub running_thread_decoy_update: Vec<(thread::JoinHandle<()>, Payload)>,
-    pub runonce_decoy_update: Vec<Payload>,
+    pub running_thread_decoy_update: Vec<(thread::JoinHandle<()>, PO)>,
+    pub runonce_decoy_update: Vec<PO>,
 
-    pub running_thread_decoy_payload: Vec<(thread::JoinHandle<()>, Payload)>,
-    pub runonce_decoy_payload: Vec<Payload>,
+    pub running_thread_decoy_payload: Vec<(thread::JoinHandle<()>, PO)>,
+    pub runonce_decoy_payload: Vec<PO>,
 
     pub loop_nb: u32,
     pub session_id: String,
