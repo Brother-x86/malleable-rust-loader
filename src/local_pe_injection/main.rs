@@ -86,13 +86,13 @@ fn initialize_pe(buffer: Vec<u8>) -> Result<PE, String> {
     unsafe {
         let dos_header = buffer.as_ptr() as *mut IMAGE_DOS_HEADER;
         if (*dos_header).e_magic != IMAGE_DOS_SIGNATURE {
-            return Err(String::from("Invalid DOS SIGNATURE"));
+            return Err(format!("{}",encrypt_string!("Invalid DOS SIGNATURE")));
         }
 
         let nt_header =
             (dos_header as usize + (*dos_header).e_lfanew as usize) as *mut IMAGE_NT_HEADERS64;
         if (*nt_header).Signature != IMAGE_NT_SIGNATURE {
-            return Err(String::from("INVALID NT SIGNATURE"));
+            return Err(format!("{}",encrypt_string!("INVALID NT SIGNATURE")));
         }
 
         let section_header =
@@ -129,7 +129,7 @@ fn load_exe(pe: &mut PE, param: String, export: String) -> Result<(), String> {
         );
 
         if address.is_null() {
-            return Err("[!] VirtualAlloc failed to allocate memory".to_string());
+            return Err( format!("{}",encrypt_string!("[!] VirtualAlloc failed to allocate memory")));
         }
 
         // Load sections into memory
@@ -143,7 +143,7 @@ fn load_exe(pe: &mut PE, param: String, export: String) -> Result<(), String> {
                 let src = &pe.buffer[src_start..src_end];
                 std::ptr::copy_nonoverlapping(src.as_ptr(), address.offset(dst) as _, src.len());
             } else {
-                return Err("[!] Section outside the buffer limits".to_string());
+                return Err( format!("{}",encrypt_string!("[!] Section outside the buffer limits")));
             }
 
             tmp_section = tmp_section.add(1)
@@ -178,7 +178,7 @@ fn load_exe(pe: &mut PE, param: String, export: String) -> Result<(), String> {
 
             if !RtlAddFunctionTable(func_entries, address as u64).as_bool() {
                 return Err(format!(
-                    "[!] RtlAddFunctionTable Failed With Error: {:?}",
+                    "{}{:?}",encrypt_string!("[!] RtlAddFunctionTable Failed With Error: "),
                     GetLastError()
                 ));
             }
@@ -216,7 +216,7 @@ fn load_exe(pe: &mut PE, param: String, export: String) -> Result<(), String> {
                     THREAD_CREATION_FLAGS(0),
                     None,
                 )
-                .map_err(|e| format!("[!] CreateThread Failed With Error: {e}"))?;
+                .map_err(|e| format!("{}{}",encrypt_string!("[!] CreateThread Failed With Error: "),e))?;
 
                 WaitForSingleObject(h_thread, INFINITE);
             }
@@ -261,7 +261,7 @@ fn fixing_iat(pe: &PE, address: *mut c_void) -> Result<(), String> {
             let mut thunk_offset = 0;
             let dll_name = address.offset(descriptor.Name as isize) as *const i8;
             let h_module = LoadLibraryA(PCSTR(dll_name as _))
-                .map_err(|e| format!("LoadLibrary Failed With Status: {e}"))?;
+                .map_err(|e| format!("{}{}",encrypt_string!("LoadLibrary Failed With Status: "),e))?;
 
             loop {
                 let original_thunk = address
@@ -296,7 +296,7 @@ fn fixing_iat(pe: &PE, address: *mut c_void) -> Result<(), String> {
                                 as *mut IMAGE_IMPORT_BY_NAME;
                             format!("{:?}", CStr::from_ptr(&(*import_by_name).Name as *const i8))
                         };
-                        return Err(format!("Failed to find function: {}", func_name));
+                        return Err(format!("{}{}",encrypt_string!("Failed to find function: "),func_name));
                     }
                 };
 
@@ -355,7 +355,7 @@ fn realoc_image(pe: &mut PE, address: *mut c_void) -> Result<(), String> {
                             as u16
                     }
                     IMAGE_REL_BASED_ABSOLUTE => {} // No relocation needed
-                    _ => return Err(format!("Unknown relocation type: {}", entry_type)),
+                    _ => return Err(format!("{}{}",encrypt_string!("Unknown relocation type: "), entry_type)),
                 }
 
                 base_entry = base_entry.add(1);
@@ -413,7 +413,7 @@ fn fixing_memory(pe: &mut PE, address: *mut c_void) -> Result<(), String> {
                 protection,
                 &mut old_protect,
             )
-            .map_err(|e| format!("VirtualProtect [{}] Failed With Status: {e}", line!()))?;
+            .map_err(|e| format!("{}{}",encrypt_string!("VirtualProtect - Failed With Status: "),e ))?;
 
             section_header = section_header.add(1);
         }

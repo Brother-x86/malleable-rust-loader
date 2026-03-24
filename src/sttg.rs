@@ -21,9 +21,10 @@ pub fn hide_mod<'a>(
 
     let number_of_bytes_in_payload = payload_bytes.len() as u32;
     //TODO a supprimer
+    /* 
     if hider::is_payload_too_large(number_of_bytes_in_payload, carrier_x_limit, carrier_y_limit) {
         panic!("Payload is too large for the carrier image");
-    };
+    };*/
 
     let mut vec: Vec<u8> = Vec::with_capacity((number_of_bytes_in_payload + 4) as usize);
     vec.extend_from_slice(&transform_u32_to_array_of_u8(number_of_bytes_in_payload));

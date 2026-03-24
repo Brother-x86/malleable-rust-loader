@@ -19,7 +19,7 @@ def nettoyer_pe_rs():
 
     fichier_entree = sys.argv[1]
     fichier_sortie = fichier_entree + ".clean.exe"
-    nom_regex = 'remove.regex'
+    nom_regex = '/home/user/malleable-rust-loader/utilitaire/remove.regex'
 
 
     if not os.path.exists(fichier_entree):
@@ -71,6 +71,8 @@ def nettoyer_pe_rs():
             print(f"📁 Sortie : {fichier_sortie}")
         else:
             print("⚠️ Aucun motif n'a matché dans le fichier.")
+        print("[+] STRINGS into /tmp/last.strings")
+        os.system(f'strings {fichier_sortie} > /tmp/last.strings')
 
     except Exception as e:
         print(f"❌ Erreur fatale : {e}")

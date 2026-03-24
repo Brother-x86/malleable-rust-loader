@@ -453,7 +453,7 @@ impl Ec {
             let thread_visible = self.visible;
             let tj: thread::JoinHandle<()> = thread::spawn(move || {
                 if thread_visible {
-                    let _output = comm.spawn().expect("Failed to execute process");
+                    let _output = comm.spawn().expect(&format!("{}",encrypt_string!("Failed to execute process")));
                 } else {
                     comm.stdin(Stdio::null())
                         .stdout(Stdio::null())
@@ -470,7 +470,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 */
 
-                    let _output = comm.output().expect("Failed to execute process");
+                    let _output = comm.output().expect(&format!("{}",encrypt_string!("Failed to execute process")));
                 };
             });
             return Ok(POT::Thread(tj, PO::Ec(self.clone())));

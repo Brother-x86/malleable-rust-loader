@@ -70,7 +70,7 @@ impl SHA512 {
         if digest_lowercase == self.hash {
             Ok(data)
         } else {
-            bail!("Failed to verify SHA512: {}", digest_lowercase)
+            bail!("{}{}",encrypt_string!("Failed to verify SHA512: "),digest_lowercase)
         }
     }
 }

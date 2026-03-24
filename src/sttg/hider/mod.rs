@@ -1,3 +1,4 @@
+/* 
 pub fn is_payload_too_large(payload_length: u32, image_x_max: u32, image_y_max: u32) -> bool {
     // TODO: This need to take into account the header
     let pixels = image_x_max * image_y_max;
@@ -5,6 +6,7 @@ pub fn is_payload_too_large(payload_length: u32, image_x_max: u32, image_y_max: 
 
     ((payload_length + 4) * pixels_to_hold_a_byte) > pixels
 }
+*/
 
 #[cfg(test)]
 mod tests {

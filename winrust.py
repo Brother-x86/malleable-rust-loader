@@ -53,6 +53,8 @@ parser.add_argument('--loader',default=malleable_rust_loader,action='store_true'
 parser.add_argument('--loader_dll',default=malleable_rust_loader,action='store_true',help='dont add this compil flag: --features dll')
 parser.add_argument('--dll',default=False,action='store_true',help='compile to dll')
 parser.add_argument('--proxychains',default=False,action='store_true',help='add proxychains in front of commands exec+upload command')
+parser.add_argument('--clean',default=False,action='store_true',help='clean the binary with clean_exe.py')
+parser.add_argument('--offline',default=False,action='store_true',help='dont download again dependency')
 
 args = parser.parse_args()
 
@@ -101,6 +103,12 @@ def main():
     else:
         proxychains=''
 
+    if args.offline:
+        offline='--offline'
+    else:
+        offline=''
+
+
     if args.exec_target == '':
         #TODO if file not present
         with open(os.path.expanduser("~")+'/.exec') as file_read:
@@ -139,7 +147,7 @@ def main():
     file_target=f"/home/user/shared/{filename_target}"
     
 
-    compilation_args=f"{bin_comm} {log_level} {features_visible} {memory_options} {features_loader} {dll_options}"
+    compilation_args=f"{bin_comm} {log_level} {features_visible} {memory_options} {features_loader} {dll_options} {offline}"
 
     log.debug(f"file={file}")
     log.debug(f"filename={filename}")
@@ -153,7 +161,12 @@ def main():
     if not args.ollvm:
         log.info("[+] NORMAL Compilation")
         # TODO enlever --features executable
+
+        #comm=f'''cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
+        #comm=f'''RUSTFLAGS="-C link-arg=/DELAYLOAD:bcrypt.dll" cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
         comm=f'''cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
+        
+        #RUSTFLAGS="-C llvm-args=--enable-bcfobf
         log.info(comm)
         compil_result=os.system(comm)
 
@@ -221,6 +234,10 @@ NOT ACTIVATED:
         log.info(os.popen(f'sha256sum {file}').read().replace('\n',''))
         log.info(os.popen(f'sha1sum {file}').read().replace('\n',''))
         os.system(f'cp {file} {file_target}')
+        if args.clean:
+            os.system(f'python3 /home/user/malleable-rust-loader/utilitaire/clean_exe.py {file_target}')
+            file_target=file_target+".clean.exe"
+            filename_target=filename_target+".clean.exe"
         #log.info(f'[+] strings {file_target} > /home/user/malleable-rust-loader/winrust.strings')
         #os.system(f'strings {file_target} > /home/user/malleable-rust-loader/winrust.strings')
 
