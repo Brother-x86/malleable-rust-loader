@@ -16,28 +16,39 @@ use log::warn;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct Advanced {
+    #[serde(rename = "r")]
     pub random: u64, // fetch only x random link from pool and ignore the other, (0 not set)
+    #[serde(rename = "mlb")]
     pub max_link_broken: u64, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
+    #[serde(rename = "pll")]
     pub parallel: bool,       // try to fetch every link in the same time, if not its one by one
+    #[serde(rename = "ln")]
     pub linear: bool,         // fetch link in the order or randomized
+    #[serde(rename = "st")]
     pub stop_same: bool,      // stop if found the same conf -> not for parallel_fetch
+    #[serde(rename = "sn")]
     pub stop_new: bool,       // stop if found a new conf -> not for parallel_fetch
+    #[serde(rename = "ao")]
     pub accept_old: bool, // accept conf older than the active one -> true not recommended, need to fight against hypothetic valid config replay.
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub enum POLM {
+pub enum POM {
+    #[serde(rename = "si")]
     SIMPLE,
+    #[serde(rename = "ad")]
     ADVANCED(Advanced),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct POLKS {
-    pub pool_mode: POLM,
+pub struct Plk {
+    #[serde(rename = "pm")]
+    pub pool_mode: POM,
+    #[serde(rename = "pl")]
     pub pool_links: Vec<Lk>,
 }
 
-impl POLKS {
+impl Plk {
     pub fn update_pool(
         &self,
         config: &CCC,
@@ -46,8 +57,8 @@ impl POLKS {
         run_data: &RunData,
     ) -> Result<CCC, anyhow::Error> {
         match &self.pool_mode {
-            POLM::SIMPLE => self.update_links_simple(config, session_id, run_data),
-            POLM::ADVANCED(advanced) => {
+            POM::SIMPLE => self.update_links_simple(config, session_id, run_data),
+            POM::ADVANCED(advanced) => {
                 self.update_links_advanced(config, advanced, session_id, run_data)
             }
         }

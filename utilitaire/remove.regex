@@ -8,3 +8,7 @@ RUST
 lib.rs
 struct\s[a-zA-Z0-9]+\swith\s\d+\selement
 struct\s[a-zA-Z0-9]+
+Could not retrieve assembly
+Cannot handle an entrypoint
+Cannot handle an entrypoint
+loading library from in-memory data failed

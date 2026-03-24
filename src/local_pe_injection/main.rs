@@ -500,6 +500,6 @@ fn export_function_address(
             }
         }
 
-        Err(format!(encrypt_string!("Function address not found")))
+        Err(format!("{}", encrypt_string!("Function address not found")))
     }
 }

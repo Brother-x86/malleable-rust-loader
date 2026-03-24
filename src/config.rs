@@ -5,8 +5,8 @@ use crate::link::Lk;
 use crate::payload::PO;
 use crate::payload::POT;
 use crate::payload_util::create_directory;
-use crate::poollink::POLKS;
-use crate::poollink::POLM;
+use crate::poollink::Plk;
+use crate::poollink::POM;
 use crate::rundata::RunData;
 use crate::utils::calculate_path;
 use crate::utils::calculate_path_reverse;
@@ -39,7 +39,7 @@ pub struct VSM { // VerifSignMaterial
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CCC {
     #[serde(rename = "ul")]
-    pub update_links: BTreeMap<u64, (String, POLKS)>,
+    pub update_links: BTreeMap<u64, (String, Plk)>,
     #[serde(rename = "bc")]
     pub backup_config: Vec<LF>,
     #[serde(rename = "pa")]
@@ -79,7 +79,7 @@ pub struct CCC {
 //#[allow(dead_code)]
 impl CCC {
     pub fn new_unsigned(
-        update_links: BTreeMap<u64, (String, POLKS)>,
+        update_links: BTreeMap<u64, (String, Plk)>,
         backup_config: Vec<LF>,
         payloads: Vec<PO>,
         defuse_update: Vec<DF>,
@@ -125,7 +125,7 @@ impl CCC {
     }
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
-        update_links: BTreeMap<u64, (String, POLKS)>,
+        update_links: BTreeMap<u64, (String, Plk)>,
         backup_config: Vec<LF>,
         payloads: Vec<PO>,
         defuse_update: Vec<DF>,
@@ -569,8 +569,8 @@ impl CCC {
             }
         }
 
-        let pool_links = POLKS {
-            pool_mode: POLM::SIMPLE,
+        let pool_links = Plk {
+            pool_mode: POM::SIMPLE,
             pool_links: file_links,
         };
 
@@ -586,7 +586,7 @@ impl CCC {
 
     fn handle_pool_update(
         &self,
-        pool_links: &POLKS,
+        pool_links: &Plk,
         session_id: &String,
         run_data: &RunData,
         restore_config: bool,
