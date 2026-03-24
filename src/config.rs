@@ -1,6 +1,6 @@
 use crate::dataoperation::apply_all_dataoperations;
 use crate::defuse::{DF, Operator};
-use crate::link::FFF;
+use crate::link::LF;
 use crate::link::Lk;
 use crate::payload::PO;
 use crate::payload::POT;
@@ -41,7 +41,7 @@ pub struct CCC {
     #[serde(rename = "ul")]
     pub update_links: BTreeMap<u64, (String, POLKS)>,
     #[serde(rename = "bc")]
-    pub backup_config: Vec<FFF>,
+    pub backup_config: Vec<LF>,
     #[serde(rename = "pa")]
     pub payloads: Vec<PO>,
     #[serde(rename = "du")]
@@ -80,7 +80,7 @@ pub struct CCC {
 impl CCC {
     pub fn new_unsigned(
         update_links: BTreeMap<u64, (String, POLKS)>,
-        backup_config: Vec<FFF>,
+        backup_config: Vec<LF>,
         payloads: Vec<PO>,
         defuse_update: Vec<DF>,
         defuse_payload: Vec<DF>,
@@ -126,7 +126,7 @@ impl CCC {
     pub fn new_signed(
         key_pair: &Ed25519KeyPair,
         update_links: BTreeMap<u64, (String, POLKS)>,
-        backup_config: Vec<FFF>,
+        backup_config: Vec<LF>,
         payloads: Vec<PO>,
         defuse_update: Vec<DF>,
         defuse_payload: Vec<DF>,
@@ -464,7 +464,7 @@ impl CCC {
 
     // TODO reste a faire, il ne faut PAS backuper la config en clair, mais bien lui appliquer une suite de dataopération bien définie.
     // ensuite, il faudra appliquer une logique de chargement de cette config si existante et plus récente etc... au lancement du loader
-    pub fn backup_config_to_file(&self, backup_file: &mut FFF) {
+    pub fn backup_config_to_file(&self, backup_file: &mut LF) {
         match calculate_path(&backup_file.file_path) {
             Ok(path) => {
                 if let Err(e) = create_directory(&path) {
@@ -548,7 +548,7 @@ impl CCC {
                             }
                         };
 
-                        let fff: Lk = Lk::FILE(FFF {
+                        let fff: Lk = Lk::LF(LF {
                             file_path,
                             dataoperation: backup_file.dataoperation.clone(),
                             jitt: 0,

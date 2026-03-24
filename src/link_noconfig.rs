@@ -1,6 +1,6 @@
 
-use crate::link::MMM;
-use crate::link::FFF;
+use crate::link::LM;
+use crate::link::LF;
 use crate::link_util::read_file;
 use crate::memory::access_memory;
 use crate::dataoperation::DO;
@@ -16,8 +16,8 @@ use log::info;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum LinkNoConfig {
-    FILE(FFF),
-    MEMORY(MMM),
+    FILE(LF),
+    MEMORY(LM),
 }
 
 pub trait LinkFetchNoConfig {
@@ -96,7 +96,7 @@ impl LinkFetchNoConfig for LinkNoConfig {
 
 
 
-impl LinkFetchNoConfig for FFF {
+impl LinkFetchNoConfig for LF {
     fn download_data_noconfig(&self) -> Result<Vec<u8>, anyhow::Error> {
         read_file(&self.get_target())
     }
@@ -116,7 +116,7 @@ impl LinkFetchNoConfig for FFF {
 
 
 
-impl LinkFetchNoConfig for MMM {
+impl LinkFetchNoConfig for LM {
     fn download_data_noconfig(&self) -> Result<Vec<u8>, anyhow::Error> {
         access_memory(self.memory_nb)
     }

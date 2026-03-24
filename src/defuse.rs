@@ -1,5 +1,5 @@
 use crate::config::CCC;
-use crate::link::{HHH, Lk, LinkFetch};
+use crate::link::{LH, Lk, LinkFetch};
 
 use gethostname::gethostname;
 use regex::Regex;
@@ -67,7 +67,7 @@ impl DefuseCheck for CI {
     fn stop_exec(&self, config: &CCC) -> bool {
         for url in &self.list {
             debug!("{}{}", encrypt_string!("check internet: "), url);
-            let link: Lk = Lk::HTTP(HHH {
+            let link: Lk = Lk::LH(LH {
                 url: url.to_string(),
                 dataoperation: vec![],
                 jitt: 0,
