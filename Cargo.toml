@@ -67,6 +67,8 @@ walkdir = "2"
 # todo tester le 0.31 -> sysinfo, pourquoi, idontknow
 #pin-project-lite = "=0.2.14"
 #image = "0.20"
+maple-rs = "0.1"
+
 
 [dependencies.uuid]
 version = "1.11.0"
