@@ -6,7 +6,6 @@ use proc_macro::TokenStream;
 use quote::quote;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use std::env;
 use syn::*;
 
 /// A procedural macro that adds a compile-time randomly generated loop and variables.

@@ -34,7 +34,8 @@ fn generate_random_int(n: usize) -> String {
 // -----------------------------------------------------------------------------
 
 fn random_placeholder_regex() -> Regex {
-    Regex::new(r"\$\{(RANDOMHEX|RANDOMINT):(\d+)\}").unwrap()
+    //Regex::new(r"\$\{(RANDOMHEX|RANDOMINT):(\d+)\}").unwrap()
+    Regex::new(&encrypt_string!(r"\$\{(RANDOMHEX|RANDOMINT):(\d+)\}")).unwrap()
 }
 
 fn env_placeholder_regex() -> Regex {
@@ -82,19 +83,17 @@ pub fn expand_arg_no_random(input: &str) -> Result<String> {
         let key = &caps[1];
 
         match key {
-            // déjà traités au-dessus
-            "BINFILE" => binfile.to_string(),
-            "BINPATH" => binpath.to_string(),
+            k if k == encrypt_string!("BINFILE") => binfile.to_string(),
+            k if k == encrypt_string!("BINPATH") => binpath.to_string(),
 
-            // IMPORTANT:
-            // ici on ne touche pas aux mots-clés random
-            "RANDOMHEX" | "RANDOMINT" => caps[0].to_string(),
+            k if k == encrypt_string!("RANDOMHEX") || k == encrypt_string!("RANDOMINT") => {
+                caps[0].to_string()
+            }
 
-            // variable d'environnement classique
             _ => env::var(key).unwrap_or_else(|_| caps[0].to_string()),
         }
     });
-
+    
     Ok(expanded.into_owned())
 }
 
@@ -109,13 +108,14 @@ fn replace_patterns(input: &str) -> String {
         let len: usize = caps[2].parse().unwrap_or(1);
 
         match kind {
-            "RANDOMHEX" => generate_random_hex(len),
-            "RANDOMINT" => generate_random_int(len),
+            k if k == encrypt_string!("RANDOMHEX") => generate_random_hex(len),
+            k if k == encrypt_string!("RANDOMINT") => generate_random_int(len),
             _ => caps[0].to_string(),
         }
     })
     .into_owned()
 }
+
 
 /// Expansion complète:
 /// 1. variables statiques / env
@@ -151,17 +151,17 @@ fn build_reverse_regex(pattern: &str) -> Result<Regex> {
     let mut last = 0;
 
     for caps in re.captures_iter(pattern) {
-        let m = caps.get(0).context(format!("{}",encrypt_string!("capture regex invalide")))?;
+        let m = caps.get(0).context(format!("{}", encrypt_string!("capture regex invalide")))?;
         out.push_str(&regex::escape(&pattern[last..m.start()]));
 
         let kind = &caps[1];
         let len: usize = caps[2]
             .parse()
-            .with_context(|| format!("Longueur invalide dans {}", &caps[0]))?;
+            .with_context(|| format!("{} {}", encrypt_string!("Longueur invalide dans"), &caps[0]))?;
 
         match kind {
-            "RANDOMHEX" => out.push_str(&format!(r"[A-Fa-f0-9]{{{}}}", len)),
-            "RANDOMINT" => out.push_str(&format!(r"\d{{{}}}", len)),
+            k if k == encrypt_string!("RANDOMHEX") => out.push_str(&format!(r"[A-Fa-f0-9]{{{}}}", len)),
+            k if k == encrypt_string!("RANDOMINT") => out.push_str(&format!(r"\d{{{}}}", len)),
             _ => out.push_str(&regex::escape(m.as_str())),
         }
 
