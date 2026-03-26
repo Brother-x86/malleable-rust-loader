@@ -1,0 +1,13 @@
+[package]
+name = "cryptify"
+version = "3.2.1"
+edition = "2021"
+authors = ["Pranav Dronavalli <dronavallipranav@gmail.com>"]
+description = "A procedural macro library to obfuscate Rust code. Provides compile-time string encryption and random flow obfuscation."
+license = "MIT"
+repository = "https://github.com/dronavallipranav/rust-obfuscator/tree/main/cryptify"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+labyrinth_macros = "3.0.2"

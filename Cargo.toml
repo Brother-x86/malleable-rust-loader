@@ -44,7 +44,7 @@ rot13 = "0.1.1"
 regex = "1.10.6"
 gethostname = "0.5.0"
 env_logger = "0.10.2"
-cryptify = "3.1.1"
+cryptify = { path = "./cryptify" }
 argparse = "0.2.2"
 image = "0.21"
 shellexpand = "3.1.0"
@@ -78,8 +78,6 @@ features = [
 ]
 
 [target.'cfg(windows)'.dependencies]
-memorymodule-rs = "0.0.3"
-obfstr = "0.4.3"
 windows-sys = { version = "0.45.0" , features = [
     "Win32_Foundation",
     "Win32_Security",

