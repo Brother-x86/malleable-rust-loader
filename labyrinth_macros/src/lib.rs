@@ -1,0 +1,103 @@
+//! `labyrinth_macros` crate provides procedural macros for compile-time obfuscation. NOT MEANT TO BE USED STANDALONE.
+//!
+//! This crate includes macros like `encrypt_string` and `flow_stmt` which are used
+//! to enhance the security of Rust code by obfuscating strings and control flows.
+use proc_macro::TokenStream;
+use quote::quote;
+use rand::seq::SliceRandom;
+use rand::Rng;
+use std::env;
+use syn::*;
+
+/// A procedural macro that adds a compile-time randomly generated loop and variables.
+///
+/// # Note
+/// The unsafe operation is meant to help the dummy loop survive compiler optimizations. only writes to dummy variable
+///
+#[proc_macro]
+pub fn flow_stmt(_: TokenStream) -> TokenStream {
+    let mut rng = rand::thread_rng();
+
+    let initial_value = rng.gen_range(1..=10);
+    let increment_value = rng.gen_range(1..=4);
+    let upper_bound = rng.gen_range(50..=100);
+    let add_extra_dummy_variable = rng.gen_bool(0.5);
+
+    let mut statements = vec![
+        quote! { let mut _dummy_counter = std::hint::black_box(#initial_value as i32); },
+        quote! { let _dummy_increment = std::hint::black_box(#increment_value as i32); },
+        quote! { let _dummy_upper_bound = std::hint::black_box(#upper_bound as i32); },
+    ];
+
+    //add random dummy variable occasionally
+    if add_extra_dummy_variable {
+        let extra_dummy_value = rng.gen_range(1..=10);
+        statements.push(
+            quote! { let _extra_dummy_var = std::hint::black_box(#extra_dummy_value as i32); },
+        );
+    }
+
+    //randomize the order of variable assignments
+    statements.shuffle(&mut rng);
+
+    let loop_block = quote! {
+        loop {
+            if std::hint::black_box(_dummy_counter) > std::hint::black_box(_dummy_upper_bound) {
+                break;
+            }
+            //hide what expr evaluates to to stop compiler
+            _dummy_counter = std::hint::black_box(std::hint::black_box(_dummy_counter) + std::hint::black_box(_dummy_increment));
+        }
+    };
+
+    let generated_loop = quote! {
+        {
+            let _is_dummy_145 = true;
+            #(#statements)*
+            #loop_block
+        }
+    };
+
+    TokenStream::from(generated_loop)
+}
+/// A procedural macro that encrypts a string literal at compile time.
+///
+/// # Parameters
+/// - `input`: The string literal to be encrypted.
+///
+#[proc_macro]
+pub fn encrypt_string(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as LitStr);
+    let string = input.value();
+
+    //set key to seeded env key or default
+    let key = "invalidarray".to_string();
+
+    let encrypted_string = xor_cipher(&string, &key);
+
+    let output = quote! {
+        cryptify::decrypt_string(#encrypted_string)
+    };
+
+    TokenStream::from(output)
+}
+
+fn xor_cipher(input: &str, key: &str) -> String {
+    input
+        .chars()
+        .zip(key.chars().cycle())
+        .map(|(input_char, key_char)| ((input_char as u8) ^ (key_char as u8)) as char)
+        .collect()
+}
+
+//for self-contained tests
+#[allow(dead_code)]
+fn decrypt_string(encrypted: &str) -> String {
+    let key = "invalidarray".to_string();
+    encrypted
+        .chars()
+        .zip(key.chars().cycle())
+        .map(|(encrypted_char, key_char)| ((encrypted_char as u8) ^ (key_char as u8)) as char)
+        .collect()
+}
+

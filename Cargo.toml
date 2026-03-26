@@ -32,6 +32,7 @@ log = { version = "0.4.22", features = ["release_max_level_off"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "=0.4.38", features = ["serde"]}
+cryptify = { path = "./cryptify" }
 chksum-sha2-512 = "0.0.0"
 ring = "0.17.8"
 rand = "0.8.5"
@@ -44,7 +45,6 @@ rot13 = "0.1.1"
 regex = "1.10.6"
 gethostname = "0.5.0"
 env_logger = "0.10.2"
-cryptify = { path = "./cryptify" }
 argparse = "0.2.2"
 image = "0.21"
 shellexpand = "3.1.0"

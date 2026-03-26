@@ -7,7 +7,7 @@ pub use labyrinth_macros::*;
 /// - `input`: The encrypted string literal
 ///
 pub fn decrypt_string(encrypted: &str) -> String {
-    let key = "xnasff3wcedj".to_string();
+    let key = "invalidarray".to_string();
     encrypted
         .chars()
         .zip(key.chars().cycle())
