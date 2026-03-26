@@ -6,3 +6,22 @@ ardaku/whoami
 rust
 RUST
 lib.rs
+Failed to read relocation block
+Failed to read relocation entries
+Failed to read import descriptor
+Failed to set section protection: 
+Failed to read TLS directory
+Failed to load library 
+Could not prepare assembly due to a safe array related error
+Could not retrieve assembly
+Failed while running `ToString`:
+Main()Main(System.String[])
+Cannot handle an entrypoint with this method signature
+Could not retrieve entrypoint
+Could not retrieve default app domain
+Could not invoke method
+Could not retrieve ICLR
+Failed while running `IsLoadable`
+Failed while running `IsStarted`
+Could not enumerate installed runtimes
+Could not retrieve ICorRuntimeHost

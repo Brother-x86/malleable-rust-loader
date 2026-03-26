@@ -457,7 +457,7 @@ impl CCC {
 
     pub fn backup_config(&self) {
         for backup_file in &self.backup_config {
-            info!("{}{}", encrypt_string!("[+] backup_file: "), serde_json::to_string_pretty(backup_file).unwrap_or_default());
+            info!("{}{}", encrypt_string!("[+] backup_file: "), serde_json::to_string(backup_file).unwrap_or_default());
             self.backup_config_to_file(&mut backup_file.clone());
         }
     }
