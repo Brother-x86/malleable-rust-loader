@@ -15,7 +15,6 @@ Failed to load library
 Could not prepare assembly due to a safe array related error
 Could not retrieve assembly
 Failed while running `ToString`:
-Main()Main(System.String[])
 Cannot handle an entrypoint with this method signature
 Could not retrieve entrypoint
 Could not retrieve default app domain
@@ -25,3 +24,57 @@ Failed while running `IsLoadable`
 Failed while running `IsStarted`
 Could not enumerate installed runtimes
 Could not retrieve ICorRuntimeHost
+v2.0.50727
+v3.0
+v4.0.30319
+library/core
+library/std
+library/alloc
+Invalid PE optional header magic
+PE optional header size is too small
+Invalid PE optional header size
+Invalid PE magic
+DLL initialization failed
+Failed to allocate memory
+No entry point found
+annot execute DLL entry point
+Not a DLL
+No DLL entry point found
+DLL application initialization failed
+Failed to free memory
+Import name out of bounds
+Invalid RVA for import name
+Module not loaded
+No named exports
+Invalid function name
+Function ordinal
+Function not implemented
+No export directory
+Invalid export directory
+Invalid name pointer
+Invalid ordinal
+Invalid function RVA
+Invalid section headerNot a 64-bit executable
+Invalid optional header
+Invalid file header
+Invalid NT signature
+Invalid NT headers offset
+Invalid DOS signature
+File too small for DOS header
+Section data exceeds file size
+Unsupported relocation type:
+haystack too small
+TIFF signature not found
+TIFF signature invalid
+Unsupported color type
+Entry and PNG dimensions do not match
+The PNG is not in RGBA format
+Entry specified a length that is shorter than PNG header
+Invalid PE headers offset or size
+Invalid PE number of RVA and sizes
+Invalid RVA for string
+Invalid UTF-8 import name
+Could not find any runtimes
+Could not retrieve type
+Could not retrieve method
+Error while creating instance
