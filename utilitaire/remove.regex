@@ -70,10 +70,6 @@ Unsupported color type
 Entry and PNG dimensions do not match
 The PNG is not in RGBA format
 Entry specified a length that is shorter than PNG header
-Invalid PE headers offset or size
-Invalid PE number of RVA and sizes
-Invalid RVA for string
-Invalid UTF-8 import name
 Could not find any runtimes
 Could not retrieve type
 Could not retrieve method
