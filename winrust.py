@@ -13,6 +13,12 @@ if "malleable-rust-loader" in working_dir:
 else:
     malleable_rust_loader=False
 
+if "packer-en-rust" in working_dir:
+    packer_en_rust=True
+else:
+    packer_en_rust=False
+
+
 parser = argparse.ArgumentParser(
                     prog = 'winrust',
                     description = 'Tools to help from Linux to compile rust code Windows and then exec it into a Windows host by uploading with SMB + use some some impacket LateralMovement techniques',
@@ -21,9 +27,15 @@ parser = argparse.ArgumentParser(
 if malleable_rust_loader:
     parser.add_argument('-bin',default='loader',help='target bin')
     parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
+    parser.add_argument('--nop',default=False,action='store_true',help='dont use the bin value')
+elif packer_en_rust:
+    parser.add_argument('-bin',default='loaderhttpnostdclean',help='target bin')
+    parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
+    parser.add_argument('--nop',default=True,action='store_true',help='dont use the bin value')
 elif os.path.isdir("src/bin"):
     parser.add_argument('bin', help='target bin')
     parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
+    parser.add_argument('--nop',default=False,action='store_true',help='dont use the bin value')
 else:
     import re
     with open("Cargo.toml") as f:
@@ -72,6 +84,7 @@ def main():
     log.addHandler(ch)
 
     log.info("Winrust start 🔥")
+
     log.debug(f"args_bin={args.bin}")
 
     if args.loader :
@@ -131,9 +144,12 @@ def main():
         dll_smb=""
         file_format="exe"
         bin_comm=f'''--bin "{args.bin}"'''
+        
 
     if args.nobin:
         bin_comm=""
+    elif args.nop:
+        bin_comm=f'''-p "{args.bin}"'''
 
 
 
@@ -223,59 +239,66 @@ NOT ACTIVATED:
     # https://claude.ai/chat/7e82e06a-b6ee-4cca-8142-6fab827d78df
     # Les flags les plus gourmands en RAM/CPU sont clairement bcf_loop, constenc_times et fw_times. Voici une config allégée :
 
-        rustflags = " ".join([
-            "-C llvm-args=--enable-bcfobf",
-            "-C llvm-args=--enable-antihook",
-            "-C llvm-args=--enable-strcry",
-            "-C llvm-args=--strcry_prob=100",
-            "-C llvm-args=--enable-constenc",
-            "-C llvm-args=--enable-acdobf",
-            "-C llvm-args=--enable-cffobf",
-            "-C llvm-args=--enable-fco",
-            "-C llvm-args=--enable-funcwra",
-            "-C llvm-args=--enable-indibran",
-            "-C llvm-args=--enable-name-compression",
-            "-C llvm-args=--enable-splitobf",
-            "-C llvm-args=--enable-subobf",
-            # BCF junk code
-            "-C llvm-args=--bcf_prob=50",
-            "-C llvm-args=--bcf_loop=1",
-            "-C llvm-args=--bcf_junkasm",
-            "-C llvm-args=--bcf_junkasm_minnum=1",
-            "-C llvm-args=--bcf_junkasm_maxnum=2",
-            # Substitution
-            "-C llvm-args=--sub_prob=100",
-            "-C llvm-args=--sub_loop=1",
-            # Constant encryption
-            "-C llvm-args=--constenc_times=1",
-            "-C llvm-args=--constenc_togv",
-            "-C llvm-args=--constenc_togv_prob=100",
-            "-C llvm-args=--constenc_subxor",
-            "-C llvm-args=--constenc_subxor_prob=100",
-            # Indirect branch
-            "-C llvm-args=--indibran-use-stack",
-            "-C llvm-args=--indibran-enc-jump-target",
-            # Function wrapper
-            "-C llvm-args=--fw_prob=100",
-            "-C llvm-args=--fw_times=1",
-            # Block splitting
-            "-C llvm-args=--split_num=1",
-            "-C llvm-args=--hikari",  # Active le moteur IR obfuscation global
 
-            "-C llvm-args=--bcf_createfunc",  # Met le junk dans de vraies fonctions = plus dur à éliminer
-            "-C link-arg=-Wl,--no-gc-sections",  # Désactive le garbage collect des sections
-        ])
+        if packer_en_rust :
+            log.info('packer_en_rust OLLVM special options')
+            rustflags = " ".join([
+                "-C llvm-args=--enable-bcfobf",
+                "-C llvm-args=--enable-antihook",
+         #   "-C llvm-args=--enable-strcry",
+         #   "-C llvm-args=--strcry_prob=100",
+                "-C llvm-args=--enable-constenc",
+                "-C llvm-args=--enable-acdobf",
+                "-C llvm-args=--enable-cffobf",
+                "-C llvm-args=--enable-fco",
+                "-C llvm-args=--enable-funcwra",
+                "-C llvm-args=--enable-indibran",
+                "-C llvm-args=--enable-name-compression",
+                "-C llvm-args=--enable-splitobf",
+                "-C llvm-args=--enable-subobf",
+                # BCF junk code
+                "-C llvm-args=--bcf_prob=100",
+                "-C llvm-args=--bcf_loop=1",
+             "-C llvm-args=--bcf_junkasm", # en cours de test
+             "-C llvm-args=--bcf_junkasm_minnum=1", # en cours de test
+             "-C llvm-args=--bcf_junkasm_maxnum=3", # en cours de test
+                # Substitution
+                "-C llvm-args=--sub_prob=100",
+                "-C llvm-args=--sub_loop=1",
+                # Constant encryption
+                #"-C llvm-args=--constenc_times=1",
+                #"-C llvm-args=--constenc_togv",
+                #"-C llvm-args=--constenc_togv_prob=30",
+                #"-C llvm-args=--constenc_subxor",
+                #"-C llvm-args=--constenc_subxor_prob=30",
+                # Indirect branch
+                "-C llvm-args=--indibran-use-stack",
+                "-C llvm-args=--indibran-enc-jump-target",
+                # Function wrapper
+                "-C llvm-args=--fw_prob=100",
+                "-C llvm-args=--fw_times=1",
+                # Block splitting
+                "-C llvm-args=--split_num=3",
+                "-C llvm-args=--hikari",  # Active le moteur IR obfuscation global
 
+                #"-C llvm-args=--bcf_createfunc",  # Met le junk dans de vraies fonctions = plus dur à éliminer
+                "-C link-arg=-Wl,--no-gc-sections",  # Désactive le garbage collect des sections
 
+                f'-C link-arg=-nostartfiles ' ,
+                f'-C link-arg=-Wl,--entry,mainCRTStartup ',
+
+            ])
+        
         comm = (
             f"sudo docker run "
             f"-v $(pwd):/projects/ "
             f"-w /projects "
             f"-e CARGO_TARGET_DIR=ollvm "
             f'-e RUSTFLAGS="{rustflags}" '
+            "-e RUST_MIN_STACK=33554432 "   # 32MB
             f"-it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 "
             f"cargo rustc {compilation_args} "
-            f"--features ollvm "
+          #DEBUGOLLVM  f"--features ollvm "
             f"--target x86_64-pc-windows-gnu "
             f"--release"
         )
