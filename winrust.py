@@ -220,7 +220,7 @@ NOT ACTIVATED:
         # --enable-allobf activation de TOUT.
         #comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e CARGO_TARGET_DIR=ollvm -e RUSTFLAGS="-C llvm-args=--enable-bcfobf -C llvm-args=--enable-antihook -C llvm-args=--enable-strcry -C llvm-args=--strcry_prob=100 -C llvm-args=--enable-constenc -C llvm-args=--enable-acdobf -C llvm-args=--enable-cffobf -C llvm-args=--enable-fco -C llvm-args=--enable-funcwra -C llvm-args=--enable-indibran -C llvm-args=--enable-name-compression -C llvm-args=--enable-splitobf -C llvm-args=--enable-subobf" -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
 
-
+        feat_ollvm=''
         rustflags = " ".join([
             "-C llvm-args=--enable-bcfobf",
             "-C llvm-args=--enable-antihook",
@@ -288,7 +288,56 @@ NOT ACTIVATED:
                 f'-C link-arg=-Wl,--entry,mainCRTStartup ',
 
             ])
-        
+        if malleable_rust_loader :
+            log.info('malleable_rust_loader OLLVM special options')
+            rustflags = " ".join([
+                "-C llvm-args=--enable-bcfobf",
+                "-C llvm-args=--enable-antihook",
+         #   "-C llvm-args=--enable-strcry",
+         #   "-C llvm-args=--strcry_prob=100",
+                "-C llvm-args=--enable-constenc",
+                "-C llvm-args=--enable-acdobf",
+                "-C llvm-args=--enable-cffobf",
+                "-C llvm-args=--enable-fco",
+                "-C llvm-args=--enable-funcwra",
+                "-C llvm-args=--enable-indibran",
+                "-C llvm-args=--enable-name-compression",
+                "-C llvm-args=--enable-splitobf",
+                "-C llvm-args=--enable-subobf",
+                # BCF junk code
+                "-C llvm-args=--bcf_prob=10",
+                "-C llvm-args=--bcf_loop=1",
+             "-C llvm-args=--bcf_junkasm", # en cours de test
+          #   "-C llvm-args=--bcf_junkasm_minnum=1", # en cours de test
+          #   "-C llvm-args=--bcf_junkasm_maxnum=3", # en cours de test
+                # Substitution
+                "-C llvm-args=--sub_prob=100",
+                "-C llvm-args=--sub_loop=1",
+                # Constant encryption
+                #"-C llvm-args=--constenc_times=1",
+                #"-C llvm-args=--constenc_togv",
+                #"-C llvm-args=--constenc_togv_prob=30",
+                #"-C llvm-args=--constenc_subxor",
+                #"-C llvm-args=--constenc_subxor_prob=30",
+                # Indirect branch
+            #    "-C llvm-args=--indibran-use-stack",
+           #     "-C llvm-args=--indibran-enc-jump-target",
+                # Function wrapper
+                "-C llvm-args=--fw_prob=100",
+                "-C llvm-args=--fw_times=1",
+                # Block splitting
+               # "-C llvm-args=--split_num=3",
+                "-C llvm-args=--hikari",  # Active le moteur IR obfuscation global
+
+                #"-C llvm-args=--bcf_createfunc",  # Met le junk dans de vraies fonctions = plus dur à éliminer
+                "-C link-arg=-Wl,--no-gc-sections",  # Désactive le garbage collect des sections
+
+                f'-C link-arg=-nostartfiles ' ,
+                f'-C link-arg=-Wl,--entry,mainCRTStartup ',
+
+            ])
+            feat_ollvm="--features ollvm "
+
         comm = (
             f"sudo docker run "
             f"-v $(pwd):/projects/ "
@@ -298,7 +347,7 @@ NOT ACTIVATED:
             "-e RUST_MIN_STACK=33554432 "   # 32MB
             f"-it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 "
             f"cargo rustc {compilation_args} "
-          #DEBUGOLLVM  f"--features ollvm "
+            f"{feat_ollvm}"
             f"--target x86_64-pc-windows-gnu "
             f"--release"
         )
