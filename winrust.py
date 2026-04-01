@@ -223,18 +223,20 @@ NOT ACTIVATED:
         feat_ollvm=''
         rustflags = " ".join([
             "-C llvm-args=--enable-bcfobf",
-            "-C llvm-args=--enable-antihook",
-            "-C llvm-args=--enable-strcry",
-            "-C llvm-args=--strcry_prob=100",
+           # "-C llvm-args=--enable-antihook",
+           # "-C llvm-args=--enable-strcry",
+           # "-C llvm-args=--strcry_prob=100",
             "-C llvm-args=--enable-constenc",
             "-C llvm-args=--enable-acdobf",
             "-C llvm-args=--enable-cffobf",
             "-C llvm-args=--enable-fco",
             "-C llvm-args=--enable-funcwra",
-            "-C llvm-args=--enable-indibran",
+           # "-C llvm-args=--enable-indibran",
             "-C llvm-args=--enable-name-compression",
             "-C llvm-args=--enable-splitobf",
             "-C llvm-args=--enable-subobf",
+
+            "-C llvm-args=--hikari"
         ])
     # https://claude.ai/chat/7e82e06a-b6ee-4cca-8142-6fab827d78df
     # Les flags les plus gourmands en RAM/CPU sont clairement bcf_loop, constenc_times et fw_times. Voici une config allégée :
@@ -288,7 +290,8 @@ NOT ACTIVATED:
                 f'-C link-arg=-Wl,--entry,mainCRTStartup ',
 
             ])
-        if malleable_rust_loader :
+        #if malleable_rust_loader :
+        if False :
             log.info('malleable_rust_loader OLLVM special options')
             rustflags = " ".join([
                 "-C llvm-args=--enable-bcfobf",
@@ -300,7 +303,7 @@ NOT ACTIVATED:
                 "-C llvm-args=--enable-cffobf",
                 "-C llvm-args=--enable-fco",
                 "-C llvm-args=--enable-funcwra",
-                "-C llvm-args=--enable-indibran",
+             #   "-C llvm-args=--enable-indibran",
                 "-C llvm-args=--enable-name-compression",
                 "-C llvm-args=--enable-splitobf",
                 "-C llvm-args=--enable-subobf",
@@ -332,8 +335,8 @@ NOT ACTIVATED:
                 #"-C llvm-args=--bcf_createfunc",  # Met le junk dans de vraies fonctions = plus dur à éliminer
                 "-C link-arg=-Wl,--no-gc-sections",  # Désactive le garbage collect des sections
 
-                f'-C link-arg=-nostartfiles ' ,
-                f'-C link-arg=-Wl,--entry,mainCRTStartup ',
+               # f'-C link-arg=-nostartfiles ' ,
+               # f'-C link-arg=-Wl,--entry,mainCRTStartup ',
 
             ])
             feat_ollvm="--features ollvm "
@@ -377,7 +380,7 @@ NOT ACTIVATED:
             os.system("x86_64-w64-mingw32-gcc -o /home/user/shared/overlord.exe overlord_mod.c -L.")
             os.system("rm overlord_mod.c")
 
-        os.system('rm -f config/*')
+        #os.system('rm -f config/*')
         log.info(os.popen(f'ls -lah {file}').read().replace('\n',''))
         log.info(os.popen(f'file {file}').read().replace('\n',''))
         log.info(os.popen(f'sha256sum {file}').read().replace('\n',''))
@@ -427,7 +430,7 @@ EOF
 
     else:
         log.info('[+] compilation failed')
-        os.system('rm -f config/*')
+        #os.system('rm -f config/*')
 
     log.info('winrust Done')
     
