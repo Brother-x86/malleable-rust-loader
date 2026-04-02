@@ -8,8 +8,13 @@ import os
 # no_loader/no_dll
 
 working_dir = os.path.basename(os.getcwd())
+
+feat_ollvm=""
+
 if "malleable-rust-loader" in working_dir:
     malleable_rust_loader=True
+    feat_ollvm="--features ollvm "
+
 else:
     malleable_rust_loader=False
 
@@ -220,7 +225,6 @@ NOT ACTIVATED:
         # --enable-allobf activation de TOUT.
         #comm=f'''sudo docker run -v $(pwd):/projects/ -w /projects -e CARGO_TARGET_DIR=ollvm -e RUSTFLAGS="-C llvm-args=--enable-bcfobf -C llvm-args=--enable-antihook -C llvm-args=--enable-strcry -C llvm-args=--strcry_prob=100 -C llvm-args=--enable-constenc -C llvm-args=--enable-acdobf -C llvm-args=--enable-cffobf -C llvm-args=--enable-fco -C llvm-args=--enable-funcwra -C llvm-args=--enable-indibran -C llvm-args=--enable-name-compression -C llvm-args=--enable-splitobf -C llvm-args=--enable-subobf" -it ngtystr/rust-obfuscator-llvm:1.89.0-20.1.5-20251230 cargo rustc {compilation_args} --features ollvm --target x86_64-pc-windows-gnu --release'''
 
-        feat_ollvm=''
         rustflags = " ".join([
             "-C llvm-args=--enable-bcfobf",
            # "-C llvm-args=--enable-antihook",
@@ -339,7 +343,6 @@ NOT ACTIVATED:
                # f'-C link-arg=-Wl,--entry,mainCRTStartup ',
 
             ])
-            feat_ollvm="--features ollvm "
 
         comm = (
             f"sudo docker run "
