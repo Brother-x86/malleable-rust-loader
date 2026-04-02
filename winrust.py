@@ -185,7 +185,18 @@ def main():
 
         #comm=f'''cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
         #comm=f'''RUSTFLAGS="-C link-arg=/DELAYLOAD:bcrypt.dll" cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
-        comm=f'''cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
+        if packer_en_rust:
+            rustflags = " ".join([
+                            f'-C link-arg=-nostartfiles ' ,
+                        f'-C link-arg=-Wl,--entry,mainCRTStartup ',
+            ])
+            rustflags=f'RUSTFLAGS="{rustflags}" '
+            print('packer-en-rust')
+            print(f'rustflags = {rustflags} ')
+        else:
+            rustflags=''
+
+        comm=f'''{rustflags}cargo rustc --target x86_64-pc-windows-gnu {comm_mode} {compilation_args}'''
         
         #RUSTFLAGS="-C llvm-args=--enable-bcfobf
         log.info(comm)
