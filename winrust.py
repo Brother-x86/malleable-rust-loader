@@ -34,7 +34,7 @@ if malleable_rust_loader:
     parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
     parser.add_argument('--nop',default=False,action='store_true',help='dont use the bin value')
 elif packer_en_rust:
-    parser.add_argument('-bin',default='loaderhttpnostdclean',help='target bin')
+    parser.add_argument('-bin',default='loader',help='target bin')
     parser.add_argument('--nobin',default=False,action='store_true',help='dont use the bin value')
     parser.add_argument('--nop',default=True,action='store_true',help='dont use the bin value')
 elif os.path.isdir("src/bin"):
