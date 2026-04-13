@@ -12,7 +12,6 @@ use log::debug;
 use log::info;
 
 pub fn encrypt_config(config: CCC, json_config_file: String) {
-    let message = "Unable to write file";
     let decrypt_file = format!("{}.encrypted", json_config_file);
 
     let mut dataoperations: Vec<DO> = vec![];
@@ -24,15 +23,14 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
 
     let path_aes_conf = format!("{decrypt_file}.aes");
     info!("[+] AES encrypted loader config: {}", path_aes_conf);
-    fs::write(&path_aes_conf, &data).expect(message);
+    let _ = fs::write(&path_aes_conf, &data);
 
     let path_aes_material = format!("{decrypt_file}.aes.dataop");
     info!("[+] AES decryption key material: {}", path_aes_material);
-    fs::write(
+    let _ = fs::write(
         &path_aes_material,
         bincode::serialize(&dataoperations).unwrap(),
-    )
-    .expect(message);
+    );
 
     // Ofuscate AES material with ROT13+BASE64
     let mut dataoperations: Vec<DO> = vec![
@@ -49,7 +47,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
         "[+] AES decryption key obfuscated with {}: {}",
         serde_json::to_string(&dataoperations).unwrap_or_default(), path_aes_material_obfuscated
     );
-    fs::write(&path_aes_material_obfuscated, &data).expect(message);
+    let _ = fs::write(&path_aes_material_obfuscated, &data);
 
     //NEW!
 
@@ -60,7 +58,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     let mut zlib_dataop: Vec<DO> = vec![DO::ZLIB];
     obfuscated_dataop_zlib =
         apply_all_dataoperations(&mut zlib_dataop, obfuscated_dataop_zlib).unwrap();
-    fs::write(&path_aes_material_obfuscated_dataop, obfuscated_dataop_zlib).expect(message);
+    let _ = fs::write(&path_aes_material_obfuscated_dataop, obfuscated_dataop_zlib);
     info!(
         "[+] AES decryption key de-obfuscation steps: {}",
         path_aes_material_obfuscated_dataop

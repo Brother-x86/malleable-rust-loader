@@ -15,7 +15,7 @@ use log::info;
 use log::warn;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct Advanced {
+pub struct Adv {
     #[serde(rename = "r")]
     pub random: u64, // fetch only x random link from pool and ignore the other, (0 not set)
     #[serde(rename = "mlb")]
@@ -37,7 +37,7 @@ pub enum POM {
     #[serde(rename = "si")]
     SIMPLE,
     #[serde(rename = "ad")]
-    ADVANCED(Advanced),
+    ADVANCED(Adv),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -72,7 +72,7 @@ impl Plk {
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
     ) -> Result<CCC, anyhow::Error> {
-        let advanced = Advanced {
+        let advanced = Adv {
             random: 0,          // fetch only x random link from pool and ignore the other, (0 not set)
             max_link_broken: 0, // how many accepted link broken before switch to next pool if no conf found, (0 not set)
             parallel: false,    // try to fetch every link in the same time, if not its one by one
@@ -87,7 +87,7 @@ impl Plk {
     pub fn update_links_advanced(
         &self,
         config: &CCC,
-        advanced: &Advanced,
+        advanced: &Adv,
         session_id: &String,
         //running_thread: &Vec<Payload>,
         run_data: &RunData,
@@ -108,8 +108,7 @@ impl Plk {
                     &mut rand::thread_rng(),
                     advanced
                         .random
-                        .try_into()
-                        .expect("Value too large to fit into usize"),
+                        .try_into()?,
                 )
                 .cloned()
                 .collect();
@@ -237,7 +236,7 @@ impl Plk {
     pub fn choose_config_from_config_list(
         &self,
         config: &CCC,
-        _advanced: &Advanced,
+        _advanced: &Adv,
         config_list: Vec<(CCC, i32)>,
     ) -> Result<CCC, anyhow::Error> {
         if config_list.len() == 0 {

@@ -106,8 +106,8 @@ impl PO {
     }
 
     pub fn is_same_payload(&self, other_payload: &PO) -> bool {
-        let self_serialized = serde_json::to_string(self).unwrap();
-        let other_serialized = serde_json::to_string(other_payload).unwrap();
+        let self_serialized = bincode::serialize(self).unwrap();
+        let other_serialized = bincode::serialize(other_payload).unwrap();
         self_serialized == other_serialized
     }
     //TODO DECOTY, la c'est que les payloads normal, il va falloir convertir
@@ -361,6 +361,7 @@ impl WZ {
             match self.link.fetch_data(config) {
                 Ok(data) => break data,
                 Err(e) => {
+                    #[cfg(debug_assertions)]
                     error!(
                         "retry={}/{} Fail fetch_data {}",
                         retries, self.retry, serde_json::to_string(&self.link).unwrap_or_default()

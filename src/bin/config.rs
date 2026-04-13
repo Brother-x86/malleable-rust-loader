@@ -213,11 +213,11 @@ impl CCC {
     }
     pub fn serialize_to_file(&self, path_file: &str) {
         let serialized: String = self.concat_loader_jsondata();
-        fs::write(path_file, &serialized).expect("Unable to write file");
+        let _ = fs::write(path_file, &serialized);
     }
     pub fn serialize_to_file_pretty(&self, path_file: &str) {
         let serialized: String = serde_json::to_string_pretty(&self).unwrap();
-        fs::write(path_file, &serialized).expect("Unable to write file");
+        let _ = fs::write(path_file, &serialized);
     }
     pub fn concat_loader_jsondata(&self) -> String {
         serde_json::to_string(&self).unwrap()

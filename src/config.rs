@@ -217,7 +217,7 @@ impl CCC {
     } */
     pub fn serialize_to_file(&self, path_file: &str) {
         let serialized: Vec<u8> = self.loader_data_serialized();
-        fs::write(path_file, &serialized).expect("Unable to write file");
+        let _ = fs::write(path_file, &serialized);
     }
     /*
     pub fn serialize_to_file_pretty(&self, path_file: &str) {
