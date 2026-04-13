@@ -33,7 +33,7 @@ fn main() {
     let key_pair = CCC::fromfile_master_keypair(keypair.as_str());
     config.sign_loader(&key_pair);
     info!("[+] Write sign_bytes to: {config_file_to_sign}");
-    config.serialize_to_file_pretty(&config_file_to_sign);
+    config.serialize_to_file(&config_file_to_sign);
     info!("[+] Done!");
     initialize_all_configs(config, config_file_to_sign.to_string());
 }

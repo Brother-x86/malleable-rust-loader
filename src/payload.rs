@@ -94,9 +94,17 @@ impl PO {
     pub fn print_payload_compact(&self) {
         debug!("+{}", self.string_payload_compact());
     }
+
+    #[cfg(debug_assertions)]
     pub fn string_payload_compact(&self) -> String {
-        format!("{}", serde_json::to_string(self).unwrap_or_default())
+        serde_json::to_string(self).unwrap_or_default()
     }
+    
+    #[cfg(not(debug_assertions))]
+    pub fn string_payload_compact(&self) -> String {
+        String::new()
+    }
+
     pub fn is_same_payload(&self, other_payload: &PO) -> bool {
         let self_serialized = serde_json::to_string(self).unwrap();
         let other_serialized = serde_json::to_string(other_payload).unwrap();

@@ -31,6 +31,7 @@ mem4 = []
 log = { version = "0.4.22", features = ["release_max_level_off"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+bincode = "1"
 chrono = { version = "=0.4.38", features = ["serde"]}
 cryptify = { path = "./cryptify" }
 chksum-sha2-512 = "0.0.0"

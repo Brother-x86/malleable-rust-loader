@@ -89,7 +89,9 @@ pub fn print_running_thread(
             msg,
             running_thread.len()
         );
+        #[cfg(debug_assertions)]
         for i in running_thread {
+            #[cfg(debug_assertions)]
             info!("{}{}", encrypt_string!("-thread: "), serde_json::to_string(&i.1).unwrap_or_default() );
         }
     } else {
@@ -105,7 +107,9 @@ pub fn print_runonce(runonce: &mut Vec<PO>, msg: String) {
             msg,
             runonce.len()
         );
+        #[cfg(debug_assertions)]
         for i in runonce {
+            #[cfg(debug_assertions)]
             info!("{}{}", encrypt_string!("-runonce: "), serde_json::to_string(i).unwrap_or_default());
         }
     } else {

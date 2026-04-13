@@ -13,6 +13,7 @@ extern crate env_logger;
 use log::error;
 use log::info;
 
+
 // ------ STANDARD compilation
 #[rustfmt::skip]
 #[cfg(not(feature="ollvm"))]
@@ -62,11 +63,11 @@ pub fn run_loader() {
     )
     .unwrap();
     let ope_for_data_op: Vec<DO> =
-        serde_json::from_slice(decrypt_key_obfuscation_steps.as_slice()).unwrap();
+    bincode::deserialize(decrypt_key_obfuscation_steps.as_slice()).unwrap();
     let initial_config_decrypt_key =
         un_apply_all_dataoperations(ope_for_data_op, obfuscated_config_decrypt_key).unwrap();
     let initial_config_decrypt_key_dataoperation: Vec<DO> =
-        serde_json::from_slice(initial_config_decrypt_key.as_slice()).unwrap();
+    bincode::deserialize(initial_config_decrypt_key.as_slice()).unwrap();
 
     info!("{}", encrypt_string!("[+] DECRYPT initial config"));
     let initial_config_decrypted = un_apply_all_dataoperations(
@@ -76,7 +77,7 @@ pub fn run_loader() {
     .unwrap();
     info!("{}", encrypt_string!("[+] DECRYPTED!"));
 
-    let mut config: CCC = serde_json::from_slice(initial_config_decrypted.as_slice()).unwrap();
+    let mut config: CCC = bincode::deserialize(initial_config_decrypted.as_slice()).unwrap();
     info!("{}", encrypt_string!("[+] VERIFY initial config"));
     config.verify_newconfig_signature(&config).unwrap();
     info!("{}{}", encrypt_string!("[+] VERIFIED!"), "\n");
@@ -110,6 +111,7 @@ pub fn run_loader() {
             run_data.loop_nb,
             encrypt_string!(" --------------------------------------------------------")
         );
+        #[cfg(debug_assertions)]
         info!("{}{}", encrypt_string!("[+] Active LOADER: "), serde_json::to_string(&config).unwrap_or_default());
 
         info!("{}", encrypt_string!("[+] DEFUSE UPDATE config"));

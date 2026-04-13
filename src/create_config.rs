@@ -7,6 +7,7 @@ use crate::link::LinkFetch;
 
 use std::fs;
 
+#[cfg(debug_assertions)]
 use log::debug;
 use log::info;
 
@@ -18,7 +19,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     let aes_mat: AM = AM::generate_aes_material();
     dataoperations.push(DO::AM(aes_mat));
 
-    let mut data: Vec<u8> = config.concat_loader_jsondata().into_bytes();
+    let mut data: Vec<u8> = config.loader_data_serialized();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 
     let path_aes_conf = format!("{decrypt_file}.aes");
@@ -29,7 +30,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     info!("[+] AES decryption key material: {}", path_aes_material);
     fs::write(
         &path_aes_material,
-        serde_json::to_string(&dataoperations).unwrap(),
+        bincode::serialize(&dataoperations).unwrap(),
     )
     .expect(message);
 
@@ -43,6 +44,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     let mut data: Vec<u8> = fs::read(format!("{decrypt_file}.aes.dataop")).unwrap();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
     let path_aes_material_obfuscated = format!("{decrypt_file}.aes.dataop.obfuscated");
+    #[cfg(debug_assertions)]
     info!(
         "[+] AES decryption key obfuscated with {}: {}",
         serde_json::to_string(&dataoperations).unwrap_or_default(), path_aes_material_obfuscated
@@ -54,7 +56,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     let path_aes_material_obfuscated_dataop =
         format!("{decrypt_file}.aes.dataop.obfuscated.dataop");
     dataoperations.reverse();
-    let mut obfuscated_dataop_zlib = serde_json::to_vec(&dataoperations).unwrap();
+    let mut obfuscated_dataop_zlib = bincode::serialize(&dataoperations).unwrap();
     let mut zlib_dataop: Vec<DO> = vec![DO::ZLIB];
     obfuscated_dataop_zlib =
         apply_all_dataoperations(&mut zlib_dataop, obfuscated_dataop_zlib).unwrap();
@@ -99,6 +101,7 @@ pub fn create_extension_filename(dataop: &Vec<DO>) -> String {
 pub fn initialize_all_configs(config: CCC, json_config_file: String) {
     encrypt_config(config.clone(), json_config_file.clone());
     let dataope_list = collect_all_data_operation(&config);
+    #[cfg(debug_assertions)]
     debug!("Data operation list for Config: {}", serde_json::to_string(&dataope_list).unwrap_or_default());
     for dataop in dataope_list {
         let output_filepath   =  format!("{}{}{}",env!("HOME"), "/.malleable/config/initial.json",create_extension_filename(&dataop) );
@@ -109,7 +112,8 @@ pub fn initialize_all_configs(config: CCC, json_config_file: String) {
             jitt: 0,
             sleep: 0,
         };
-
+        
+        #[cfg(debug_assertions)]
         debug!("output_filelink: {}",serde_json::to_string(&output_filelink).unwrap_or_default());
         config.backup_config_to_file(&mut output_filelink);
     }
