@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    ".",
+    "clroxide",
+]
+
 [package]
 name = "malleable-rust-loader"
 version = "0.1.0"
@@ -26,6 +32,9 @@ mem1 = []
 mem2 = []
 mem3 = []
 mem4 = []
+default-loader = []
+default = ["default-loader"]
+
 
 [dependencies]
 log = { version = "0.4.22", features = ["release_max_level_off"] }
@@ -57,7 +66,8 @@ yoke = "=0.7.4"
 sysinfo = "0.30.0"
 aes-gcm-siv = "0.11.1"
 attohttpc = "0.28.2"
-clroxide = "1.1.1"
+#clroxide = "1.1.1"
+clroxide = { path = "./clroxide" }
 shlex = "1"
 walkdir = "2"
 #native-tls = "=0.2.13"
@@ -118,6 +128,6 @@ features = [
     "Win32_System_WindowsProgramming", 
     "Win32_System_Threading", 
     "Win32_System_Kernel",
-    "Win32_Security"
+    "Win32_Security",
 ]
 
