@@ -181,13 +181,22 @@ def has_obfstr_import(lines: list) -> bool:
 
 def insert_import(lines: list) -> list:
     last_use_end = -1
+    brace_depth = 0
     i = 0
+
     while i < len(lines):
-        stripped = lines[i].strip()
-        if re.match(r'^use\s', stripped):
+        line = lines[i]
+        stripped = line.strip()
+
+        # Mise à jour de la profondeur pour détecter si on est au niveau racine
+        brace_depth += line.count('{') - line.count('}')
+
+        # On ne considère que les `use` au niveau racine (brace_depth == 0)
+        if brace_depth == 0 and re.match(r'^use\s', stripped):
             if stripped.endswith(';'):
                 last_use_end = i
             else:
+                # use multi-lignes avec accolades : on suit jusqu'à la fermeture
                 depth = stripped.count('{') - stripped.count('}')
                 j = i
                 while depth > 0 and j < len(lines) - 1:
@@ -195,6 +204,7 @@ def insert_import(lines: list) -> list:
                     depth += lines[j].count('{') - lines[j].count('}')
                 last_use_end = j
                 i = j
+
         i += 1
 
     if last_use_end >= 0:
@@ -265,14 +275,18 @@ def patch(
 
     if revert:
         console.rule("[bold red]Revert git...[/bold red]")
-        result = subprocess.run(["git", "restore", str(path)], cwd=project_root)
+        git_root = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, cwd=project_root
+        ).stdout.strip()
+        result = subprocess.run(["git", "restore", str(path)], cwd=git_root)
         if result.returncode != 0:
             rprint("[yellow]git restore a echoue, essai avec git checkout...[/yellow]")
-            subprocess.run(["git", "checkout", "--", str(path)], cwd=project_root)
+            subprocess.run(["git", "checkout", "--", str(path)], cwd=git_root)
         else:
             rprint("[green]Modifications annulees avec succes.[/green]")
         raise typer.Exit(0)
-
+        
     if path.is_file() and path.suffix == '.rs':
         rs_files = [str(path)]
     else:

@@ -20,11 +20,8 @@ use log::error;
 use log::info;
 
 #[cfg(target_os = "linux")]
-use obfstr::obfstr;
-
-#[cfg(target_os = "linux")]
 pub fn set_permission(data_write_path: &PathBuf) {
-    if cfg!(target_os = obfstr!("linux")) {
+    if cfg!(target_os = "linux") {
         info!("{}{:?}", encrypt_string!("setpermision: "), data_write_path);
         std::fs::set_permissions(data_write_path, std::fs::Permissions::from_mode(0o777)).unwrap();
     };

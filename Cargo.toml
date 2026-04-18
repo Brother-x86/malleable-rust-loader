@@ -60,7 +60,8 @@ litemap = "=0.7.3"
 yoke = "=0.7.4"
 sysinfo = "0.30.0"
 aes-gcm-siv = "0.11.1"
-attohttpc = "0.28.2"
+#attohttpc = "0.28.2"
+attohttpc = { path = "./lib/attohttpc" }
 #clroxide = "1.1.1"
 clroxide = { path = "./lib/clroxide" }
 shlex = "1"
