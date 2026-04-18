@@ -177,6 +177,10 @@ def process_line(line: str) -> str:
         after = line[match.end():].lstrip()
         if after.startswith('=>'):
             return match.group(0)
+        # Ignorer le cote droit des match arms : => "..."
+        before = line[:match.start()]
+        if '=>' in before:
+            return match.group(0)
         return f'obfstr!("{content}")'
 
     return STRING_REGEX.sub(replace_string, line)
