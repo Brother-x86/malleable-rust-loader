@@ -8,6 +8,7 @@ use anyhow::{anyhow, Context, Result};
 use walkdir::WalkDir;
 
 use cryptify::encrypt_string;
+use obfstr::obfstr;
 
 fn generate_random_hex(n: usize) -> String {
     let mut rng = rand::thread_rng();
@@ -18,7 +19,7 @@ fn generate_random_hex(n: usize) -> String {
 
 fn generate_random_int(n: usize) -> String {
     if n == 0 {
-        return "0".to_string();
+        return obfstr!("0").to_string();
     }
     let max = 10u64.pow(n as u32);
     let mut rng = rand::thread_rng();
@@ -147,7 +148,7 @@ fn contains_random_placeholder(s: &str) -> bool {
 fn build_reverse_regex(pattern: &str) -> Result<Regex> {
     let re = random_placeholder_regex();
 
-    let mut out = String::from("(?i)^");
+    let mut out = String::from(obfstr!("(?i)^"));
     let mut last = 0;
 
     for caps in re.captures_iter(pattern) {
@@ -195,11 +196,11 @@ fn find_search_root(pattern: &str) -> PathBuf {
         return path
             .parent()
             .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("."));
+            .unwrap_or_else(|| PathBuf::from(obfstr!(".")));
     }
 
     if root.as_os_str().is_empty() {
-        PathBuf::from(".")
+        PathBuf::from(obfstr!("."))
     } else {
         root
     }

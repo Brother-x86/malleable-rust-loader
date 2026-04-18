@@ -293,9 +293,7 @@ impl Plk {
             );
             bail!(
                 "{}{}",
-                encrypt_string!(
-                    "No VALID config found in Pool: actual running config.date is superior to all config: "
-                ), config.date
+                encrypt_string!("No VALID config found in Pool: actual running config.date is superior to all config: "), config.date
             )
         }
     }

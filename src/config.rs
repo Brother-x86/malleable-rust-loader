@@ -26,6 +26,7 @@ use cryptify::encrypt_string;
 use log::debug;
 use log::info;
 use log::warn;
+use obfstr::obfstr;
 
 //use bincode::Encode;
 
@@ -222,13 +223,13 @@ impl CCC {
     /*
     pub fn serialize_to_file_pretty(&self, path_file: &str) {
         let serialized: String = serde_json::to_string_pretty(&self).unwrap();
-        fs::write(path_file, &serialized).expect("Unable to write file");
+        fs::write(path_file, &serialized).expect(obfstr!("Unable to write file"));
     }
     */
     /* 
     pub fn serialize_to_file(&self, path_file: &str) {
         let serialized: String = serde_json::to_string_pretty(&self).unwrap();
-        fs::write(path_file, &serialized).expect("Unable to write file");
+        fs::write(path_file, &serialized).expect(obfstr!("Unable to write file"));
     }*/
 
 
@@ -613,7 +614,7 @@ impl CCC {
         match pool_links.update_pool(&self, session_id, run_data) {
             Ok(newconf) => {
                 let run_payload: String = if restore_config {
-                    "\n".to_string()
+                    obfstr!("\n").to_string()
                 } else {
                     format!("{}", encrypt_string!(", and run the payloads"))
                 };

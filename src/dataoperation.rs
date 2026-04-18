@@ -91,15 +91,13 @@ pub trait UnApplyDataOperation {
     fn webpage_harvesting(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: WEBPAGE harvesting"));
         let haystack = String::from_utf8_lossy(&*data);
-        let re = Regex::new(r"!!!(?<ll>\S+)!!!").unwrap();
+        let re = Regex::new(obfstr!(r"!!!(?<ll>\S+)!!!")).unwrap();
 
         let Some(caps) = re.captures(&haystack) else {
-            let e: Result<Vec<u8>, anyhow::Error> = Err(anyhow::Error::msg(encrypt_string!(
-                "Failed to harvest WEBPAGE"
-            )));
+            let e: Result<Vec<u8>, anyhow::Error> = Err(anyhow::Error::msg(encrypt_string!("Failed to harvest WEBPAGE")));
             return e;
         };
-        Ok(caps["ll"].as_bytes().to_vec())
+        Ok(caps[obfstr!("ll")].as_bytes().to_vec())
     }
 
     fn stegano_decode_lsb(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -145,7 +143,7 @@ pub trait ApplyDataOperation {
 
     fn webpage_create(&self, data: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         debug!("{}", encrypt_string!("dataoperation: WEBPAGE create"));
-        Ok(format!("!!!{}!!!", std::str::from_utf8(&data)?).into_bytes())
+        Ok(format!("{}{}{}", obfstr!("!!!"), std::str::from_utf8(&data)?, obfstr!("!!!")).into_bytes())
     }
 
     //fn stegano_encode_lsb(&self, data: Vec<u8>, input_image_link:&mut LinkNoConfig, image_output_path:&mut String) -> Result<Vec<u8>, anyhow::Error> {
@@ -224,6 +222,7 @@ use aes_gcm_siv::{
     Nonce, // Or `Aes128GcmSiv`
 };
 use anyhow::bail;
+use obfstr::obfstr;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct AM {

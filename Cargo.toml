@@ -37,6 +37,7 @@ serde_json = "1.0"
 bincode = "1"
 chrono = { version = "=0.4.38", features = ["serde"]}
 cryptify = { path = "./lib/cryptify" }
+obfstr = "0.4"
 chksum-sha2-512 = "0.0.0"
 ring = "0.17.8"
 rand = "0.8.5"
@@ -73,7 +74,7 @@ walkdir = "2"
 #pin-project-lite = "=0.2.14"
 #image = "0.20"
 maple-rs = "0.1"
-
+ 
 
 [dependencies.uuid]
 version = "1.11.0"

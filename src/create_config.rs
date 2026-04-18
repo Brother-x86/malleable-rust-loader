@@ -10,9 +10,10 @@ use std::fs;
 #[cfg(debug_assertions)]
 use log::debug;
 use log::info;
+use obfstr::obfstr;
 
 pub fn encrypt_config(config: CCC, json_config_file: String) {
-    let decrypt_file = format!("{}.encrypted", json_config_file);
+    let decrypt_file = format!("{}{}", json_config_file, obfstr!(".encrypted"));
 
     let mut dataoperations: Vec<DO> = vec![];
     let aes_mat: AM = AM::generate_aes_material();
@@ -21,11 +22,11 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     let mut data: Vec<u8> = config.loader_data_serialized();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
 
-    let path_aes_conf = format!("{decrypt_file}.aes");
+    let path_aes_conf = format!("{decrypt_file}{}", obfstr!(".aes"));
     info!("[+] AES encrypted loader config: {}", path_aes_conf);
     let _ = fs::write(&path_aes_conf, &data);
 
-    let path_aes_material = format!("{decrypt_file}.aes.dataop");
+    let path_aes_material = format!("{decrypt_file}{}", obfstr!(".aes.dataop"));
     info!("[+] AES decryption key material: {}", path_aes_material);
     let _ = fs::write(
         &path_aes_material,
@@ -39,9 +40,9 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
         DO::ZLIB,
     ];
 
-    let mut data: Vec<u8> = fs::read(format!("{decrypt_file}.aes.dataop")).unwrap();
+    let mut data: Vec<u8> = fs::read(format!("{decrypt_file}{}", obfstr!(".aes.dataop"))).unwrap();
     data = apply_all_dataoperations(&mut dataoperations, data).unwrap();
-    let path_aes_material_obfuscated = format!("{decrypt_file}.aes.dataop.obfuscated");
+    let path_aes_material_obfuscated = format!("{decrypt_file}{}", obfstr!(".aes.dataop.obfuscated"));
     #[cfg(debug_assertions)]
     info!(
         "[+] AES decryption key obfuscated with {}: {}",
@@ -52,7 +53,7 @@ pub fn encrypt_config(config: CCC, json_config_file: String) {
     //NEW!
 
     let path_aes_material_obfuscated_dataop =
-        format!("{decrypt_file}.aes.dataop.obfuscated.dataop");
+        format!("{decrypt_file}{}", obfstr!(".aes.dataop.obfuscated.dataop"));
     dataoperations.reverse();
     let mut obfuscated_dataop_zlib = bincode::serialize(&dataoperations).unwrap();
     let mut zlib_dataop: Vec<DO> = vec![DO::ZLIB];
@@ -86,11 +87,11 @@ pub fn create_extension_filename(dataop: &Vec<DO>) -> String {
     let mut data_op_reverse=dataop.clone();
     data_op_reverse.reverse();
     for onedataop in data_op_reverse {
-        extension_file_name=format!("{}.{}",extension_file_name,&onedataop.name());
+        extension_file_name=format!("{}{}{}", extension_file_name, obfstr!("."), &onedataop.name());
     };
     
     if end_with_stegano {
-        format!("{}.png",extension_file_name)
+        format!("{}{}", extension_file_name, obfstr!(".png"))
     }else{
         extension_file_name
     }

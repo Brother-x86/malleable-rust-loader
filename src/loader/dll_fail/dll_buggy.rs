@@ -35,6 +35,7 @@ use winapi::shared::minwindef::LPVOID;
 use windows_sys::Win32::Foundation::BOOL;
 use windows_sys::Win32::Foundation::HINSTANCE;
 use windows_sys::Win32::System::LibraryLoader::DisableThreadLibraryCalls;
+use obfstr::obfstr;
 
 // TODO only if DllMain compilation option
 #[no_mangle]
@@ -50,16 +51,16 @@ extern "system" fn DllMain(dll_module: HINSTANCE, call_reason: DWORD, reserved: 
     }
 
     if call_reason == DLL_PROCESS_ATTACH {
-        println!("DLL_PROCESS_ATTACH");
+        println!("{}", obfstr!("DLL_PROCESS_ATTACH"));
         //run_loader();
     } else if call_reason == DLL_PROCESS_DETACH {
-        println!("DLL_PROCESS_DETACH");
+        println!("{}", obfstr!("DLL_PROCESS_DETACH"));
     } else if call_reason == DLL_THREAD_ATTACH {
-        println!("DLL_THREAD_ATTACH");
+        println!("{}", obfstr!("DLL_THREAD_ATTACH"));
     } else if call_reason == DLL_THREAD_DETACH {
-        println!("DLL_THREAD_DETACH");
+        println!("{}", obfstr!("DLL_THREAD_DETACH"));
     } else {
-        println!("Valeur inconnue");
+        println!("{}", obfstr!("Valeur inconnue"));
     };
 
     minwindef::TRUE

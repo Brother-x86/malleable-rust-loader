@@ -3,6 +3,7 @@ use std::thread;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::time::Duration;
+use obfstr::obfstr;
 
 struct ThreadManager {
     threads: Arc<Mutex<Vec<thread::JoinHandle<()>>>>,
@@ -35,7 +36,7 @@ fn log_message(message: &str) {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("dll_log.txt")
+        .open(obfstr!("dll_log.txt"))
         .unwrap();
 
     writeln!(file, "{}", message).unwrap();
@@ -46,7 +47,7 @@ fn log_message(message: &str) {
 pub extern "system" fn DllMain(hinst_dll: *mut std::ffi::c_void, fdw_reason: u32, lp_reserved: *mut std::ffi::c_void) -> i32 {
     match fdw_reason {
         1 => { // DLL_PROCESS_ATTACH
-            log_message("DllMain start");
+            log_message(obfstr!("DllMain start"));
 
             // Créer un thread secondaire qui démarre plus tard
             thread::spawn(|| {
@@ -57,24 +58,24 @@ pub extern "system" fn DllMain(hinst_dll: *mut std::ffi::c_void, fdw_reason: u32
                 let thread_manager = Arc::new(ThreadManager::new());
 
                 thread_manager.spawn(|| {
-                    log_message("Thread 1 lancé!");
+                    log_message(obfstr!("Thread 1 lancé!"));
                     thread::sleep(Duration::from_secs(2)); // Simuler un travail
-                    log_message("Thread 1 terminé!");
+                    log_message(obfstr!("Thread 1 terminé!"));
                 });
 
                 thread_manager.spawn(|| {
-                    log_message("Thread 2 lancé!");
+                    log_message(obfstr!("Thread 2 lancé!"));
                     thread::sleep(Duration::from_secs(3)); // Simuler un travail
-                    log_message("Thread 2 terminé!");
+                    log_message(obfstr!("Thread 2 terminé!"));
                 });
 
                 // Attendre la fin des threads
-                log_message("join_all");
+                log_message(obfstr!("join_all"));
                 thread_manager.join_all();
-                log_message("Tous les threads sont terminés.");
+                log_message(obfstr!("Tous les threads sont terminés."));
             });
 
-            log_message("DllMain end");
+            log_message(obfstr!("DllMain end"));
         }
         _ => {}
     }

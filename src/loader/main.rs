@@ -12,6 +12,7 @@ use std::thread;
 extern crate env_logger;
 use log::error;
 use log::info;
+use obfstr::obfstr;
 
 
 // ------ STANDARD compilation
@@ -155,7 +156,7 @@ pub fn run_loader() {
             encrypt_string!("[+] END LOOP "),
             run_data.loop_nb,
             encrypt_string!(" ----------------------------------------------------------"),
-            "\n"
+            obfstr!("\n")
         );
         run_data.loop_nb = run_data.loop_nb + 1;
     }

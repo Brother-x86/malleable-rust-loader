@@ -10,6 +10,7 @@ use winapi::shared::minwindef::LPVOID;
 use windows_sys::Win32::Foundation::BOOL;
 use windows_sys::Win32::Foundation::HINSTANCE;
 use windows_sys::Win32::System::LibraryLoader::DisableThreadLibraryCalls;
+use obfstr::obfstr;
 
 struct ThreadManager {
     threads: Arc<Mutex<Vec<thread::JoinHandle<()>>>>,
@@ -54,25 +55,25 @@ extern "system" fn DllMain(dll_module: HINSTANCE, call_reason: DWORD, reserved: 
                 if let Some(manager) = &THREAD_MANAGER {
                     // Lancer les threads
                     manager.spawn(|| {
-                        println!("Thread 1 clean");
+                        println!("{}", obfstr!("Thread 1 clean"));
                         io::stdout().flush().unwrap();
                         let sleep_time: time::Duration = time::Duration::from_millis(1000);
                         thread::sleep(sleep_time);            
                     });
 
                     manager.spawn(|| {
-                        println!("Thread 2 clean");
+                        println!("{}", obfstr!("Thread 2 clean"));
                         io::stdout().flush().unwrap();
                         let sleep_time: time::Duration = time::Duration::from_millis(1000);
                         thread::sleep(sleep_time);            
                     });
 
                     // Attendre que tous les threads terminent
-                    println!("Attente de la fin des threads...");
+                    println!("{}", obfstr!("Attente de la fin des threads..."));
                     manager.join_all(); // Attend que tous les threads se terminent
                 }
 
-                println!("good job");
+                println!("{}", obfstr!("good job"));
                 io::stdout().flush().unwrap();
             });
 

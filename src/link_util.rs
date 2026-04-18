@@ -99,10 +99,11 @@ pub fn bytes_to_gigabytes(bytes: u64) -> f64 {
 }
 
 pub fn bytes_to_gigabytes_string(bytes: u64) -> String {
-    format!("{:.2} Go", bytes_to_gigabytes(bytes))
+    format!("{:.2}{}", bytes_to_gigabytes(bytes), obfstr!(" Go"))
 }
 
 use log::debug;
+use obfstr::obfstr;
 
 pub fn read_file(target:&String)-> Result<Vec<u8>, anyhow::Error>{
     debug!("{}{}", encrypt_string!("File Open: "), target);
