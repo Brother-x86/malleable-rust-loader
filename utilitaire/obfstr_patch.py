@@ -12,11 +12,14 @@ app = typer.Typer(
     name="obfstr-patch",
     help="🔒 Obfusque automatiquement les strings dans les fichiers Rust avec obfstr!",
     pretty_exceptions_show_locals=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 console = Console()
 
 SKIP_PATTERNS = [
     r'obfstr!',
+    r'encrypt_string!',
+    r'include_bytes!', 
     r'\bpub\b',
     r'\bfn\b',
     r'\bextern\b',
@@ -248,7 +251,7 @@ def patch(
     dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Simule sans modifier les fichiers"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Affiche aussi les fichiers skippes"),
     diff: bool = typer.Option(False, "--diff", "-d", help="Affiche les lignes modifiees avant/apres"),
-    exclude: Optional[str] = typer.Option(None, "--exclude", "-e", help="Pattern a exclure (ex: 'tests|examples')"),
+    exclude: Optional[str] = typer.Option(None, "--exclude", "-e", help="Dossier ou pattern a exclure (ex: 'examples' ou 'tests|examples')"),
     revert: bool = typer.Option(False, "--revert", "-r", help="Annule toutes les modifications non commitees via git restore"),
 ):
     """
@@ -262,10 +265,10 @@ def patch(
 
     if revert:
         console.rule("[bold red]Revert git...[/bold red]")
-        result = subprocess.run(["git", "restore", "."], cwd=project_root)
+        result = subprocess.run(["git", "restore", str(path)], cwd=project_root)
         if result.returncode != 0:
             rprint("[yellow]git restore a echoue, essai avec git checkout...[/yellow]")
-            subprocess.run(["git", "checkout", "--", "."], cwd=project_root)
+            subprocess.run(["git", "checkout", "--", str(path)], cwd=project_root)
         else:
             rprint("[green]Modifications annulees avec succes.[/green]")
         raise typer.Exit(0)
