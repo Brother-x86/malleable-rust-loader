@@ -1,9 +1,3 @@
-[workspace]
-members = [
-    ".",
-    "clroxide",
-]
-
 [package]
 name = "malleable-rust-loader"
 version = "0.1.0"
@@ -42,7 +36,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1"
 chrono = { version = "=0.4.38", features = ["serde"]}
-cryptify = { path = "./cryptify" }
+cryptify = { path = "./lib/cryptify" }
 chksum-sha2-512 = "0.0.0"
 ring = "0.17.8"
 rand = "0.8.5"
@@ -67,7 +61,7 @@ sysinfo = "0.30.0"
 aes-gcm-siv = "0.11.1"
 attohttpc = "0.28.2"
 #clroxide = "1.1.1"
-clroxide = { path = "./clroxide" }
+clroxide = { path = "./lib/clroxide" }
 shlex = "1"
 walkdir = "2"
 #native-tls = "=0.2.13"
