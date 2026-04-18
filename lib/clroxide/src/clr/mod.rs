@@ -6,6 +6,7 @@ use std::ffi::c_void;
 use windows::Win32::System::Com::VARIANT;
 #[cfg(feature = "default-loader")]
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryA};
+use obfstr::obfstr;
 
 pub struct Clr {
     contents: Vec<u8>,
@@ -37,7 +38,7 @@ pub struct OutputContext {
 impl Clr {
     #[cfg(feature = "default-loader")]
     pub fn new(contents: Vec<u8>, arguments: Vec<String>) -> Result<Clr, String> {
-        let create_interface = load_function("mscoree.dll", "CreateInterface")?;
+        let create_interface = load_function(obfstr!("mscoree.dll"), obfstr!("CreateInterface"))?;
 
         Ok(Clr {
             contents,
@@ -55,7 +56,7 @@ impl Clr {
         arguments: Vec<String>,
         version: RuntimeVersion,
     ) -> Result<Clr, String> {
-        let create_interface = load_function("mscoree.dll", "CreateInterface")?;
+        let create_interface = load_function(obfstr!("mscoree.dll"), obfstr!("CreateInterface"))?;
 
         Ok(Clr {
             contents,
@@ -69,7 +70,7 @@ impl Clr {
 
     #[cfg(feature = "default-loader")]
     pub fn context_only(version: Option<RuntimeVersion>) -> Result<Clr, String> {
-        let create_interface = load_function("mscoree.dll", "CreateInterface")?;
+        let create_interface = load_function(obfstr!("mscoree.dll"), obfstr!("CreateInterface"))?;
 
         Ok(Clr {
             contents: vec![],
@@ -147,7 +148,7 @@ impl Clr {
 
     pub fn use_app_domain(&mut self, app_domain: *mut _AppDomain) -> Result<(), String> {
         if self.context.is_none() {
-            return Err("CLR Context has not been initialized".into());
+            return Err(obfstr!("CLR Context has not been initialized").into());
         }
 
         let context = self.context.as_mut().unwrap();
@@ -183,25 +184,25 @@ impl Clr {
         let context = self.get_context()?;
 
         // Get mscorlib assembly
-        let mscorlib = unsafe { (*(&context).app_domain).load_library("mscorlib")? };
+        let mscorlib = unsafe { (*(&context).app_domain).load_library(obfstr!("mscorlib"))? };
 
         // Sort out console related types/functions
-        let console = unsafe { (*mscorlib).get_type("System.Console")? };
+        let console = unsafe { (*mscorlib).get_type(obfstr!("System.Console"))? };
 
-        let get_out = unsafe { (*console).get_method("get_Out")? };
-        let set_out = unsafe { (*console).get_method("SetOut")? };
-        let get_err = unsafe { (*console).get_method("get_Error")? };
-        let set_err = unsafe { (*console).get_method("SetError")? };
+        let get_out = unsafe { (*console).get_method(obfstr!("get_Out"))? };
+        let set_out = unsafe { (*console).get_method(obfstr!("SetOut"))? };
+        let get_err = unsafe { (*console).get_method(obfstr!("get_Error"))? };
+        let set_err = unsafe { (*console).get_method(obfstr!("SetError"))? };
 
         let old_out = unsafe { (*get_out).invoke_without_args(None)? };
         let old_err = unsafe { (*get_err).invoke_without_args(None)? };
 
         // Sort out string writer related types/functions
-        let string_writer = unsafe { (*mscorlib).get_type("System.IO.StringWriter")? };
-        let to_string = unsafe { (*string_writer).get_method("ToString")? };
+        let string_writer = unsafe { (*mscorlib).get_type(obfstr!("System.IO.StringWriter"))? };
+        let to_string = unsafe { (*string_writer).get_method(obfstr!("ToString"))? };
 
         let string_writer_instance =
-            unsafe { (*mscorlib).create_instance("System.IO.StringWriter")? };
+            unsafe { (*mscorlib).create_instance(obfstr!("System.IO.StringWriter"))? };
 
         let method_args = wrap_method_arguments(vec![string_writer_instance.clone()])?;
 
@@ -224,7 +225,7 @@ impl Clr {
 
     pub fn restore_output(&mut self) -> Result<(), String> {
         if self.output_context.is_none() {
-            return Err("Output context has not been initialized".into());
+            return Err(obfstr!("Output context has not been initialized").into());
         }
 
         let context = self.output_context.as_ref().unwrap();
@@ -248,7 +249,7 @@ impl Clr {
 
     pub fn get_redirected_output(&mut self) -> Result<String, String> {
         if self.output_context.is_none() {
-            return Err("Output context has not been initialized".into());
+            return Err(obfstr!("Output context has not been initialized").into());
         }
 
         let context = self.output_context.as_ref().unwrap();
@@ -309,17 +310,17 @@ impl Clr {
 fn load_function(library_name: &str, function_name: &str) -> Result<isize, String> {
     let library = match unsafe {
         LoadLibraryA(windows::core::PCSTR::from_raw(
-            format!("{}\0", library_name).as_ptr(),
+            format!("{}{}", library_name, obfstr!("\0")).as_ptr(),
         ))
     } {
         Ok(hinstance) => hinstance,
-        Err(e) => return Err(format!("Error while loading `{}`: {}", library_name, e)),
+        Err(e) => return Err(format!("{}{}{}{}", obfstr!("Error while loading `"), library_name, obfstr!("`: "), e)),
     };
 
     return match unsafe {
         GetProcAddress(
             library,
-            windows::core::PCSTR::from_raw(format!("{}\0", function_name).as_ptr()),
+            windows::core::PCSTR::from_raw(format!("{}{}", function_name, obfstr!("\0")).as_ptr()),
         )
     } {
         None => Err(format!(

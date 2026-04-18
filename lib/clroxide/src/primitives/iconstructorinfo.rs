@@ -13,6 +13,7 @@ use windows::{
         Ole::SafeArrayCreateVector,
     },
 };
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct _ConstructorInfo {
@@ -88,7 +89,7 @@ impl _ConstructorInfo {
         let hr = unsafe { (*self).Invoke_5(args, &mut return_value) };
 
         if hr.is_err() {
-            return Err(format!("Could not invoke method: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not invoke method: "), hr));
         }
 
         Ok(return_value)
@@ -105,7 +106,7 @@ impl _ConstructorInfo {
         let hr = unsafe { (*self).GetParameters(&mut safe_array_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Could not get parameter count: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not get parameter count: "), hr));
         }
 
         Ok(get_array_length(safe_array_ptr))
@@ -117,7 +118,7 @@ impl _ConstructorInfo {
         let hr = unsafe { (*self).ToString(&mut buffer as *mut _ as *mut *mut u16) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `ToString`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `ToString`: "), hr));
         }
 
         Ok(buffer.to_string())

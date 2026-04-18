@@ -15,6 +15,7 @@ use windows::{
         },
     },
 };
+use obfstr::obfstr;
 
 pub fn prepare_assembly(bytes: &[u8]) -> Result<*mut SAFEARRAY, String> {
     let mut bounds = SAFEARRAYBOUND {
@@ -206,7 +207,7 @@ pub fn unpack_byte_array(safe_array_ptr: *mut SAFEARRAY) -> Result<Vec<u8>, Stri
 
         match unsafe { SafeArrayGetElement(safe_array_ptr, indices.as_ptr(), pv) } {
             Ok(_) => {},
-            Err(e) => return Err(format!("Could not access safe array: {:?}", e.code())),
+            Err(e) => return Err(format!("{}{:?}", obfstr!("Could not access safe array: "), e.code())),
         }
 
         if !pv.is_null() {

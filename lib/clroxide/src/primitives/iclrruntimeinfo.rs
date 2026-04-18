@@ -3,6 +3,7 @@ use crate::primitives::{
 };
 use std::{ffi::c_void, fmt::Display, ops::Deref, ptr};
 use windows::core::{BSTR, PWSTR};
+use obfstr::obfstr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum RuntimeVersion {
@@ -13,12 +14,12 @@ pub enum RuntimeVersion {
 }
 
 impl RuntimeVersion {
-    pub fn to_str(&self) -> &str {
+    pub fn to_str(&self) -> String {
         match self {
-            RuntimeVersion::V2 => "v2.0.50727",
-            RuntimeVersion::V3 => "v3.0",
-            RuntimeVersion::V4 => "v4.0.30319",
-            RuntimeVersion::UNKNOWN => "UNKNOWN",
+            RuntimeVersion::V2 => obfstr!("v2.0.50727").to_string(),
+            RuntimeVersion::V3 => obfstr!("v3.0").to_string(),
+            RuntimeVersion::V4 => obfstr!("v4.0.30319").to_string(),
+            RuntimeVersion::UNKNOWN => obfstr!("UNKNOWN").to_string(),
         }
     }
 
@@ -124,11 +125,11 @@ impl ICLRRuntimeInfo {
         };
 
         if hr.is_err() {
-            return Err(format!("Could not retrieve ICorRuntimeHost: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not retrieve ICorRuntimeHost: "), hr));
         }
 
         if ppv.is_null() {
-            return Err("Could not retrieve ICorRuntimeHost".into());
+            return Err(obfstr!("Could not retrieve ICorRuntimeHost").into());
         }
 
         return Ok(ppv);
@@ -146,7 +147,7 @@ impl ICLRRuntimeInfo {
         let hr = unsafe { (*self).GetVersionString(version.as_ptr(), &mut length) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `GetVersionString`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `GetVersionString`: "), hr));
         }
 
         Ok(RuntimeVersion::from(unsafe {
@@ -160,7 +161,7 @@ impl ICLRRuntimeInfo {
         let hr = unsafe { (*self).IsLoadable(&mut loadable) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `IsLoadable`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `IsLoadable`: "), hr));
         }
 
         Ok(loadable.0 > 0)
@@ -173,7 +174,7 @@ impl ICLRRuntimeInfo {
         let hr = unsafe { (*self).IsStarted(&mut started, &mut startup_flags) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `IsStarted`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `IsStarted`: "), hr));
         }
 
         Ok(started.0 > 0)

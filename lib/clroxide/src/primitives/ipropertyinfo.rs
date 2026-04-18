@@ -10,6 +10,7 @@ use windows::{
     core::BSTR,
     Win32::System::Com::{SAFEARRAY, VARIANT},
 };
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct _PropertyInfo {
@@ -127,7 +128,7 @@ impl _PropertyInfo {
         let hr = unsafe { (*self).ToString(&mut buffer as *mut _ as *mut *mut u16) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `ToString`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `ToString`: "), hr));
         }
 
         Ok(buffer.to_string())
@@ -146,7 +147,7 @@ impl _PropertyInfo {
         let hr = unsafe { (*self).GetValue(object, index, &mut return_value) };
 
         if hr.is_err() {
-            return Err(format!("Could not invoke method: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not invoke method: "), hr));
         }
 
         Ok(return_value)
@@ -163,7 +164,7 @@ impl _PropertyInfo {
         let hr = unsafe { (*self).SetValue(object, value, index) };
 
         if hr.is_err() {
-            return Err(format!("Could not invoke method: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not invoke method: "), hr));
         }
 
         Ok(())

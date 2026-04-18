@@ -4,6 +4,7 @@ use windows::core::BSTR;
 use crate::primitives::{
     Class, IUnknown, IUnknownVtbl, Interface, _AppDomain, GUID, HANDLE, HINSTANCE, HRESULT,
 };
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct ICorRuntimeHost {
@@ -80,7 +81,7 @@ impl ICorRuntimeHost {
     pub fn start(&self) -> Result<(), String> {
         return match unsafe { (*self).Start().ok() } {
             Ok(_) => Ok(()),
-            Err(e) => Err(format!("Could not start runtime host: {:?}", e)),
+            Err(e) => Err(format!("{}{:?}", obfstr!("Could not start runtime host: "), e)),
         };
     }
 
@@ -90,11 +91,11 @@ impl ICorRuntimeHost {
         let hr = unsafe { (*self).GetDefaultDomain(&mut unknown) };
 
         if hr.is_err() {
-            return Err(format!("Could not retrieve default app domain: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not retrieve default app domain: "), hr));
         }
 
         if unknown.is_null() {
-            return Err("Could not retrieve default app domain".into());
+            return Err(obfstr!("Could not retrieve default app domain").into());
         }
 
         let mut app_domain: *mut _AppDomain = ptr::null_mut();
@@ -107,11 +108,11 @@ impl ICorRuntimeHost {
         };
 
         if hr.is_err() {
-            return Err(format!("Could not retrieve default app domain: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not retrieve default app domain: "), hr));
         }
 
         if app_domain.is_null() {
-            return Err("Could not retrieve default app domain".into());
+            return Err(obfstr!("Could not retrieve default app domain").into());
         }
 
         Ok(app_domain)
@@ -138,7 +139,7 @@ impl ICorRuntimeHost {
         }
 
         if unknown.is_null() {
-            return Err(format!("Could not create app domain `{}`", domain));
+            return Err(format!("{}{}{}", obfstr!("Could not create app domain `"), domain, obfstr!("`")));
         }
 
         let mut app_domain: *mut _AppDomain = ptr::null_mut();
@@ -158,7 +159,7 @@ impl ICorRuntimeHost {
         }
 
         if app_domain.is_null() {
-            return Err(format!("Could not create app domain `{}`", domain));
+            return Err(format!("{}{}{}", obfstr!("Could not create app domain `"), domain, obfstr!("`")));
         }
 
         Ok(app_domain)

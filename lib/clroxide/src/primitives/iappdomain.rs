@@ -7,6 +7,7 @@ use std::{
     ptr,
 };
 use windows::{core::BSTR, Win32::System::Com::SAFEARRAY};
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct _AppDomain {
@@ -103,11 +104,11 @@ impl _AppDomain {
         let hr = unsafe { (*self).Load_2(library_buffer.into_raw() as *mut _, &mut library_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Could not retrieve `{}`: {:?}", library, hr));
+            return Err(format!("{}{}{}{:?}", obfstr!("Could not retrieve `"), library, obfstr!("`: "), hr));
         }
 
         if library_ptr.is_null() {
-            return Err(format!("Could not retrieve `{}`", library));
+            return Err(format!("{}{}{}", obfstr!("Could not retrieve `"), library, obfstr!("`")));
         }
 
         Ok(library_ptr)
@@ -121,11 +122,11 @@ impl _AppDomain {
         let hr = unsafe { (*self).Load_3(assembly_bytes, &mut assembly_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Could not retrieve assembly: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not retrieve assembly: "), hr));
         }
 
         if assembly_ptr.is_null() {
-            return Err("Could not retrieve assembly".into());
+            return Err(obfstr!("Could not retrieve assembly").into());
         }
 
         Ok(assembly_ptr)
@@ -137,7 +138,7 @@ impl _AppDomain {
         let hr = unsafe { (*self).ToString(&mut buffer as *mut _ as *mut *mut u16) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `ToString`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `ToString`: "), hr));
         }
 
         Ok(buffer.to_string())

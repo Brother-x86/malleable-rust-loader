@@ -42,7 +42,6 @@ def should_skip_line(line: str) -> bool:
 
 
 def split_args(s: str) -> list:
-    """Split args séparés par virgules en respectant les parenthèses imbriquées."""
     args = []
     depth = 0
     current = ''
@@ -64,11 +63,6 @@ def split_args(s: str) -> list:
 
 
 def transform_format_line(line: str) -> str:
-    """
-    Transforme les format macros pour obfusquer les parties statiques.
-    format!("static {:x}", arg) -> format!("{}{:x}", obfstr!("static "), arg)
-    write!(f, "msg {:?}", val) -> write!(f, "{}{:?}", obfstr!("msg "), val)
-    """
     macro_match = FORMAT_MACROS_RE.search(line)
     if not macro_match:
         return line
@@ -81,7 +75,6 @@ def transform_format_line(line: str) -> str:
     macro_content_start = macro_match.end() + paren_match.end()
     after_paren = line[macro_content_start:]
 
-    # Pour write!/writeln!, sauter le premier arg (le writer)
     writer_prefix = ''
     if macro_match.group(1) in ('write', 'writeln'):
         writer_match = re.match(r'([^,]+,\s*)', after_paren)
@@ -89,7 +82,6 @@ def transform_format_line(line: str) -> str:
             writer_prefix = writer_match.group(1)
             after_paren = after_paren[writer_match.end():]
 
-    # Trouver la format string
     str_match = re.match(r'"((?:[^"\\]|\\.)*)"', after_paren)
     if not str_match:
         return line
@@ -97,16 +89,13 @@ def transform_format_line(line: str) -> str:
     fmt_content = str_match.group(1)
     after_str = after_paren[str_match.end():]
 
-    # Splitter : parties statiques et specifiers
     parts = re.split(r'(\{[^{}]*\})', fmt_content)
     static_parts = parts[0::2]
     specifiers = parts[1::2]
 
-    # Ne transformer que s'il y a des parties statiques non vides
     if not any(p for p in static_parts):
         return line
 
-    # Construire la nouvelle format string
     new_fmt_parts = []
     for i, static in enumerate(static_parts):
         if static:
@@ -115,7 +104,6 @@ def transform_format_line(line: str) -> str:
             new_fmt_parts.append(specifiers[i])
     new_fmt = ''.join(new_fmt_parts)
 
-    # Parser les args restants
     original_args = []
     suffix = ''
 
@@ -141,7 +129,6 @@ def transform_format_line(line: str) -> str:
     else:
         suffix = after_str.lstrip()
 
-    # Intercaler les obfstr args avec les args originaux
     all_args = []
     orig_idx = 0
     for i, static in enumerate(static_parts):
@@ -163,7 +150,6 @@ def process_line(line: str) -> str:
     if should_skip_line(line):
         return line
 
-    # Lignes avec format macros -> splitter les parties statiques
     if FORMAT_MACROS_RE.search(line):
         return transform_format_line(line)
 
@@ -177,10 +163,10 @@ def process_line(line: str) -> str:
         after = line[match.end():].lstrip()
         if after.startswith('=>'):
             return match.group(0)
-        # Ignorer le cote droit des match arms : => "..."
+        # Cote droit d'un match arm : => "..." → obfstr + to_string
         before = line[:match.start()]
         if '=>' in before:
-            return match.group(0)
+            return f'obfstr!("{content}").to_string()'
         return f'obfstr!("{content}")'
 
     return STRING_REGEX.sub(replace_string, line)
@@ -191,10 +177,6 @@ def has_obfstr_import(lines: list) -> bool:
 
 
 def insert_import(lines: list) -> list:
-    """
-    Insere use obfstr::obfstr; apres le dernier bloc use.
-    Gere correctement les blocs use multi-lignes use X::{...};
-    """
     last_use_end = -1
     i = 0
     while i < len(lines):
@@ -203,7 +185,6 @@ def insert_import(lines: list) -> list:
             if stripped.endswith(';'):
                 last_use_end = i
             else:
-                # Bloc use multi-lignes : scanner jusqu'a la };
                 depth = stripped.count('{') - stripped.count('}')
                 j = i
                 while depth > 0 and j < len(lines) - 1:

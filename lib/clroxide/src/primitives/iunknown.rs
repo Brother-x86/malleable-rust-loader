@@ -1,5 +1,6 @@
 use crate::primitives::{Interface, GUID, HRESULT};
 use std::{ffi::c_void, mem::transmute_copy};
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct IUnknown {
@@ -62,6 +63,6 @@ impl Drop for IUnknown {
 
 impl std::fmt::Debug for IUnknown {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("IUnknown").field(&self).finish()
+        f.debug_tuple(obfstr!("IUnknown")).field(&self).finish()
     }
 }

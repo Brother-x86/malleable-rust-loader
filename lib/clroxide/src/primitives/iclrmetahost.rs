@@ -3,6 +3,7 @@ use crate::primitives::{
     HRESULT,
 };
 use std::{collections::HashMap, ffi::c_void, ops::Deref, ptr};
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct ICLRMetaHostVtbl {
@@ -48,7 +49,7 @@ impl ICLRMetaHost {
         }
 
         if ppv.is_null() {
-            return Err("Could not retrieve ICLRMetaHost".into());
+            return Err(obfstr!("Could not retrieve ICLRMetaHost").into());
         }
 
         return Ok(ppv);
@@ -70,7 +71,7 @@ impl ICLRMetaHost {
             return Ok(*runtime);
         }
 
-        Err("Could not find any runtimes".into())
+        Err(obfstr!("Could not find any runtimes").into())
     }
 
     pub fn get_runtime(&self, version: RuntimeVersion) -> Result<*mut ICLRRuntimeInfo, String> {
@@ -102,11 +103,11 @@ impl ICLRMetaHost {
         let hr = unsafe { (*self).EnumerateInstalledRuntimes(&mut ieu_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Could not enumerate installed runtimes: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not enumerate installed runtimes: "), hr));
         }
 
         if ieu_ptr.is_null() {
-            return Err("Could not enumerate installed runtimes.".into());
+            return Err(obfstr!("Could not enumerate installed runtimes.").into());
         }
 
         let mut hmri: HashMap<RuntimeVersion, *mut ICLRRuntimeInfo> = HashMap::new();

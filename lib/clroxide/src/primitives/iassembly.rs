@@ -14,6 +14,7 @@ use windows::{
         Ole::{SafeArrayCreateVector, SafeArrayGetElement, SafeArrayGetUBound},
     },
 };
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct _Assembly {
@@ -92,11 +93,11 @@ impl _Assembly {
         let entrypoint = (*self).get_entrypoint()?;
         let signature = unsafe { (*entrypoint).to_string()? };
 
-        if signature.ends_with("Main()") {
+        if signature.ends_with(obfstr!("Main()")) {
             return unsafe { (*entrypoint).invoke_without_args(None) };
         }
 
-        if signature.ends_with("Main(System.String[])") {
+        if signature.ends_with(obfstr!("Main(System.String[])")) {
             let args_variant = wrap_strings_in_array(args)?;
             let method_args = wrap_method_arguments(vec![args_variant])?;
 
@@ -115,11 +116,11 @@ impl _Assembly {
         let hr = unsafe { (*self).get_EntryPoint(&mut method_info_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Could not retrieve entrypoint: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Could not retrieve entrypoint: "), hr));
         }
 
         if method_info_ptr.is_null() {
-            return Err("Could not retrieve entrypoint".into());
+            return Err(obfstr!("Could not retrieve entrypoint").into());
         }
 
         Ok(method_info_ptr)
@@ -131,7 +132,7 @@ impl _Assembly {
         let hr = unsafe { (*self).ToString(&mut buffer as *mut _ as *mut *mut u16) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `ToString`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `ToString`: "), hr));
         }
 
         Ok(buffer.to_string())
@@ -227,7 +228,7 @@ impl _Assembly {
         }
 
         if type_ptr.is_null() {
-            return Err(format!("Could not retrieve type `{}`", name));
+            return Err(format!("{}{}{}", obfstr!("Could not retrieve type `"), name, obfstr!("`")));
         }
 
         Ok(type_ptr)
@@ -241,7 +242,7 @@ impl _Assembly {
         let hr = unsafe { (*self).GetTypes(&mut safe_array_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Error while retrieving types: 0x{:x}", hr.0));
+            return Err(format!("{}{:x}", obfstr!("Error while retrieving types: 0x"), hr.0));
         }
 
         let ubound = unsafe { SafeArrayGetUBound(safe_array_ptr, 1) }.unwrap_or(0);
@@ -253,7 +254,7 @@ impl _Assembly {
 
             match unsafe { SafeArrayGetElement(safe_array_ptr, indices.as_ptr(), pv) } {
                 Ok(_) => {},
-                Err(e) => return Err(format!("Could not access safe array: {:?}", e.code())),
+                Err(e) => return Err(format!("{}{:?}", obfstr!("Could not access safe array: "), e.code())),
             }
 
             if !pv.is_null() {

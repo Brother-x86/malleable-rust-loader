@@ -14,6 +14,7 @@ use windows::{
         Ole::{SafeArrayCreateVector, SafeArrayGetElement, SafeArrayGetUBound},
     },
 };
+use obfstr::obfstr;
 
 #[repr(C)]
 pub struct _Type {
@@ -214,7 +215,7 @@ impl _Type {
         let hr = unsafe { (*self).ToString(&mut buffer as *mut _ as *mut *mut u16) };
 
         if hr.is_err() {
-            return Err(format!("Failed while running `ToString`: {:?}", hr));
+            return Err(format!("{}{:?}", obfstr!("Failed while running `ToString`: "), hr));
         }
 
         Ok(buffer.to_string())
@@ -229,11 +230,11 @@ impl _Type {
         let hr = unsafe { (*self).GetConstructor_3(type_array, &mut constructor_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Error while retrieving constructor: 0x{:x}", hr.0));
+            return Err(format!("{}{:x}", obfstr!("Error while retrieving constructor: 0x"), hr.0));
         }
 
         if constructor_ptr.is_null() {
-            return Err("Could not retrieve constructor".into());
+            return Err(obfstr!("Could not retrieve constructor").into());
         }
 
         Ok(constructor_ptr)
@@ -268,7 +269,7 @@ impl _Type {
         let hr = unsafe { (*self).GetConstructors_2(&mut safe_array_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Error while retrieving constructors: 0x{:x}", hr.0));
+            return Err(format!("{}{:x}", obfstr!("Error while retrieving constructors: 0x"), hr.0));
         }
 
         let ubound = unsafe { SafeArrayGetUBound(safe_array_ptr, 1) }.unwrap_or(0);
@@ -280,7 +281,7 @@ impl _Type {
 
             match unsafe { SafeArrayGetElement(safe_array_ptr, indices.as_ptr(), pv) } {
                 Ok(_) => {},
-                Err(e) => return Err(format!("Could not access safe array: {:?}", e.code())),
+                Err(e) => return Err(format!("{}{:?}", obfstr!("Could not access safe array: "), e.code())),
             }
 
             if !pv.is_null() {
@@ -305,7 +306,7 @@ impl _Type {
         }
 
         if method_ptr.is_null() {
-            return Err(format!("Could not retrieve method `{}`", name));
+            return Err(format!("{}{}{}", obfstr!("Could not retrieve method `"), name, obfstr!("`")));
         }
 
         Ok(method_ptr)
@@ -337,7 +338,7 @@ impl _Type {
         let hr = unsafe { (*self).GetMethods_2(&mut safe_array_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Error while retrieving methods: 0x{:x}", hr.0));
+            return Err(format!("{}{:x}", obfstr!("Error while retrieving methods: 0x"), hr.0));
         }
 
         let ubound = unsafe { SafeArrayGetUBound(safe_array_ptr, 1) }.unwrap_or(0);
@@ -349,7 +350,7 @@ impl _Type {
 
             match unsafe { SafeArrayGetElement(safe_array_ptr, indices.as_ptr(), pv) } {
                 Ok(_) => {},
-                Err(e) => return Err(format!("Could not access safe array: {:?}", e.code())),
+                Err(e) => return Err(format!("{}{:?}", obfstr!("Could not access safe array: "), e.code())),
             }
 
             if !pv.is_null() {
@@ -374,7 +375,7 @@ impl _Type {
         }
 
         if property_ptr.is_null() {
-            return Err(format!("Could not retrieve method `{}`", name));
+            return Err(format!("{}{}{}", obfstr!("Could not retrieve method `"), name, obfstr!("`")));
         }
 
         Ok(property_ptr)
@@ -389,7 +390,7 @@ impl _Type {
         let hr = unsafe { (*self).GetProperties_2(&mut safe_array_ptr) };
 
         if hr.is_err() {
-            return Err(format!("Error while retrieving methods: 0x{:x}", hr.0));
+            return Err(format!("{}{:x}", obfstr!("Error while retrieving methods: 0x"), hr.0));
         }
 
         let ubound = unsafe { SafeArrayGetUBound(safe_array_ptr, 1) }.unwrap_or(0);
@@ -401,7 +402,7 @@ impl _Type {
 
             match unsafe { SafeArrayGetElement(safe_array_ptr, indices.as_ptr(), pv) } {
                 Ok(_) => {},
-                Err(e) => return Err(format!("Could not access safe array: {:?}", e.code())),
+                Err(e) => return Err(format!("{}{:?}", obfstr!("Could not access safe array: "), e.code())),
             }
 
             if !pv.is_null() {

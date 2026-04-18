@@ -7,47 +7,48 @@ use clroxide::{
 };
 use std::{env, fs, process::exit, thread, time::Duration};
 use windows::Win32::System::Com::VARIANT;
+use obfstr::obfstr;
 
 fn main() -> Result<(), String> {
     let (path, args) = prepare_args();
-    let contents = fs::read(path).expect("Unable to read file");
+    let contents = fs::read(path).expect(obfstr!("Unable to read file"));
 
     let mut clr = Clr::context_only(None)?;
     let mut context = clr.get_context()?;
     let app_domain = context.app_domain;
-    let mscorlib = unsafe { (*app_domain).load_library("mscorlib")? };
+    let mscorlib = unsafe { (*app_domain).load_library(obfstr!("mscorlib"))? };
 
     unsafe {
         // Get memory stream type & instance
-        let memory_stream = (*mscorlib).get_type("System.IO.MemoryStream")?;
+        let memory_stream = (*mscorlib).get_type(obfstr!("System.IO.MemoryStream"))?;
 
-        let to_array = (*memory_stream).get_method("ToArray")?;
-        let set_position = (*memory_stream).get_method("set_Position")?;
-        let set_length = (*memory_stream).get_method("SetLength")?;
-        let memory_stream_instance = (*mscorlib).create_instance("System.IO.MemoryStream")?;
+        let to_array = (*memory_stream).get_method(obfstr!("ToArray"))?;
+        let set_position = (*memory_stream).get_method(obfstr!("set_Position"))?;
+        let set_length = (*memory_stream).get_method(obfstr!("SetLength"))?;
+        let memory_stream_instance = (*mscorlib).create_instance(obfstr!("System.IO.MemoryStream"))?;
 
         // Get stream writer type & instance
-        let stream_writer = (*mscorlib).get_type("System.IO.StreamWriter")?;
+        let stream_writer = (*mscorlib).get_type(obfstr!("System.IO.StreamWriter"))?;
         let stream_writer_constructor =
-            (*stream_writer).get_constructor_with_signature("Void .ctor(System.IO.Stream)")?;
+            (*stream_writer).get_constructor_with_signature(obfstr!("Void .ctor(System.IO.Stream)"))?;
 
         let stream_writer_instance = (*stream_writer_constructor)
             .invoke(wrap_method_arguments(vec![memory_stream_instance.clone()])?)?;
 
         // Set stream writer instance to auto flush
-        let auto_flush_property = (*stream_writer).get_property("AutoFlush")?;
+        let auto_flush_property = (*stream_writer).get_property(obfstr!("AutoFlush"))?;
         (*auto_flush_property).set_value(
             wrap_bool_in_variant(true),
             Some(stream_writer_instance.clone()),
         )?;
 
         // Get necessary console functions and properties
-        let console = unsafe { (*mscorlib).get_type("System.Console")? };
-        let get_out = unsafe { (*console).get_method("get_Out")? };
-        let set_out = unsafe { (*console).get_method("SetOut")? };
+        let console = unsafe { (*mscorlib).get_type(obfstr!("System.Console"))? };
+        let get_out = unsafe { (*console).get_method(obfstr!("get_Out"))? };
+        let set_out = unsafe { (*console).get_method(obfstr!("SetOut"))? };
         let old_out = unsafe { (*get_out).invoke_without_args(None)? };
-        let get_err = unsafe { (*console).get_method("get_Error")? };
-        let set_err = unsafe { (*console).get_method("SetError")? };
+        let get_err = unsafe { (*console).get_method(obfstr!("get_Error"))? };
+        let set_err = unsafe { (*console).get_method(obfstr!("SetError"))? };
         let old_err = unsafe { (*get_err).invoke_without_args(None)? };
 
         // Set stdout and stderr to our stream writer
@@ -66,7 +67,7 @@ fn main() -> Result<(), String> {
             let _ = unsafe { (*assembly).run_entrypoint(&args) };
         });
 
-        println!("[*] Results:\n");
+        println!("{}", obfstr!("[*] Results:\n"));
 
         while !t_handle.is_finished() {
             let result = (*to_array).invoke_without_args(Some(memory_stream_instance.clone()))?;
@@ -119,7 +120,7 @@ fn prepare_args() -> (String, Vec<String>) {
     let mut args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        println!("Please provide a path to a dotnet executable");
+        println!("{}", obfstr!("Please provide a path to a dotnet executable"));
 
         exit(1)
     }
@@ -132,7 +133,7 @@ fn prepare_args() -> (String, Vec<String>) {
 
     let path = args[1].clone();
 
-    println!("[+] Running `{}` with given args: {:?}", path, command_args);
+    println!("{}{}{}{:?}", obfstr!("[+] Running `"), path, obfstr!("` with given args: "), command_args);
 
     return (path, command_args);
 }
