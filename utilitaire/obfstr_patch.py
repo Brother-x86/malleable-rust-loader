@@ -30,15 +30,16 @@ SKIP_PATTERNS = [
     r'#\[',
     r'\bmod\b',
     r'impl\b',
+    r'feature\s*=',      # strings dans les attributs cfg/feature flags
+    
 ]
 
 STRING_REGEX = re.compile(r'"((?:[^"\\]|\\.)*)"')
 OBFSTR_IMPORT = 'use obfstr::obfstr;\n'
 
 FORMAT_MACROS_RE = re.compile(
-    r'\b(format|write|writeln|print|println|eprint|eprintln|panic)\s*!'
+    r'\b(format|write|writeln|print|println|eprint|eprintln|panic|debug|trace|info|warn|error)\s*!'
 )
-
 
 def should_skip_line(line: str) -> bool:
     return any(re.search(pattern, line) for pattern in SKIP_PATTERNS)
@@ -188,7 +189,6 @@ def insert_import(lines: list) -> list:
         line = lines[i]
         stripped = line.strip()
 
-        # Mise à jour de la profondeur pour détecter si on est au niveau racine
         brace_depth += line.count('{') - line.count('}')
 
         # On ne considère que les `use` au niveau racine (brace_depth == 0)
@@ -210,10 +210,14 @@ def insert_import(lines: list) -> list:
     if last_use_end >= 0:
         lines.insert(last_use_end + 1, OBFSTR_IMPORT)
     else:
+        # Sauter les //! et #! du début de fichier (crate-level doc comments)
         insert_at = 0
         for i, line in enumerate(lines):
-            if line.startswith('#!'):
+            stripped = line.strip()
+            if line.startswith('#!') or stripped.startswith('//!'):
                 insert_at = i + 1
+            elif stripped == '' and insert_at > 0:
+                insert_at = i + 1  # inclure les lignes vides après le bloc //!
             else:
                 break
         lines.insert(insert_at, OBFSTR_IMPORT)
@@ -286,7 +290,7 @@ def patch(
         else:
             rprint("[green]Modifications annulees avec succes.[/green]")
         raise typer.Exit(0)
-        
+
     if path.is_file() and path.suffix == '.rs':
         rs_files = [str(path)]
     else:
