@@ -4,32 +4,23 @@ use tokio;
 mod handlers;
 mod routes;
 
-mod dataoperation;
-
-
 use ftail::Ftail;
 use log::LevelFilter;
 use std::fs;
+use std::env;
 use log::info;
-
 
 #[tokio::main]
 async fn main() {
-    let log_path: &str = "/root/.malleable/log/";
-    let info = &format!("{}/info",log_path);
-    let error = &format!("{}/error",log_path);
-    let debug = &format!("{}/debug",log_path);
-    fs::create_dir_all(info).unwrap();
-    fs::create_dir_all(error).unwrap();
-    fs::create_dir_all(debug).unwrap();
-
+    let home = env::var("HOME").expect("HOME non défini");
+    let log_dir = format!("{}/.malleable/log", home);
+    fs::create_dir_all(&log_dir).unwrap();
 
     Ftail::new()
-    .console(LevelFilter::Info)
-    .daily_file(info, LevelFilter::Info)
-    .daily_file(error, LevelFilter::Error)
-    .daily_file(debug, LevelFilter::Debug)
-    .init().unwrap();
+        .console(LevelFilter::Debug)
+        .single_file(&format!("{}/server.log", log_dir), true, LevelFilter::Debug)
+        .init()
+        .expect("Échec de l'initialisation du logger");
 
     let app_routes = routes::app::build_routes();
 

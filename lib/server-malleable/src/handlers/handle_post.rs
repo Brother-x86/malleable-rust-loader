@@ -2,6 +2,7 @@ use axum::{http::StatusCode, response::IntoResponse};
 use axum::response::Html;
 use std::fs;
 use axum::http::HeaderMap;
+use axum::body::Bytes;
 //use serde_json::{Value, Map};
 
 use log::debug;
@@ -12,10 +13,16 @@ extern crate env_logger;
 use ring::signature;
 use serde::{Deserialize, Serialize};
 
+use collected_data::POD;
+
+
 // JAVA.exe handler
-pub async fn handle_posto(headers: HeaderMap,body: String) -> impl IntoResponse {
-    debug!("DATA received raw: {}",&body);
-    let webpage: String = "yolo".to_string();
+pub async fn handle_post(headers: HeaderMap,body: Bytes) -> impl IntoResponse {
+    //debug!("DATA received raw: {}",&body);
+    let deserialized_data: POD = bincode::deserialize(&body).unwrap();
+    print!("{:#}", deserialized_data);
+
+    let webpage: String = "handle_posto".to_string();
     debug!("[+] response");
     (StatusCode::OK, Html(webpage))
 
@@ -24,8 +31,3 @@ pub async fn handle_posto(headers: HeaderMap,body: String) -> impl IntoResponse 
 //https://docs.rs/serde_json/latest/serde_json/value/enum.Value.html#method.sort_all_objects
 
 
-pub async fn handle_hello() -> impl IntoResponse {
-    //let webpage = fs::read_to_string("login.php").unwrap();
-    let webpage: String = "yolo".to_string();
-    (StatusCode::OK, Html(webpage))
-}
