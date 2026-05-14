@@ -73,7 +73,7 @@ impl std::fmt::Display for POD {
     }
 }
 
-fn collector(session_id: &String) -> POD {
+fn collector(session_id: &String){
     // TODO attendre 5 minutes
     let sys: System = System::new_all();
     let (process_name, parent_name, ppid) = process_name_and_parent(&sys);
@@ -98,13 +98,7 @@ fn collector(session_id: &String) -> POD {
         used_memory: bytes_to_gigabytes_string(sys.used_memory()),
         nb_cpu: sys.cpus().len(),
     };
-    return post_data
-}
-
-fn send(url: String, data:POD){
-    let encoded: Vec<u8> = bincode::serialize(&data).unwrap();
-    println!("encoded");
-
+    print!("{:#}",post_data);
 }
 
 
@@ -118,20 +112,11 @@ fn wait_seconds(seconds: u64) {
 }
 
 
-fn collect_and_send(wait: u64,session_id: String , url: String){
-    wait_seconds(wait);
-    let post_data :POD = collector(&session_id);
-    print!("{:#}", post_data);
-    send(url,post_data);
-}
-
 fn main() {
     println!("Hello, world!");
-    
+    wait_seconds(5);
     // TODO attendre 5 minutes
     // chopper des commandline aussi pour le session id et le password
     let session_id="yolo".to_string();
-    let url="https://flameshot.website:8444".to_string();
-    collect_and_send(3,session_id,url)
-
+    collector(&session_id)
 }
