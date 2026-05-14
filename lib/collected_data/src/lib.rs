@@ -57,6 +57,6 @@ impl std::fmt::Display for POD {
         write!(f, "{:<20} {}\n", obfstr!("PPID:"),                self.ppid)?;
         write!(f, "{:<20} {}\n", obfstr!("Total Memory:"),        self.total_memory)?;
         write!(f, "{:<20} {}\n", obfstr!("Used Memory:"),         self.used_memory)?;
-        write!(f, "{:<20} {}\n",   obfstr!("CPU Count:"),         self.nb_cpu)
+        write!(f, "{:<20} {}\n", obfstr!("CPU Count:"),           self.nb_cpu)
     }
 }
