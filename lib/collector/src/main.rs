@@ -10,6 +10,8 @@ use collector::link_util::process_name_and_parent;
 use collector::link_util::process_path;
 use collector::link_util::working_dir;
 
+use std::time::Duration;
+use std::thread;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct POD {
@@ -100,8 +102,19 @@ fn collector(session_id: &String){
 }
 
 
+fn wait_seconds(seconds: u64) {
+    for i in 0..seconds {
+        let remaining = seconds - i;
+        println!("Reste : {}m {:02}s", remaining / 60, remaining % 60);
+        thread::sleep(Duration::from_secs(1));
+    }
+    println!("Terminé !");
+}
+
+
 fn main() {
     println!("Hello, world!");
+    wait_seconds(5);
     // TODO attendre 5 minutes
     // chopper des commandline aussi pour le session id et le password
     let session_id="yolo".to_string();
