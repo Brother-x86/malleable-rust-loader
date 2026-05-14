@@ -24,9 +24,8 @@ async fn main() {
 
     let app_routes = routes::app::build_routes();
 
-    //let url = "127.0.0.1:3000";
     //let url: &str = "127.0.0.1:3000";
-    let url: &str = "0.0.0.0:3000";
+    let url: &str = "0.0.0.0:8444";
     let listener = tokio::net::TcpListener::bind(url)
         .await
         .unwrap();

