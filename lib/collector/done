@@ -154,3 +154,8 @@ index 332694e..7793e52 100644
 
 [+] git push --set-upstream origin dev
     - with commit message 'exe or dll for collector -'
+[dev 93ed9a5] exe or dll for collector -
+ 6 files changed, 295 insertions(+), 84 deletions(-)
+ create mode 100644 lib/collector/done
+ create mode 100644 lib/collector/overlord.c
+ create mode 100644 lib/collector/src/collect.rs
