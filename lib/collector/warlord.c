@@ -19,10 +19,6 @@ int main() {
         printf("sleep en c\n");
         sleep(1); // Pause de 1 seconde
     }
-
-    // Typedef avec les arguments
-    typedef void (*OverlordFunc)(unsigned long long sleep_time, const char* session_id, const char* url);
-
     // Obtenez l'adresse de la fonction 'Overlord'
     OverlordFunc Overlord = (OverlordFunc)GetProcAddress(dll_handle, "Warlord");
     if (!Overlord) {
@@ -31,6 +27,8 @@ int main() {
         return 1;
     }
 
+    // Typedef avec les arguments
+    typedef void (*OverlordFunc)(unsigned long long sleep_time, const char* session_id, const char* url);
 
     // Appelez la fonction
     printf("Calling 'Warlord' with args...\n");
