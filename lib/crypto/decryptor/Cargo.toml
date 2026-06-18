@@ -1,0 +1,10 @@
+[package]
+name = "decryptor"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+obfstr = { version = "0.4", default-features = false }
+aes = { version = "0.8", default-features = false }
+cbc = { version = "0.1", features = ["alloc", "block-padding"] }
+miniz_oxide = { version = "0.7", features = ["with-alloc"] }

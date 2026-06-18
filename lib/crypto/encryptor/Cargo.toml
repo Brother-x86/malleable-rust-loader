@@ -1,0 +1,10 @@
+[package]
+name = "encryptor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aes = "0.8"
+cbc = { version = "0.1", features = ["alloc"] }
+flate2 = { version = "1.0", features = ["zlib"] }
+rand = "0.8"

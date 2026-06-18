@@ -25,3 +25,4 @@ ftail = "0.1.2"
 flate2 = "1.0.35"
 collected_data = { path = "../collected_data" }
 bincode = "1"
+decryptor = { path = "../crypto/decryptor" }

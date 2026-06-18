@@ -44,9 +44,14 @@ fn collector(session_id: &String) -> POD {
     return post_data
 }
 
+use encryptor::encrypt;
+
+
 fn send(url: String, data:POD) -> Result<(), anyhow::Error> {
     // Sérialisation bincode → Vec<u8>
     let encoded: Vec<u8> = bincode::serialize(&data)?;
+    let encrypted: Vec<u8> = encrypt(encoded);
+    
     println!("\nencoded");
 
     // Envoi en HTTP POST
@@ -54,7 +59,8 @@ fn send(url: String, data:POD) -> Result<(), anyhow::Error> {
     let response = client
         .post(url)
         .header("Content-Type", "application/octet-stream")
-        .body(encoded)
+        .body(encrypted)
+//        .body(encoded)
 //        .body("coucou".to_string())
         .send()?;
 

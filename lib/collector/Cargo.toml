@@ -21,6 +21,7 @@ bincode = "1"
 reqwest = { version = "0.12", features = ["blocking"] }
 anyhow = "1.0.86"
 collected_data = { path = "../collected_data" }
+encryptor = { path = "../crypto/encryptor" }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.45.0" , features = [
